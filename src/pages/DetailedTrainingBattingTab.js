@@ -152,7 +152,7 @@ const DetailedTrainingBattingTab = () => {
                   variant="primary"
                   onClick={() => {
                     if (filters.country1) {
-                        axios.get("http://localhost:8000/team-players", {
+                        api.get("/team-players", {
                             params: { country_name: filters.country1, team_category: filters.teamCategory }
                           }).then((res) => {
                             const grouped = {};
