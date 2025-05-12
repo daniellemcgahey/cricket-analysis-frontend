@@ -196,8 +196,8 @@ const handleGenerate = () => {
                         <div
                         style={{
                             position: "absolute",
-                            top: "45%",
-                            left: "54%",
+                            top: "30%",
+                            left: "50%",
                             transform: "translate(-50%, -50%)",
                             backgroundColor: isDarkMode ? "rgba(33, 37, 41, 0.95)" : "rgba(248, 249, 250, 0.95)",
                             padding: "16px",
