@@ -44,22 +44,10 @@ const DetailedBattingTab = () => {
       return;
     }
 
-    let player_ids = [];
-
-    if (filters.teamCategory.toLowerCase() === "training") {
-      player_ids = selectedPlayer.split(",").map(id => parseInt(id)).filter(id => !isNaN(id));
-    } else {
-      const parsed = parseInt(selectedPlayer);
-      if (!isNaN(parsed)) player_ids = [parsed];
-    }
-
-    if (player_ids.length === 0) {
-      alert("Player ID(s) could not be parsed.");
-      return;
-    }
+    setLoading(true);
 
     const sharedPayload = {
-      player_ids,
+      player_ids: [selectedPlayer],
       tournaments: filters.tournaments,
       team_category: filters.teamCategory,
       bowling_arm: filters.selectedBowlingArms,
