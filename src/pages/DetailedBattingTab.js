@@ -59,7 +59,8 @@ const DetailedBattingTab = () => {
         y: shot.shot_y,
         runs: shot.runs,
         over: shot.over,
-        balls_this_over: shot.balls_this_over
+        balls_this_over: shot.balls_this_over,
+        ball_id: shot.ball_id 
       }));
 
       setPitchMapData(res.data.pitch_map);
