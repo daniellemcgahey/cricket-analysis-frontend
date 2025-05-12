@@ -5,6 +5,7 @@ import BackButton from "../components/BackButton";
 import IndividualBattingTab from "./IndividualBattingTab";
 import IndividualBowlingTab from "./IndividualBowlingTab";
 import DetailedBattingTab from "./DetailedBattingTab";
+import DetailedBowlingTab from "./DetailedBowlingTab";
 import TrendsTab from "./TrendsTab";
 
 import "./TabStyles.css";
@@ -38,6 +39,9 @@ const IndividualTabs = () => {
           </Tab>
           <Tab eventKey="bowling" title="Bowling">
             <IndividualBowlingTab />
+          </Tab>
+          <Tab eventKey="detailed-bowling" title="Detailed Bowling">
+            <DetailedBowlingTab />
           </Tab>
           <Tab eventKey="fielding" title="Fielding">
             <FieldingTab />
