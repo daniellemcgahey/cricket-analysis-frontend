@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Accordion, Spinner , Form } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
@@ -30,24 +30,22 @@ const PressureTab = () => {
   
   useEffect(() => {
     if (!teamCategory) return;
-  
-    axios.get("http://localhost:8000/countries", {
-      params: { teamCategory }
-    }).then((res) => setCountries(res.data));
-  
-    axios.get("http://localhost:8000/tournaments", {
-      params: { teamCategory }
-    }).then((res) => setTournaments(res.data));
-  
-    axios.get("http://localhost:8000/matches", {
-      params: { teamCategory }
-    }).then((res) => {
-      setMatches(res.data);
-      if (selectAllMatches) {
-        setSelectedMatches(res.data.map(m => m.match_id));
-      }
-    });
+
+    api.get("/countries", { params: { teamCategory } })
+      .then((res) => setCountries(res.data));
+
+    api.get("/tournaments", { params: { teamCategory } })
+      .then((res) => setTournaments(res.data));
+
+    api.get("/matches", { params: { teamCategory } })
+      .then((res) => {
+        setMatches(res.data);
+        if (selectAllMatches) {
+          setSelectedMatches(res.data.map(m => m.match_id));
+        }
+      });
   }, [teamCategory, selectAllMatches]);
+
 
   const handleFetchPressureData = () => {
     if (!country1 || !country2 || selectedTournaments.length === 0) {
@@ -66,7 +64,7 @@ const PressureTab = () => {
       teamCategory: teamCategory,
     };
 
-    axios.post("http://localhost:8000/pressure-analysis", payload)
+    api.post("/pressure-analysis", payload)
       .then((res) => {
         const flatOverPressure = {};
         const overPressure = res.data.overPressure;
@@ -90,6 +88,7 @@ const PressureTab = () => {
         });
       })
       .finally(() => setLoading(false));
+
   };
 
   return (

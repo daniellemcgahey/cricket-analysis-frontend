@@ -3,7 +3,8 @@ import PitchMapFilters from "../components/PitchMapFilters";
 import PitchMapChart from "./PitchMapChart";
 import HeatMapToggle from "../components/HeatMapToggle";
 import "./TabStyles.css";
-import axios from "axios";
+import api from "../api";
+
 
 const PitchMapComparisonPage = () => {
   const [pitchData, setPitchData] = useState(null);
@@ -23,14 +24,15 @@ const PitchMapComparisonPage = () => {
 
   const handleGenerate = async () => {
     if (!filters) return;
-  
+
     try {
-      const response = await axios.post("http://localhost:8000/pitch-map-comparison", filters);
+      const response = await api.post("/pitch-map-comparison", filters);
       setPitchData(response.data);
     } catch (error) {
       console.error("Failed to fetch pitch map data", error);
     }
   };
+
 
   if (filters && pitchData) {
     console.log("🎯 Pitch Data:", pitchData);

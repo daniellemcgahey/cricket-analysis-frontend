@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Accordion, Spinner, Alert, Button, Form, Card } from "react-bootstrap";
 import { Line } from "react-chartjs-2";
 import DarkModeContext from "../DarkModeContext";
@@ -58,12 +58,13 @@ const MatchPressurePage = () => {
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women"];
 
   useEffect(() => {
-    axios.get("http://localhost:8000/tournaments").then(res => setTournaments(res.data));
+    api.get("/tournaments").then(res => setTournaments(res.data));
   }, []);
+
 
   useEffect(() => {
     if (selectedTournament && teamCategory) {
-      axios.get("http://localhost:8000/matches", {
+      api.get("/matches", {
         params: { teamCategory }
       }).then(res => {
         const filtered = res.data.filter(m => m.tournament === selectedTournament);
@@ -75,7 +76,7 @@ const MatchPressurePage = () => {
   const fetchData = () => {
     if (!selectedMatch) return alert("Please select a match.");
     setLoading(true);
-    axios.post("http://localhost:8000/match-momentum", {
+    api.post("/match-momentum", {
       team_category: teamCategory,
       tournament: selectedTournament,
       match_id: selectedMatch
@@ -87,6 +88,7 @@ const MatchPressurePage = () => {
       alert("Failed to fetch pressure data.");
     });
   };
+
 
   return (
     <div className="container-fluid py-4">

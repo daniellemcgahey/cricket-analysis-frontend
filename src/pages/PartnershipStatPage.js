@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Accordion, Spinner, Alert, Button, Form, Card } from "react-bootstrap";
 import { Bar } from "react-chartjs-2";
 import DarkModeContext from "../DarkModeContext";
@@ -29,33 +29,37 @@ const PartnershipStatPage = () => {
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women"];
 
   useEffect(() => {
-    axios.get("http://localhost:8000/tournaments").then(res => setTournaments(res.data));
+    api.get("/tournaments").then(res => setTournaments(res.data));
   }, []);
 
   useEffect(() => {
     if (selectedTournament && teamCategory) {
-      axios.get("http://localhost:8000/matches", { params: { teamCategory } })
-        .then(res => {
-          const filtered = res.data.filter(m => m.tournament === selectedTournament);
-          setMatches(filtered);
-        });
+      api.get("/matches", { params: { teamCategory } })
+      .then(res => {
+        const filtered = res.data.filter(m => m.tournament === selectedTournament);
+        setMatches(filtered);
+      });
+
     }
   }, [selectedTournament, teamCategory]);
 
   const fetchData = () => {
     if (!selectedMatch) return alert("Please select a match.");
     setLoading(true);
-    axios.post("http://localhost:8000/match-partnerships", {
+    api.post("/match-partnerships", {
       team_category: teamCategory,
       tournament: selectedTournament,
       match_id: selectedMatch
-    }).then(res => {
+    })
+    .then(res => {
       setPartnerships(res.data.partnerships || []);
       setLoading(false);
-    }).catch(() => {
+    })
+    .catch(() => {
       setLoading(false);
       alert("Failed to fetch partnership data.");
     });
+
   };
 
   const generateChartData = (partnership) => {

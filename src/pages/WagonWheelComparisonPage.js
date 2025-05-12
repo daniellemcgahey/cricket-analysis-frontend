@@ -3,7 +3,8 @@ import { Button, Spinner } from "react-bootstrap";
 import WagonWheelChart from "./WagonWheelChart";
 import WagonWheelFilters from "../components/WagonWheelFilters";
 import WagonWheelStyleToggle from "../components/WagonWheelStyleToggle";
-import axios from "axios";
+import api from "../api";
+
 
 const WagonWheelComparisonPage = () => {
   const [filters, setFilters] = useState({
@@ -44,7 +45,7 @@ const WagonWheelComparisonPage = () => {
     setChartData(null);
     setLoading(true);
   
-    axios.post("http://localhost:8000/wagon-wheel-comparison", {
+    api.post("/wagon-wheel-comparison", {
       ...filters,
       perspective: wagonWheelStyle
     })

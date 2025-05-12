@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Card, Button, Accordion, Table, Spinner, Alert } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
@@ -31,11 +31,12 @@ const IndividualBattingTab = () => {
   // Load players when country changes
   useEffect(() => {
     if (filters.country1) {
-      axios.get("http://localhost:8000/team-players", {
+      api.get("/team-players", {
         params: { country_name: filters.country1, team_category: filters.teamCategory }
       }).then((res) => setPlayers(res.data));
     }
   }, [filters.country1, filters.teamCategory]);
+
 
   const handleGenerate = () => {
     if (!selectedPlayer || filters.tournaments.length === 0) {
@@ -43,8 +44,8 @@ const IndividualBattingTab = () => {
       return;
     }
     setLoading(true);
-  
-    axios.post("http://localhost:8000/player-batting-analysis", {
+
+    api.post("/player-batting-analysis", {
       player_id: selectedPlayer,
       team_category: filters.teamCategory,
       tournaments: filters.tournaments,
@@ -63,6 +64,7 @@ const IndividualBattingTab = () => {
     });
   };
 
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -80,7 +82,7 @@ const IndividualBattingTab = () => {
                   variant="primary"
                   onClick={() => {
                     if (filters.country1) {
-                      axios.get("http://localhost:8000/team-players", {
+                      api.get("/team-players", {
                         params: { country_name: filters.country1, team_category: filters.teamCategory }
                       }).then((res) => setPlayers(res.data));
                     }
@@ -89,6 +91,7 @@ const IndividualBattingTab = () => {
                 >
                   Load Players
                 </Button>
+
                 <select
                   className="form-select"
                   value={selectedPlayer}

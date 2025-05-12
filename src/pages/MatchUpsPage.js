@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { Form, Button, Table, Spinner } from "react-bootstrap";
 
 const MatchUpsPage = () => {
@@ -15,8 +15,9 @@ const MatchUpsPage = () => {
 
 
   useEffect(() => {
-    axios.get("http://localhost:8000/countries?teamCategory=Women").then(res => setCountries(res.data));
+    api.get("/countries", { params: { teamCategory: "Women" } }).then(res => setCountries(res.data));
   }, []);
+
 
   const fetchMatchups = () => {
     if (!battingTeam || !bowlingTeam || !selectedPhases) {
@@ -25,7 +26,7 @@ const MatchUpsPage = () => {
     }
 
     setLoading(true);
-    axios.post("http://localhost:8000/tactical-matchups", {
+    api.post("/tactical-matchups", {
       batting_team: battingTeam,
       bowling_team: bowlingTeam,
       selected_phases: selectedPhases,
@@ -34,6 +35,7 @@ const MatchUpsPage = () => {
     })
     .then(res => setMatchups(res.data.matchups || []))
     .finally(() => setLoading(false));
+
   };
 
   return (

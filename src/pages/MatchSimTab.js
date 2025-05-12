@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import DarkModeContext from '../DarkModeContext';
 import BackButton from "../components/BackButton";
 import "./TabStyles.css";
-import axios from "axios";
+import api from "../api";
 import { Form, Button, Row, Col, Spinner, Alert, Table, Collapse } from "react-bootstrap";
 
 const MatchSimTab = () => {
@@ -29,15 +29,17 @@ const MatchSimTab = () => {
   const [showOversB, setShowOversB] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/countries?teamCategory=Women").then(res => {
-      setAllCountries(res.data);
-    });
+    api.get("/countries", { params: { teamCategory: "Women" } })
+      .then(res => setAllCountries(res.data));
   }, []);
+
 
   useEffect(() => {
     if (teamA) {
       setLoadingA(true);
-      axios.get(`http://localhost:8000/team-players?country_name=${teamA}&team_category=Women`)
+      api.get("/team-players", {
+        params: { country_name: teamA, team_category: "Women" }
+      })
         .then(res => {
           setTeamAPlayers(res.data);
           setLoadingA(false);
@@ -45,16 +47,20 @@ const MatchSimTab = () => {
     }
   }, [teamA]);
 
+
   useEffect(() => {
     if (teamB) {
       setLoadingB(true);
-      axios.get(`http://localhost:8000/team-players?country_name=${teamB}&team_category=Women`)
+      api.get("/team-players", {
+        params: { country_name: teamB, team_category: "Women" }
+      })
         .then(res => {
           setTeamBPlayers(res.data);
           setLoadingB(false);
         });
     }
   }, [teamB]);
+
 
   const handleLogin = () => {
     if (enteredPassword === correctPassword) {
@@ -67,7 +73,7 @@ const MatchSimTab = () => {
 
   const handleSimulate = () => {
     setSimLoading(true);
-    axios.post("http://localhost:8000/simulate-match", {
+    api.post("/simulate-match", {
       team_a_name: teamA,
       team_b_name: teamB,
       team_a_players: teamASelected,
@@ -82,6 +88,7 @@ const MatchSimTab = () => {
       console.error("Simulation error:", err);
       setSimLoading(false);
     });
+
   };
 
   const renderOversTable = (overs) => (

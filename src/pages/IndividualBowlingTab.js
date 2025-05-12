@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Form, Accordion, Table, Spinner, Alert } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import PitchMapChart from "./PitchMapChart";
@@ -22,15 +22,16 @@ const IndividualBowlingTab = () => {
 
 
   useEffect(() => {
-    axios.get("http://localhost:8000/countries", { params: { teamCategory } })
+    api.get("/countries", { params: { teamCategory } })
       .then((res) => setCountries(res.data));
-    axios.get("http://localhost:8000/tournaments", { params: { teamCategory } })
+    api.get("/tournaments", { params: { teamCategory } })
       .then((res) => setTournaments(res.data));
   }, [teamCategory]);
 
+
   useEffect(() => {
     if (selectedCountry) {
-      axios.get("http://localhost:8000/team-players", {
+      api.get("/team-players", {
         params: { country_name: selectedCountry, team_category: teamCategory }
       }).then((res) => setPlayers(res.data));
     }
@@ -42,7 +43,7 @@ const IndividualBowlingTab = () => {
       return;
     }
     setLoading(true);
-    axios.post("http://localhost:8000/player-bowling-analysis", {
+    api.post("/player-bowling-analysis", {
       player_id: selectedPlayer,
       tournaments: selectedTournaments,
       team_category: teamCategory,
@@ -56,6 +57,7 @@ const IndividualBowlingTab = () => {
       setLoading(false);
     });
   };
+
 
   const renderTable = (title, data, headers, rows, totalRow = null) => (
     <>

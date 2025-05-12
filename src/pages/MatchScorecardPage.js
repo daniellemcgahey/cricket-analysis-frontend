@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
+import api from "../api";
 import { Form, Accordion, Spinner, Alert, ButtonGroup, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
@@ -18,7 +18,7 @@ const ScorecardTab = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/tournaments").then(res => {
+    api.get("/tournaments").then(res => {
       setTournaments(res.data);
       setSelectedTournament("");
       setSelectedMatch("");
@@ -26,7 +26,7 @@ const ScorecardTab = () => {
   }, [teamCategory]);
 
   useEffect(() => {
-    axios.get("http://localhost:8000/matches", { params: { teamCategory } }).then(res => {
+    api.get("/matches", { params: { teamCategory } }).then(res => {
       const filtered = selectedTournament
         ? res.data.filter(m => m.tournament === selectedTournament)
         : res.data;
@@ -38,19 +38,19 @@ const ScorecardTab = () => {
   const handleGenerate = () => {
     if (!selectedMatch) return alert("Please select a match");
     setLoading(true);
-    axios.post("http://localhost:8000/match-scorecard", {
-        team_category: teamCategory,
-        tournament: selectedTournament,
-        match_id: selectedMatch,
-      }).then(res => {
-        setScorecard(res.data);
-        setSelectedInningsIndex(0);
-        setLoading(false);
-      
-        console.log("📦 Full Scorecard:", res.data);
-        console.log("📝 Batting Card:", res.data.innings[0]?.batting_card);
-      });
+    api.post("/match-scorecard", {
+      team_category: teamCategory,
+      tournament: selectedTournament,
+      match_id: selectedMatch,
+    }).then(res => {
+      setScorecard(res.data);
+      setSelectedInningsIndex(0);
+      setLoading(false);
+      console.log("📦 Full Scorecard:", res.data);
+      console.log("📝 Batting Card:", res.data.innings[0]?.batting_card);
+    });
   };
+
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>

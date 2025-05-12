@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext , useRef} from "react";
-import axios from "axios";
+import api from "../api";
 import { Accordion, Spinner, Form, Alert } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
@@ -48,23 +48,25 @@ const TrendsTab = () => {
   const [trendMode, setTrendMode] = useState("Batting");
   
   useEffect(() => {
-    axios.get("http://localhost:8000/countries", { params: { teamCategory } })
+    api.get("/countries", { params: { teamCategory } })
       .then(res => setCountries(res.data))
       .catch(err => console.error("❌ Error fetching countries", err));
-  
-    axios.get("http://localhost:8000/tournaments", { params: { teamCategory } })
+
+    api.get("/tournaments", { params: { teamCategory } })
       .then(res => setTournaments(res.data))
       .catch(err => console.error("❌ Error fetching tournaments", err));
   }, [teamCategory]);
+
   
   
   useEffect(() => {
     if (selectedCountry) {
-      axios.get("http://localhost:8000/team-players", {
+      api.get("/team-players", {
         params: { country_name: selectedCountry, team_category: teamCategory }
       }).then(res => setPlayers(res.data));
     }
   }, [selectedCountry, teamCategory]);
+
   
   const handleGenerate = () => {
     if (!selectedPlayer || selectedTournaments.length === 0) {
@@ -78,15 +80,16 @@ const TrendsTab = () => {
     ? "player-trend-analysis"
     : "player-bowling-trend-analysis";
 
-    axios.post(`http://localhost:8000/${endpoint}`, {
-    player_id: selectedPlayer,
-    tournaments: selectedTournaments,
-    team_category: teamCategory,
+    api.post(`/${endpoint}`, {
+      player_id: selectedPlayer,
+      tournaments: selectedTournaments,
+      team_category: teamCategory,
     }).then(res => {
-    console.log("📊 Trend Data:", res.data);
-    setTrendData(res.data);
-    setLoading(false);
+      console.log("📊 Trend Data:", res.data);
+      setTrendData(res.data);
+      setLoading(false);
     });
+
 }
  
   const renderGroupedBarChart = () => {

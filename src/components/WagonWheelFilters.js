@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Accordion, Form } from "react-bootstrap";
-import axios from "axios";
+import api from "../api";
+
 
 const teamCategories = ["Men", "Women", "U19 Men", "U19 Women"];
 const phases = ["Powerplay", "Middle Overs", "Death Overs"];
@@ -15,11 +16,14 @@ const WagonWheelFilters = ({ filters, setFilters }) => {
 
   useEffect(() => {
     if (!filters.teamCategory) return;
-    axios.get("http://localhost:8000/countries", { params: { teamCategory: filters.teamCategory } })
+
+    api.get("/countries", { params: { teamCategory: filters.teamCategory } })
       .then((res) => setCountries(res.data));
-    axios.get("http://localhost:8000/tournaments", { params: { teamCategory: filters.teamCategory } })
+
+    api.get("/tournaments", { params: { teamCategory: filters.teamCategory } })
       .then((res) => setTournaments(res.data));
-    axios.get("http://localhost:8000/matches", { params: { teamCategory: filters.teamCategory } })
+
+    api.get("/matches", { params: { teamCategory: filters.teamCategory } })
       .then((res) => setMatches(res.data));
   }, [filters.teamCategory]);
 
