@@ -125,7 +125,7 @@ const DetailedBattingTab = () => {
     });
     if (closestIndex !== null) {
       const clickedBall = pitchMapData[closestIndex];
-      setSelectedBallId(prev => prev === clickedBall.ball_id ? null : clickedBall.ball_id);
+      setSelectedBallId(clickedBall.ball_id);
     } else {
       setSelectedBallId(null);
     }
