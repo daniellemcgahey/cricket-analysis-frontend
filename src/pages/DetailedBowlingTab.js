@@ -46,7 +46,7 @@ const handleGenerate = () => {
   setLoading(true);
 
   const payload = {
-    player_id: [selectedPlayer],
+    player_ids: [selectedPlayer],
     tournaments: filters.tournaments,
     team_category: filters.teamCategory,
     batting_hand: filters.selectedBattingHands,
