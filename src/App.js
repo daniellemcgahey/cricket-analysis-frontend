@@ -11,7 +11,6 @@ import IndividualTabs from './pages/IndividualTabs';
 import MatchAnalysisTabs from './pages/MatchAnalysisTabs';
 import FutureMatchTabs from './pages/FutureMatchTabs';
 import MatchSimTab from './pages/MatchSimTab';
-import TrainingTab from './pages/TrainingTab';
 
 // Optional: global dark mode context
 import DarkModeContext from './DarkModeContext';
@@ -46,9 +45,6 @@ function AnalysisHub() {
           <Link to="/match-sims">
             <Button variant="info">Match Sim</Button>
           </Link>
-          <Link to="/training">
-            <Button variant="info">Training</Button>
-          </Link>
         </div>
       </div>
     </div>
@@ -69,7 +65,6 @@ function App() {
           <Route path="/match-analysis" element={<MatchAnalysisTabs />} />
           <Route path="/future-matches" element={<FutureMatchTabs />} />
           <Route path="/match-sims" element={<MatchSimTab />} />
-          <Route path="/training" element={<TrainingTab />} />
         </Routes>
       </Router>
     </DarkModeContext.Provider>

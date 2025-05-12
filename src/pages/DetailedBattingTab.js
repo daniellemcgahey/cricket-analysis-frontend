@@ -109,7 +109,7 @@ const DetailedBattingTab = () => {
     }
   };
 
-  const handlePitchMapClick = (e) => {
+    const handlePitchMapClick = (e) => {
     if (!pitchMapRef.current || !projectedBalls.length) return;
     const rect = pitchMapRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -117,26 +117,29 @@ const DetailedBattingTab = () => {
     let minDist = Infinity;
     let closestIndex = null;
     projectedBalls.forEach((ball, idx) => {
-      const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
-      if (dist < 10 && dist < minDist) {
+        const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
+        if (dist < 10 && dist < minDist) {
         minDist = dist;
         closestIndex = idx;
-      }
+        }
     });
     if (closestIndex !== null) {
-      const clickedBall = pitchMapData[closestIndex];
-      setSelectedBallId(clickedBall.ball_id);
+        const clickedBall = pitchMapData[closestIndex];
+        setSelectedBallId(prev =>
+        prev === clickedBall.ball_id ? null : clickedBall.ball_id
+        );
     } else {
-      setSelectedBallId(null);
+        setSelectedBallId(null);
     }
-  };
+    };
 
-  const adjustedWagonWheelData = useMemo(() => {
+
+    const adjustedWagonWheelData = useMemo(() => {
     return wagonWheelData.map((line) => ({
-      ...line,
-      highlight: line.ball_id === selectedBallId
+        ...line,
+        highlight: line.ball_id === selectedBallId
     }));
-  }, [wagonWheelData, selectedBallId]);
+    }, [wagonWheelData, selectedBallId]);
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>

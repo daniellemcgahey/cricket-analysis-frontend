@@ -44,9 +44,10 @@ const IndividualBattingTab = () => {
       return;
     }
     setLoading(true);
+    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
 
     api.post("/player-batting-analysis", {
-      player_id: selectedPlayer,
+      player_ids,
       team_category: filters.teamCategory,
       tournaments: filters.tournaments,
       bowling_arm: filters.selectedBowlingArms,
@@ -84,7 +85,18 @@ const IndividualBattingTab = () => {
                     if (filters.country1) {
                       api.get("/team-players", {
                         params: { country_name: filters.country1, team_category: filters.teamCategory }
-                      }).then((res) => setPlayers(res.data));
+                      }).then((res) => {
+                        if (filters.teamCategory.toLowerCase() === "training") {
+                          const grouped = {};
+                          res.data.forEach((p) => {
+                            if (!grouped[p.name]) grouped[p.name] = [];
+                            grouped[p.name].push(p.id);
+                          });
+                          setPlayers(grouped);
+                        } else {
+                          setPlayers(res.data);
+                        }
+                      });
                     }
                   }}
                   className="mb-3"
@@ -92,16 +104,31 @@ const IndividualBattingTab = () => {
                   Load Players
                 </Button>
 
-                <select
-                  className="form-select"
-                  value={selectedPlayer}
-                  onChange={(e) => setSelectedPlayer(e.target.value)}
-                >
-                  <option value="">Select Player</option>
-                  {players.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                {filters.teamCategory.toLowerCase() === "training" ? (
+                  <select
+                    className="form-select"
+                    value={selectedPlayer}
+                    onChange={(e) => setSelectedPlayer(e.target.value)}
+                  >
+                    <option value="">Select Player</option>
+                    {Object.entries(players).map(([name, ids]) => (
+                      <option key={name} value={ids.join(",")}>
+                        {name} ({ids.length > 1 ? `x${ids.length}` : ""})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <select
+                    className="form-select"
+                    value={String(selectedPlayer)}
+                    onChange={(e) => setSelectedPlayer(parseInt(e.target.value))}
+                  >
+                    <option value="">Select Player</option>
+                    {players.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                )}
 
                 <Button
                   variant="success"
