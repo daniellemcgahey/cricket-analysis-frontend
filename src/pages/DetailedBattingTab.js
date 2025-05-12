@@ -65,7 +65,7 @@ const DetailedBattingTab = () => {
       setPitchMapData(res.data.pitch_map);
       setWagonWheelData(formattedWagonWheel);
       setFullBallData(res.data.full_balls);
-      setSelectedBallIndexes([]);
+      setSelectedBallId(null);
       setLoading(false);
     }).catch(() => {
       setLoading(false);
@@ -110,7 +110,7 @@ const DetailedBattingTab = () => {
                 ball.balls_this_over === line.balls_this_over
       ) !== undefined
     }));
-  }, [wagonWheelData, selectedBallIndexes, fullBallData]);
+  }, [wagonWheelData, selectedBallId, fullBallData]);
   
   
 

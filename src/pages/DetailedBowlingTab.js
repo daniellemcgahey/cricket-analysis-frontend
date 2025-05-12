@@ -113,7 +113,7 @@ const handleGenerate = () => {
         ball => ball.ball_id === selectedBallId && ball.over === line.over && ball.balls_this_over === line.balls_this_over
     ) !== undefined
     }));
-  }, [wagonWheelData, selectedBallIndexes, fullBallData]);
+  }, [wagonWheelData, selectedBallId, fullBallData]);
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
