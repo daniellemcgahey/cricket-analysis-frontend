@@ -90,7 +90,7 @@ const handleGenerate = () => {
     let closestIndex = null;
     projectedBalls.forEach((ball, idx) => {
         const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
-        if (dist < 10 && dist < minDist) {
+        if (dist < 2 && dist < minDist) {
         minDist = dist;
         closestIndex = idx;
         }
