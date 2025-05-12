@@ -100,14 +100,12 @@ const DetailedBattingTab = () => {
   };
 
   
-
   const adjustedWagonWheelData = useMemo(() => {
     return wagonWheelData.map((line) => ({
       ...line,
       highlight: line.ball_id === selectedBallId
-
     }));
-  }, [wagonWheelData, selectedBallId, fullBallData]);
+  }, [wagonWheelData, selectedBallId]);
   
   
 

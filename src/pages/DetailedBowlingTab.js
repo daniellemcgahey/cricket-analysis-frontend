@@ -106,13 +106,12 @@ const handleGenerate = () => {
     };
 
 
-  const adjustedWagonWheelData = useMemo(() => {
-    return wagonWheelData.map(line => ({
-      ...line,
-    highlight: line.ball_id === selectedBallId
-
+    const adjustedWagonWheelData = useMemo(() => {
+    return wagonWheelData.map((line) => ({
+        ...line,
+        highlight: line.ball_id === selectedBallId
     }));
-  }, [wagonWheelData, selectedBallId, fullBallData]);
+    }, [wagonWheelData, selectedBallId]);
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
