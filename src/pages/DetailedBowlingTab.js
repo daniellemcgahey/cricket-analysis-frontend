@@ -90,7 +90,7 @@ const handleGenerate = () => {
     let closestIndex = null;
     projectedBalls.forEach((ball, idx) => {
         const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
-        if (dist < 2 && dist < minDist) {
+        if (dist < 10 && dist < minDist) {
         minDist = dist;
         closestIndex = idx;
         }
@@ -109,9 +109,8 @@ const handleGenerate = () => {
   const adjustedWagonWheelData = useMemo(() => {
     return wagonWheelData.map(line => ({
       ...line,
-    highlight: fullBallData.find(
-        ball => ball.ball_id === selectedBallId && ball.over === line.over && ball.balls_this_over === line.balls_this_over
-    ) !== undefined
+    highlight: line.ball_id === selectedBallId
+
     }));
   }, [wagonWheelData, selectedBallId, fullBallData]);
 
