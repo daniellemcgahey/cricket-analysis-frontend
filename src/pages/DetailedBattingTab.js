@@ -150,14 +150,15 @@ const DetailedBattingTab = () => {
                 </Button>
                 <select
                   className="form-select"
-                  value={selectedPlayer}
-                  onChange={(e) => setSelectedPlayer(e.target.value)}
+                  value={String(selectedPlayer)}
+                  onChange={(e) => setSelectedPlayer(parseInt(e.target.value))}
                 >
                   <option value="">Select Player</option>
                   {players.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
+
 
                 <Button
                   variant="success"
