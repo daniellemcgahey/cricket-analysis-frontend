@@ -33,9 +33,21 @@ const IndividualBattingTab = () => {
     if (filters.country1) {
       api.get("/team-players", {
         params: { country_name: filters.country1, team_category: filters.teamCategory }
-      }).then((res) => setPlayers(res.data));
+      }).then((res) => {
+        if (filters.teamCategory.toLowerCase() === "training") {
+          const grouped = {};
+          res.data.forEach((p) => {
+            if (!grouped[p.name]) grouped[p.name] = [];
+            grouped[p.name].push(p.id);
+          });
+          setPlayers(grouped);
+        } else {
+          setPlayers(res.data);
+        }
+      });
     }
   }, [filters.country1, filters.teamCategory]);
+
 
 
   const handleGenerate = () => {
