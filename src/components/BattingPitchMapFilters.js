@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Accordion, Form } from "react-bootstrap";
 import api from "../api";
 
-const teamCategories = ["Men", "Women", "U19 Men", "U19 Women"];
+const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 const phases = ["Powerplay", "Middle Overs", "Death Overs"];
 const bowlingArms = ["Left", "Right"];
 const bowlerTypes = ["Pace", "Medium", "Off Spin", "Leg Spin"];
