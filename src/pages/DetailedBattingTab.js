@@ -46,8 +46,9 @@ const DetailedBattingTab = () => {
 
     setLoading(true);
 
+    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
     const sharedPayload = {
-      player_ids: [selectedPlayer],
+      player_ids,
       tournaments: filters.tournaments,
       team_category: filters.teamCategory,
       bowling_arm: filters.selectedBowlingArms,
