@@ -13,7 +13,7 @@ const createZones = () => [
 const PITCH_Y_MULTIPLIER = 1.0;
 
 
-const PitchMapChart = ({ data, viewMode, selectedBallIndexes = [], innerRef = null, setProjectedBalls = () => {} }) => {
+const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null, setProjectedBalls = () => {} }) => {
 
   const fallbackCanvasRef = useRef();
   const canvasRef = innerRef ? innerRef : fallbackCanvasRef;
@@ -320,7 +320,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallIndexes = [], innerRef = nu
       else if (runs >= 4) color = "#3498db";
       else color = "#2ecc71";
 
-      if (selectedBallIndexes.includes(index)) {
+      if (ball.ball_id === selectedBallId) {
         color = "purple";
       }
 
@@ -329,7 +329,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallIndexes = [], innerRef = nu
       const [x, y] = projectPoint(flatX, metersToCanvasY, canvasWidth, canvasHeight, topW, bottomW, paddingTop);
 
       ctx.beginPath();
-      ctx.arc(x, y, index === selectedBallIndexes.includes(index) ? 7 : 5, 0, 2 * Math.PI);
+      ctx.arc(x, y, ball.ball_id === selectedBallId ? 7 : 5, 0, 2 * Math.PI);
       ctx.fillStyle = color;
       ctx.fill();
 
@@ -431,7 +431,8 @@ const PitchMapChart = ({ data, viewMode, selectedBallIndexes = [], innerRef = nu
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, [filteredData, viewMode, selectedBallIndexes]);
+}, [filteredData, viewMode, selectedBallId]);
+
 
   if (!Array.isArray(data)) return null;
 

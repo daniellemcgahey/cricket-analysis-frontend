@@ -32,7 +32,7 @@ const DetailedBattingTab = () => {
   const [pitchMapData, setPitchMapData] = useState([]);
   const [wagonWheelData, setWagonWheelData] = useState([]);
   const [fullBallData, setFullBallData] = useState([]);
-  const [selectedBallIndexes, setSelectedBallIndexes] = useState([]);
+  const [selectedBallId, setSelectedBallId] = useState(null);
   const [projectedBalls, setProjectedBalls] = useState([]);
 
   const pitchMapRef = useRef();
@@ -73,16 +73,16 @@ const DetailedBattingTab = () => {
     });
   };
 
-  const handlePitchMapClick = (e) => {
+    const handlePitchMapClick = (e) => {
     if (!pitchMapRef.current || !projectedBalls.length) return;
-  
+
     const rect = pitchMapRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
-  
+
     let minDist = Infinity;
     let closestIndex = null;
-  
+
     projectedBalls.forEach((ball, idx) => {
       const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
       if (dist < 10 && dist < minDist) {
@@ -90,33 +90,25 @@ const DetailedBattingTab = () => {
         closestIndex = idx;
       }
     });
-  
+
     if (closestIndex !== null) {
-      setSelectedBallIndexes(prev => {
-        if (prev.includes(closestIndex)) {
-          // If already selected → deselect it
-          return prev.filter(idx => idx !== closestIndex);
-        } else {
-          // If not selected → add it
-          return [...prev, closestIndex];
-        }
-      });
+      const clickedBall = pitchMapData[closestIndex];
+      setSelectedBallId(prev => prev === clickedBall.ball_id ? null : clickedBall.ball_id);
     } else {
-      // Clicked on empty space → clear selection
-      setSelectedBallIndexes([]);
+      setSelectedBallId(null);
     }
   };
+
   
 
   const adjustedWagonWheelData = useMemo(() => {
     return wagonWheelData.map((line) => ({
       ...line,
-      highlight: selectedBallIndexes.some(
-        (idx) => 
-          fullBallData[idx] &&
-          line.over === fullBallData[idx].over &&
-          line.balls_this_over === fullBallData[idx].balls_this_over
-      )
+      highlight: fullBallData.find(
+        ball => ball.ball_id === selectedBallId &&
+                ball.over === line.over &&
+                ball.balls_this_over === line.balls_this_over
+      ) !== undefined
     }));
   }, [wagonWheelData, selectedBallIndexes, fullBallData]);
   
@@ -192,7 +184,7 @@ const DetailedBattingTab = () => {
                             data={pitchMapData}
                             viewMode="Dots"
                             innerRef={pitchMapRef}
-                            selectedBallIndexes={selectedBallIndexes}
+                            selectedBallId={selectedBallId}
                             setProjectedBalls={setProjectedBalls}
                           />
                         </div>
@@ -208,37 +200,43 @@ const DetailedBattingTab = () => {
                       </div>
                     </div>
 
-                    {selectedBallIndexes.length === 1 && fullBallData[selectedBallIndexes[0]] && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "45%",
-                        left: "64%",
-                        transform: "translate(-50%, -50%)",
-                        backgroundColor: isDarkMode ? "rgba(33, 37, 41, 0.95)" : "rgba(248, 249, 250, 0.95)",
-                        padding: "16px",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-                        zIndex: 1000,
-                        width: "180px",
-                        textAlign: "left",
-                        fontSize: "10px"
-                      }}
-                    >
-                      <h6 className="fw-bold mb-3 text-center">Ball Details</h6>
+                    {selectedBallId && fullBallData.length > 0 && (() => {
+                      const selectedBall = fullBallData.find(ball => ball.ball_id === selectedBallId);
+                      if (!selectedBall) return null;
 
-                      <p className="mb-1"><strong>Bowler:</strong> {fullBallData[selectedBallIndexes[0]].bowler_name}</p>
-                      <p className="mb-1"><strong>Type:</strong> {fullBallData[selectedBallIndexes[0]].bowler_type}</p>
-                      <p className="mb-1"><strong>Arm:</strong> {fullBallData[selectedBallIndexes[0]].bowling_arm}</p>
-                      <p className="mb-1"><strong>Over:</strong> {fullBallData[selectedBallIndexes[0]].over}.{fullBallData[selectedBallIndexes[0]].balls_this_over}</p>
-                      <p className="mb-1"><strong>Shot Type:</strong> {fullBallData[selectedBallIndexes[0]].shot_type}</p>
-                      <p className="mb-1"><strong>Footwork:</strong> {fullBallData[selectedBallIndexes[0]].footwork}</p>
-                      <p className="mb-1"><strong>Shot:</strong> {fullBallData[selectedBallIndexes[0]].shot_selection}</p>
-                      <p className="mb-1"><strong>Delivery:</strong> {fullBallData[selectedBallIndexes[0]].delivery_type}</p>
-                      <p className="mb-1"><strong>Runs:</strong> {fullBallData[selectedBallIndexes[0]].runs}</p>
-                      <p className="mb-0"><strong>Dismissal:</strong> {fullBallData[selectedBallIndexes[0]].dismissal_type ? "Yes" : "No"}</p>
-                    </div>
-                  )}
+                      return (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "45%",
+                            left: "64%",
+                            transform: "translate(-50%, -50%)",
+                            backgroundColor: isDarkMode ? "rgba(33, 37, 41, 0.95)" : "rgba(248, 249, 250, 0.95)",
+                            padding: "16px",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                            zIndex: 1000,
+                            width: "180px",
+                            textAlign: "left",
+                            fontSize: "10px"
+                          }}
+                        >
+                          <h6 className="fw-bold mb-3 text-center">Ball Details</h6>
+
+                          <p className="mb-1"><strong>Bowler:</strong> {selectedBall.bowler_name}</p>
+                          <p className="mb-1"><strong>Type:</strong> {selectedBall.bowler_type}</p>
+                          <p className="mb-1"><strong>Arm:</strong> {selectedBall.bowling_arm}</p>
+                          <p className="mb-1"><strong>Over:</strong> {selectedBall.over}.{selectedBall.balls_this_over}</p>
+                          <p className="mb-1"><strong>Shot Type:</strong> {selectedBall.shot_type}</p>
+                          <p className="mb-1"><strong>Footwork:</strong> {selectedBall.footwork}</p>
+                          <p className="mb-1"><strong>Shot:</strong> {selectedBall.shot_selection}</p>
+                          <p className="mb-1"><strong>Delivery:</strong> {selectedBall.delivery_type}</p>
+                          <p className="mb-1"><strong>Runs:</strong> {selectedBall.runs}</p>
+                          <p className="mb-0"><strong>Dismissal:</strong> {selectedBall.dismissal_type ? "Yes" : "No"}</p>
+                        </div>
+                      );
+                    })()}
+
 
                   </>
                 ) : (

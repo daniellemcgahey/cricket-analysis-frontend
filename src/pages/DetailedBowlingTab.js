@@ -32,7 +32,7 @@ const DetailedBowlingTab = () => {
   const [pitchMapData, setPitchMapData] = useState([]);
   const [wagonWheelData, setWagonWheelData] = useState([]);
   const [fullBallData, setFullBallData] = useState([]);
-  const [selectedBallIndexes, setSelectedBallIndexes] = useState([]);
+  const [selectedBallId, setSelectedBallId] = useState(null);
   const [projectedBalls, setProjectedBalls] = useState([]);
 
   const pitchMapRef = useRef();
@@ -70,7 +70,7 @@ const handleGenerate = () => {
       setPitchMapData(res.data.pitch_map);
       setWagonWheelData(formattedWagonWheel);
       setFullBallData(res.data.full_balls);
-      setSelectedBallIndexes([]);
+      setSelectedBallId(null);
       setLoading(false);
     })
     .catch((err) => {
@@ -81,7 +81,7 @@ const handleGenerate = () => {
 };
 
 
-  const handlePitchMapClick = (e) => {
+    const handlePitchMapClick = (e) => {
     if (!pitchMapRef.current || !projectedBalls.length) return;
     const rect = pitchMapRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -89,27 +89,29 @@ const handleGenerate = () => {
     let minDist = Infinity;
     let closestIndex = null;
     projectedBalls.forEach((ball, idx) => {
-      const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
-      if (dist < 10 && dist < minDist) {
+        const dist = Math.hypot(clickX - ball.x, clickY - ball.y);
+        if (dist < 10 && dist < minDist) {
         minDist = dist;
         closestIndex = idx;
-      }
+        }
     });
     if (closestIndex !== null) {
-      setSelectedBallIndexes(prev =>
-        prev.includes(closestIndex) ? prev.filter(i => i !== closestIndex) : [...prev, closestIndex]
-      );
+        const clickedBall = pitchMapData[closestIndex];
+        setSelectedBallId(prev =>
+        prev === clickedBall.ball_id ? null : clickedBall.ball_id
+        );
     } else {
-      setSelectedBallIndexes([]);
+        setSelectedBallId(null);
     }
-  };
+    };
+
 
   const adjustedWagonWheelData = useMemo(() => {
     return wagonWheelData.map(line => ({
       ...line,
-      highlight: selectedBallIndexes.some(
-        idx => fullBallData[idx] && line.over === fullBallData[idx].over && line.balls_this_over === fullBallData[idx].balls_this_over
-      )
+    highlight: fullBallData.find(
+        ball => ball.ball_id === selectedBallId && ball.over === line.over && ball.balls_this_over === line.balls_this_over
+    ) !== undefined
     }));
   }, [wagonWheelData, selectedBallIndexes, fullBallData]);
 
@@ -172,7 +174,7 @@ const handleGenerate = () => {
                             data={pitchMapData}
                             viewMode="Dots"
                             innerRef={pitchMapRef}
-                            selectedBallIndexes={selectedBallIndexes}
+                            selectedBallId={selectedBallId}
                             setProjectedBalls={setProjectedBalls}
                             />
                         </div>
@@ -187,7 +189,11 @@ const handleGenerate = () => {
                     </div>
 
                     {/* Ball Details Popup */}
-                    {selectedBallIndexes.length === 1 && fullBallData[selectedBallIndexes[0]] && (
+                    {selectedBallId && fullBallData.length > 0 && (() => {
+                    const selectedBall = fullBallData.find(ball => ball.ball_id === selectedBallId);
+                    if (!selectedBall) return null;
+
+                    return (
                         <div
                         style={{
                             position: "absolute",
@@ -205,18 +211,20 @@ const handleGenerate = () => {
                         }}
                         >
                         <h6 className="fw-bold mb-3 text-center">Ball Details</h6>
-                        <p className="mb-1"><strong>Bowler:</strong> {fullBallData[selectedBallIndexes[0]].bowler_name}</p>
-                        <p className="mb-1"><strong>Type:</strong> {fullBallData[selectedBallIndexes[0]].bowler_type}</p>
-                        <p className="mb-1"><strong>Arm:</strong> {fullBallData[selectedBallIndexes[0]].bowling_arm}</p>
-                        <p className="mb-1"><strong>Over:</strong> {fullBallData[selectedBallIndexes[0]].over}.{fullBallData[selectedBallIndexes[0]].balls_this_over}</p>
-                        <p className="mb-1"><strong>Shot Type:</strong> {fullBallData[selectedBallIndexes[0]].shot_type}</p>
-                        <p className="mb-1"><strong>Footwork:</strong> {fullBallData[selectedBallIndexes[0]].footwork}</p>
-                        <p className="mb-1"><strong>Shot:</strong> {fullBallData[selectedBallIndexes[0]].shot_selection}</p>
-                        <p className="mb-1"><strong>Delivery:</strong> {fullBallData[selectedBallIndexes[0]].delivery_type}</p>
-                        <p className="mb-1"><strong>Runs:</strong> {fullBallData[selectedBallIndexes[0]].runs}</p>
-                        <p className="mb-0"><strong>Dismissal:</strong> {fullBallData[selectedBallIndexes[0]].dismissal_type ? "Yes" : "No"}</p>
+                        <p className="mb-1"><strong>Bowler:</strong> {selectedBall.bowler_name}</p>
+                        <p className="mb-1"><strong>Type:</strong> {selectedBall.bowler_type}</p>
+                        <p className="mb-1"><strong>Arm:</strong> {selectedBall.bowling_arm}</p>
+                        <p className="mb-1"><strong>Over:</strong> {selectedBall.over}.{selectedBall.balls_this_over}</p>
+                        <p className="mb-1"><strong>Shot Type:</strong> {selectedBall.shot_type}</p>
+                        <p className="mb-1"><strong>Footwork:</strong> {selectedBall.footwork}</p>
+                        <p className="mb-1"><strong>Shot:</strong> {selectedBall.shot_selection}</p>
+                        <p className="mb-1"><strong>Delivery:</strong> {selectedBall.delivery_type}</p>
+                        <p className="mb-1"><strong>Runs:</strong> {selectedBall.runs}</p>
+                        <p className="mb-0"><strong>Dismissal:</strong> {selectedBall.dismissal_type ? "Yes" : "No"}</p>
                         </div>
-                    )}
+                    );
+                    })()}
+
                     </div>
                 ) : (
                     <Alert variant="info">Please generate a report to view Pitch Map and Wagon Wheel.</Alert>
