@@ -82,9 +82,17 @@ const TrainingBattingTab = () => {
                   variant="primary"
                   onClick={() => {
                     if (filters.country1) {
-                      api.get("/team-players", {
-                        params: { country_name: filters.country1, team_category: filters.teamCategory }
-                      }).then((res) => setPlayers(res.data));
+                        api.get("/team-players", {
+                            params: { country_name: filters.country1, team_category: filters.teamCategory }
+                          }).then((res) => {
+                            const grouped = {};
+                            res.data.forEach((p) => {
+                              if (!grouped[p.name]) grouped[p.name] = [];
+                              grouped[p.name].push(p.id);
+                            });
+                          
+                            setPlayers(grouped);
+                          });
                     }
                   }}
                   className="mb-3"
