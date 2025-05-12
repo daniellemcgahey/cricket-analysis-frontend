@@ -159,34 +159,70 @@ const handleGenerate = () => {
 
           <div className="col-md-8">
             {loading ? (
-              <Spinner animation="border" />
-            ) : (
-              pitchMapData.length > 0 && wagonWheelData.length > 0 ? (
-                <div className="row">
-                  <div className="col-lg-6 col-12 mb-5" onClick={handlePitchMapClick} style={{ cursor: "pointer" }}>
-                    <div style={{ width: "100%", maxWidth: "600px", height: "800px", padding: "10px", margin: "0 auto" }}>
-                      <h5 className="text-center mb-2">Pitch Map (Balls Bowled)</h5>
-                      <PitchMapChart
-                        data={pitchMapData}
-                        viewMode="Dots"
-                        innerRef={pitchMapRef}
-                        selectedBallIndexes={selectedBallIndexes}
-                        setProjectedBalls={setProjectedBalls}
-                      />
+                <Spinner animation="border" />
+                ) : (
+                pitchMapData.length > 0 && wagonWheelData.length > 0 ? (
+                    <div style={{ position: "relative" }}>
+                    <div className="row">
+                        {/* Pitch map + Wagon Wheel */}
+                        <div className="col-lg-6 col-12 mb-5" onClick={handlePitchMapClick} style={{ cursor: "pointer" }}>
+                        <div style={{ width: "100%", maxWidth: "600px", height: "800px", padding: "10px", margin: "0 auto" }}>
+                            <h5 className="text-center mb-2">Pitch Map (Balls Bowled)</h5>
+                            <PitchMapChart
+                            data={pitchMapData}
+                            viewMode="Dots"
+                            innerRef={pitchMapRef}
+                            selectedBallIndexes={selectedBallIndexes}
+                            setProjectedBalls={setProjectedBalls}
+                            />
+                        </div>
+                        </div>
+                        <div className="col-lg-6 col-12 mb-5">
+                        <h5 className="text-center mb-3">Wagon Wheel (Runs Conceded)</h5>
+                        <WagonWheelChart
+                            data={adjustedWagonWheelData}
+                            perspective="Lines"
+                        />
+                        </div>
                     </div>
-                  </div>
-                  <div className="col-lg-6 col-12 mb-5">
-                    <h5 className="text-center mb-3">Wagon Wheel (Runs Conceded)</h5>
-                    <WagonWheelChart
-                      data={adjustedWagonWheelData}
-                      perspective="Lines"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <Alert variant="info">Please generate a report to view Pitch Map and Wagon Wheel.</Alert>
-              )
-            )}
+
+                    {/* Ball Details Popup */}
+                    {selectedBallIndexes.length === 1 && fullBallData[selectedBallIndexes[0]] && (
+                        <div
+                        style={{
+                            position: "absolute",
+                            top: "45%",
+                            left: "64%",
+                            transform: "translate(-50%, -50%)",
+                            backgroundColor: isDarkMode ? "rgba(33, 37, 41, 0.95)" : "rgba(248, 249, 250, 0.95)",
+                            padding: "16px",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+                            zIndex: 1000,
+                            width: "180px",
+                            textAlign: "left",
+                            fontSize: "10px"
+                        }}
+                        >
+                        <h6 className="fw-bold mb-3 text-center">Ball Details</h6>
+                        <p className="mb-1"><strong>Bowler:</strong> {fullBallData[selectedBallIndexes[0]].bowler_name}</p>
+                        <p className="mb-1"><strong>Type:</strong> {fullBallData[selectedBallIndexes[0]].bowler_type}</p>
+                        <p className="mb-1"><strong>Arm:</strong> {fullBallData[selectedBallIndexes[0]].bowling_arm}</p>
+                        <p className="mb-1"><strong>Over:</strong> {fullBallData[selectedBallIndexes[0]].over}.{fullBallData[selectedBallIndexes[0]].balls_this_over}</p>
+                        <p className="mb-1"><strong>Shot Type:</strong> {fullBallData[selectedBallIndexes[0]].shot_type}</p>
+                        <p className="mb-1"><strong>Footwork:</strong> {fullBallData[selectedBallIndexes[0]].footwork}</p>
+                        <p className="mb-1"><strong>Shot:</strong> {fullBallData[selectedBallIndexes[0]].shot_selection}</p>
+                        <p className="mb-1"><strong>Delivery:</strong> {fullBallData[selectedBallIndexes[0]].delivery_type}</p>
+                        <p className="mb-1"><strong>Runs:</strong> {fullBallData[selectedBallIndexes[0]].runs}</p>
+                        <p className="mb-0"><strong>Dismissal:</strong> {fullBallData[selectedBallIndexes[0]].dismissal_type ? "Yes" : "No"}</p>
+                        </div>
+                    )}
+                    </div>
+                ) : (
+                    <Alert variant="info">Please generate a report to view Pitch Map and Wagon Wheel.</Alert>
+                )
+                )}
+
           </div>
         </div>
       </div>
