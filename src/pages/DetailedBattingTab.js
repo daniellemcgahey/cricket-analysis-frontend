@@ -1,5 +1,5 @@
 import React, { useState, useContext, useRef , useMemo} from "react";
-import axios from "axios";
+import api from "../api";
 import { Card, Spinner, Alert, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import PitchMapChart from "./PitchMapChart";
@@ -45,7 +45,7 @@ const DetailedBattingTab = () => {
 
     setLoading(true);
 
-    axios.post("http://localhost:8000/player-detailed-batting", {
+    api.post("/player-detailed-batting", {
       player_id: selectedPlayer,
       tournaments: filters.tournaments,
       team_category: filters.teamCategory,

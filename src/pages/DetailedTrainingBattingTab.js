@@ -1,5 +1,5 @@
 import React, { useState, useContext, useRef , useMemo} from "react";
-import axios from "axios";
+import api from "../api";
 import { Card, Spinner, Alert, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import PitchMapChart from "./PitchMapChart";
@@ -59,9 +59,10 @@ const DetailedTrainingBattingTab = () => {
     };
   
     Promise.all([
-      axios.post("http://localhost:8000/player-detailed-batting", sharedPayload),
-      axios.post("http://localhost:8000/player-intent-summary", sharedPayload)
+      api.post("/player-detailed-batting", sharedPayload),
+      api.post("/player-intent-summary", sharedPayload)
     ])
+
       .then(([battingRes, intentRes]) => {
         const formattedWagonWheel = battingRes.data.wagon_wheel.map(shot => ({
           x: shot.shot_x,

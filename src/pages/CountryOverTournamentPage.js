@@ -1,6 +1,6 @@
 // src/pages/CountryComparisonPage.jsx
 import React, { useEffect, useState, useContext } from "react";
-import axios from "axios";
+import api from "../api"; // ✅ replaces axios
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import ComparisonTable from "./ComparisonTable";
@@ -9,17 +9,13 @@ import AdvancedFilters from "./AdvancedFilters";
 import DarkModeContext from '../DarkModeContext';
 import { Accordion } from "react-bootstrap";
 
-
-
 const CountryOverTournamentPage = () => {
-  const { isDarkMode } = useContext(DarkModeContext);  // ✅ Global dark mode
+  const { isDarkMode } = useContext(DarkModeContext);
 
-  // Basic filter state for countries
   const [country, setCountry1] = useState("");
   const [countries, setCountries] = useState([]);
   const [teamCategory, setTeamCategory] = useState("Women");
 
-  // Advanced Filters
   const [tournamentOptions, setTournamentOptions] = useState([]);
   const [selectedTournaments, setSelectedTournaments] = useState([]);
   const [tournament1, tournament2] = selectedTournaments;
@@ -27,29 +23,24 @@ const CountryOverTournamentPage = () => {
   const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Spin"]);
   const [selectedBowlingArms, setSelectedBowlingArms] = useState(["Left", "Right"]);
 
-  // Stats to display
   const [selectedStats, setSelectedStats] = useState([]);
-
-  // Backend response
   const [statsByTournament, setStatsByTournament] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load countries and tournaments on mount
   useEffect(() => {
     if (!teamCategory) return;
-  
-    axios.get("http://localhost:8000/countries", {
+
+    api.get("/countries", {
       params: { teamCategory }
     }).then((res) => setCountries(res.data));
-  
-    axios.get("http://localhost:8000/tournaments", {
+
+    api.get("/tournaments", {
       params: { teamCategory }
     }).then((res) => {
       setTournamentOptions(res.data);
       setSelectedTournaments(res.data);
     });
   }, [teamCategory]);
-
 
   const handleFetchStats = async () => {
     if (!selectedStats.length) {
@@ -69,7 +60,7 @@ const CountryOverTournamentPage = () => {
 
     try {
       setLoading(true);
-      const res = await axios.post("http://localhost:8000/compare_over_tournament", payload);
+      const res = await api.post("/compare_over_tournament", payload);
       setStatsByTournament(res.data.stats_by_tournament);
     } catch (err) {
       console.error("Error fetching stats:", err.response?.data || err.message);
@@ -77,6 +68,7 @@ const CountryOverTournamentPage = () => {
       setLoading(false);
     }
   };
+
 
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
