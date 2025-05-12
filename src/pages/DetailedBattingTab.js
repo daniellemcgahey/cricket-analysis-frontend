@@ -38,6 +38,28 @@ const DetailedBattingTab = () => {
 
   const pitchMapRef = useRef();
 
+  useEffect(() => {
+  // Reset all relevant state when team category changes to prevent stale values
+    setSelectedPlayer("");
+    setPlayers([]);
+    setPitchMapData([]);
+    setWagonWheelData([]);
+    setFullBallData([]);
+    setSelectedBallId(null);
+    setProjectedBalls([]);
+    setIntentSummary(null);
+
+    // Also clear country selection and tournaments
+    setFilters((prev) => ({
+      ...prev,
+      country1: "",
+      country2: "",
+      tournaments: [],
+      selectedMatches: [],
+    }));
+  }, [filters.teamCategory]);
+
+
   const handleGenerate = () => {
     if (!selectedPlayer) {
       alert("Please select a player.");
