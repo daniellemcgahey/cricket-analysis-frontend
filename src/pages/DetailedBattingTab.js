@@ -44,9 +44,20 @@ const DetailedBattingTab = () => {
       return;
     }
 
-    setLoading(true);
+    let player_ids = [];
 
-    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
+    if (filters.teamCategory.toLowerCase() === "training") {
+      player_ids = selectedPlayer.split(",").map(id => parseInt(id)).filter(id => !isNaN(id));
+    } else {
+      const parsed = parseInt(selectedPlayer);
+      if (!isNaN(parsed)) player_ids = [parsed];
+    }
+
+    if (player_ids.length === 0) {
+      alert("Player ID(s) could not be parsed.");
+      return;
+    }
+
     const sharedPayload = {
       player_ids,
       tournaments: filters.tournaments,
