@@ -1,0 +1,14 @@
+/* Headings have personality */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Charm', cursive !important;
+}
+
+/* Body text stays clean and crisp */
+body, p, span, div, button, input, select, label, a {
+  font-family: 'Inter', sans-serif !important;  /* or 'Roboto', 'Lato', etc. */
+}
+
+/* Code block styling remains */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
