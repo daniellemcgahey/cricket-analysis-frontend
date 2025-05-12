@@ -39,7 +39,7 @@ const DetailedBattingTab = () => {
   const pitchMapRef = useRef();
 
   useEffect(() => {
-  // Reset all relevant state when team category changes to prevent stale values
+    // Reset all dependent state on teamCategory change
     setSelectedPlayer("");
     setPlayers([]);
     setPitchMapData([]);
@@ -49,7 +49,6 @@ const DetailedBattingTab = () => {
     setProjectedBalls([]);
     setIntentSummary(null);
 
-    // Also clear country selection and tournaments
     setFilters((prev) => ({
       ...prev,
       country1: "",
@@ -57,8 +56,7 @@ const DetailedBattingTab = () => {
       tournaments: [],
       selectedMatches: [],
     }));
-  }, [filters.teamCategory]);
-
+  }, [filters.teamCategory])
 
   const handleGenerate = () => {
     if (!selectedPlayer) {
@@ -68,7 +66,20 @@ const DetailedBattingTab = () => {
 
     setLoading(true);
 
-    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
+    let player_ids = [];
+
+    if (filters.teamCategory.toLowerCase() === "training") {
+      player_ids = selectedPlayer.split(",").map(id => parseInt(id)).filter(id => !isNaN(id));
+    } else {
+      const parsed = parseInt(selectedPlayer);
+      if (!isNaN(parsed)) player_ids = [parsed];
+    }
+
+    if (player_ids.length === 0) {
+      alert("Invalid player selection.");
+      return;
+    }
+
     const sharedPayload = {
       player_ids,
       tournaments: filters.tournaments,
