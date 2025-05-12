@@ -18,7 +18,7 @@ const DetailedBattingTab = () => {
     tournaments: [],
     selectedPhases: ["Powerplay", "Middle Overs", "Death Overs"],
     selectedBowlingArms: ["Left", "Right"],
-    selectedBowlerTypes: ["Pace", "Medium", "Spin"],
+    selectedBowlerTypes: ["Pace", "Medium", "Leg Spin", "Off Spin"],
     selectedBattingHands: ["Left", "Right"],
     selectedLengths: ["Full Toss", "Yorker", "Full", "Good", "Short"],
     allMatchesSelected: true,
