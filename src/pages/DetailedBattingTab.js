@@ -174,6 +174,10 @@ const DetailedBattingTab = () => {
     }));
     }, [wagonWheelData, selectedBallId]);
 
+    const isTraining = filters.teamCategory.toLowerCase() === "training";
+  const isGroupedPlayers = players && typeof players === "object" && !Array.isArray(players);
+
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -208,31 +212,35 @@ const DetailedBattingTab = () => {
                 >
                   Load Players
                 </Button>
-                {filters.teamCategory.toLowerCase() === "training" ? (
-                  <select
-                    className="form-select"
-                    value={selectedPlayer}
-                    onChange={(e) => setSelectedPlayer(e.target.value)}
-                  >
-                    <option value="">Select Player</option>
-                    {Object.entries(players).map(([name, ids]) => (
-                      <option key={name} value={ids.join(",")}>
-                        {name} ({ids.length > 1 ? `x${ids.length}` : ""})
+                {isTraining && isGroupedPlayers ? (
+                <select
+                  className="form-select"
+                  value={selectedPlayer}
+                  onChange={(e) => setSelectedPlayer(e.target.value)}
+                >
+                  <option value="">Select Player</option>
+                  {Object.entries(players).map(([name, ids]) => (
+                    <option key={name} value={ids.join(",")}>
+                      {name} ({ids.length > 1 ? `x${ids.length}` : ""})
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  className="form-select"
+                  value={String(selectedPlayer)}
+                  onChange={(e) => setSelectedPlayer(parseInt(e.target.value))}
+                >
+                  <option value="">Select Player</option>
+                  {Array.isArray(players) &&
+                    players.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
                       </option>
                     ))}
-                  </select>
-                ) : (
-                  <select
-                    className="form-select"
-                    value={String(selectedPlayer)}
-                    onChange={(e) => setSelectedPlayer(parseInt(e.target.value))}
-                  >
-                    <option value="">Select Player</option>
-                    {players.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                )}
+                </select>
+              )}
+
                 <Button
                   variant="success"
                   onClick={handleGenerate}
