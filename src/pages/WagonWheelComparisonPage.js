@@ -14,7 +14,7 @@ const WagonWheelComparisonPage = () => {
     selectedPhases: ["Powerplay", "Middle Overs", "Death Overs"],
     selectedMatches: [],
     allMatchesSelected: true,
-    selectedBowlerTypes: ["Pace", "Medium", "Spin"],
+    selectedBowlerTypes: ["Pace", "Medium", "Off Spin", "Leg Spin"],
     selectedBowlingArms: ["Left", "Right"],
     selectedBattingHands: ["Left", "Right"],
     teamCategory: "Women",
