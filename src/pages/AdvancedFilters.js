@@ -12,14 +12,13 @@ const AdvancedFilters = ({
 }) => {
   // Define your options for each category.
   const phaseOptions = ["Powerplay", "Middle Overs", "Death Overs"];
-  // Remove "Pace+Medium" and pre-select "Pace", "Medium", and "Spin".
-  const bowlerTypeOptions = ["Pace", "Medium", "Spin"];
+  const bowlerTypeOptions = ["Pace", "Medium", "Leg Spin", "Off Spin"];
   const bowlingArmOptions = ["Left", "Right"];
 
   // Use default selections where desired.
   const [selectedTournaments, setSelectedTournaments] = useState([]);
   const [selectedPhases, setSelectedPhases] = useState(phaseOptions); // All phases by default.
-  const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Spin"]); // Pre-selected.
+  const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Leg Spin", "Off Spin"]); // Pre-selected.
   const [selectedBowlingArms, setSelectedBowlingArms] = useState(bowlingArmOptions); // Both by default.
 
   // Generic handler for checkbox changes.
