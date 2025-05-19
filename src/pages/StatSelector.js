@@ -6,7 +6,7 @@ const StatSelector = ({ onSelectionChange }) => {
   const battingStats = [
     "Innings", "Runs Scored", "Balls Faced", "Strike Rate", "Batters Average",
     "Dot Balls Faced", "Scoring Shot %", "1s", "2s", "3s", "4s", "6s",
-    "25+ Partnerships", "Dismissals", "Attacking Shot %", "Defensive Shot %", "Rotation Shot %"
+    "25+ Partnerships", "Dismissals", "Attacking Shot %", "Defensive Shot %", "Rotation Shot %", "Avg Intent Score"
   ];
 
   const bowlingStats = [

@@ -25,7 +25,7 @@ const isStatUnavailable = (value) => {
 const battingStats = new Set([
   "Innings", "Runs Scored", "Balls Faced", "Dot Balls Faced", "1s", "2s", "3s",
   "4s", "6s", "Dismissals", "Strike Rate", "Scoring Shot %", "Batters Average",
-  "Attacking Shot %", "Defensive Shot %", "Rotation Shot %"
+  "Attacking Shot %", "Defensive Shot %", "Rotation Shot %", "Avg Intent Score"
 ]);
 
 const bowlingStats = new Set([
