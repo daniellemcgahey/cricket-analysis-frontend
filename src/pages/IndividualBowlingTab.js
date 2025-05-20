@@ -318,16 +318,6 @@ const IndividualBowlingTab = () => {
                     </Accordion.Body>
                 </Accordion.Item>
 
-                <Accordion.Item eventKey="4" className={isDarkMode ? "bg-dark text-white" : ""}>
-                <Accordion.Header>Pitch Map</Accordion.Header>
-                <Accordion.Body>
-                    {bowlingPitchMap?.length > 0 ? (
-                    <PitchMapChart data={bowlingPitchMap} viewMode="Dots" />
-                    ) : (
-                    <Alert variant="info">No pitch map data available.</Alert>
-                    )}
-                </Accordion.Body>
-                </Accordion.Item>
                 <Accordion.Item eventKey="5" className={isDarkMode ? "bg-dark text-white" : ""}>
                 <Accordion.Header>Actual vs Expected Performance</Accordion.Header>
                 <Accordion.Body>
