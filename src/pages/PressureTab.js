@@ -111,7 +111,7 @@ const PressureTab = () => {
                     value={teamCategory}
                     onChange={(e) => setTeamCategory(e.target.value)}
                   >
-                    {["Men", "Women", "U19 Men", "U19 Women"].map((category) => (
+                    {["Men", "Women", "U19 Men", "U19 Women", "Training"].map((category) => (
                       <option key={category} value={category}>
                         {category}
                       </option>
