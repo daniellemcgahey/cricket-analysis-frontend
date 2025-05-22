@@ -65,7 +65,7 @@ const ScorecardTab = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>Team Category</Form.Label>
                     <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
-                      {["Men", "Women", "U19 Men", "U19 Women"].map(cat => (
+                      {["Men", "Women", "U19 Men", "U19 Women", "Training"].map(cat => (
                         <option key={cat}>{cat}</option>
                       ))}
                     </Form.Select>
