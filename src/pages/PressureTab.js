@@ -93,13 +93,13 @@ const PressureTab = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
-      <div className="container my-4">
+      <div className="container-fluid my-4">
         <BackButton isDarkMode={isDarkMode} />
         <h2 className="text-center fw-bold mb-4">Pressure Analysis</h2>
 
         <div className="row">
           {/* Accordion Filters Column */}
-          <div className="col-md-4">
+          <div className="col-md-4" style={{ marginLeft: "0px" }}>
             <Accordion defaultActiveKey={null} className="mb-4">
               {/* TEAM CATEGORY FILTER */}
               <Accordion.Item eventKey="0">

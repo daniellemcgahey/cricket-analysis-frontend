@@ -65,10 +65,10 @@ const WagonWheelComparisonPage = () => {
   };
 
   return (
-    <div className="container py-4">
+    <div className="container-fluid py-4">
       <div className="row">
         {/* Filters */}
-        <div className="col-md-4">
+        <div className="col-md-4" style={{ marginLeft: "0px" }}>
           <WagonWheelStyleToggle selected={wagonWheelStyle} onChange={setWagonWheelStyle} />
           <WagonWheelFilters filters={filters} setFilters={setFilters} />
           <Button className="w-100 mt-3" onClick={handleGenerate}>

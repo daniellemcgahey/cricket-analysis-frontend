@@ -54,10 +54,10 @@ const ScorecardTab = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
-      <div className="container py-4">
+      <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
         <div className="row">
-          <div className="col-md-4">
+          <div className="col-md-3" style={{ marginLeft: "0px" }}>
             <Accordion defaultActiveKey="0">
               <Accordion.Item eventKey="0">
                 <Accordion.Header>Filters</Accordion.Header>
