@@ -132,10 +132,10 @@ const PartnershipStatPage = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
-      <div className="container py-4">
+      <div className="container-fluid py-4">
         <div className="row">
           {/* Filters */}
-          <div className="col-md-3">
+          <div className="col-md-3" style={{ marginLeft: "0px" }}>
             <Card className={isDarkMode ? "bg-dark text-white" : ""}>
               <Card.Body>
                 <Accordion defaultActiveKey="0">
