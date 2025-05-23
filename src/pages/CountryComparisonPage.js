@@ -131,7 +131,7 @@ const CountryComparisonPage = () => {
                     value={teamCategory}
                     onChange={(e) => setTeamCategory(e.target.value)}
                   >
-                    {["Men", "Women", "U19 Men", "U19 Women"].map((cat) => (
+                    {["Men", "Women", "U19 Men", "U19 Women", "Training"].map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
