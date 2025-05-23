@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "../api"; // your axios or fetch wrapper
+import api from "../api";
 import DarkModeContext from '../DarkModeContext';
 
 const MatchReportPage = () => {
@@ -26,8 +26,7 @@ const MatchReportPage = () => {
   const [teamsRight, setTeamsRight] = useState([]);
   const [selectedTeamRight, setSelectedTeamRight] = useState(null);
 
-  // ===== LEFT SIDE LOGIC =====
-
+  // LEFT SIDE LOGIC
   useEffect(() => {
     if (!selectedCategoryLeft) {
       setTournamentsLeft([]);
@@ -97,12 +96,6 @@ const MatchReportPage = () => {
   }, [selectedMatchLeft, matchesLeft]);
 
   useEffect(() => {
-    if (selectedTeamLeft && !teamsLeft.find(t => t.id === selectedTeamLeft.id)) {
-      setSelectedTeamLeft(null);
-    }
-  }, [teamsLeft]);
-
-  useEffect(() => {
     if (!selectedTeamLeft) {
       setPlayers([]);
       setSelectedPlayer(null);
@@ -113,14 +106,7 @@ const MatchReportPage = () => {
       .catch(console.error);
   }, [selectedTeamLeft]);
 
-  useEffect(() => {
-    if (selectedPlayer && !players.find(p => p.id === selectedPlayer.id)) {
-      setSelectedPlayer(null);
-    }
-  }, [players]);
-
-  // ===== RIGHT SIDE LOGIC =====
-
+  // RIGHT SIDE LOGIC
   useEffect(() => {
     if (!selectedCategoryRight) {
       setTournamentsRight([]);
@@ -177,20 +163,14 @@ const MatchReportPage = () => {
     }
   }, [selectedMatchRight, matchesRight]);
 
-  useEffect(() => {
-    if (selectedTeamRight && !teamsRight.find(t => t.id === selectedTeamRight.id)) {
-      setSelectedTeamRight(null);
-    }
-  }, [teamsRight]);
-
-  // Generate Player Report PDF
+  // Generate Player Report
   const handleGeneratePlayerReport = () => {
     if (!selectedMatchLeft || !selectedPlayer) return;
-    const url = `${api.defaults.baseURL}/match-report/${selectedMatchLeft}/player/${selectedPlayer.id}`;
+    const url = `${api.defaults.baseURL}/match-report/${selectedMatchLeft}/player/${selectedPlayer}`;
     window.open(url, "_blank");
   };
 
-  // Generate Team Report PDF
+  // Generate Team Report
   const handleGenerateTeamReport = () => {
     if (!selectedMatchRight || !selectedTeamRight) return;
     const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchRight}/${selectedTeamRight.id}`;
@@ -257,18 +237,12 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamLeft ? selectedTeamLeft.id : ""}
-              onChange={e => {
-                const id = parseInt(e.target.value);
-                const team = teamsLeft.find(t => t.id === id);
-                setSelectedTeamLeft(team || null);
-              }}
+              value={selectedTeamLeft || ""}
+              onChange={e => setSelectedTeamLeft(e.target.value)}
               disabled={!selectedMatchLeft}
             >
               <option value="">-- Select Team --</option>
-              {teamsLeft.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
+              {teamsLeft.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 
@@ -277,12 +251,8 @@ const MatchReportPage = () => {
             <label className="form-label">Select Player</label>
             <select
               className="form-select"
-              value={selectedPlayer ? selectedPlayer.id : ""}
-              onChange={e => {
-                const id = parseInt(e.target.value);
-                const player = players.find(p => p.id === id);
-                setSelectedPlayer(player || null);
-              }}
+              value={selectedPlayer || ""}
+              onChange={e => setSelectedPlayer(parseInt(e.target.value))}
               disabled={!selectedTeamLeft}
             >
               <option value="">-- Select Player --</option>
@@ -354,18 +324,12 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamRight ? selectedTeamRight.id : ""}
-              onChange={e => {
-                const id = parseInt(e.target.value);
-                const team = teamsRight.find(t => t.id === id);
-                setSelectedTeamRight(team || null);
-              }}
+              value={selectedTeamRight || ""}
+              onChange={e => setSelectedTeamRight(e.target.value)}
               disabled={!selectedMatchRight}
             >
               <option value="">-- Select Team --</option>
-              {teamsRight.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
+              {teamsRight.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 
