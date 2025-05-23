@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "../api";
+import api from "../api"; // your axios or fetch wrapper
 import DarkModeContext from '../DarkModeContext';
 
 const MatchReportPage = () => {
@@ -26,7 +26,8 @@ const MatchReportPage = () => {
   const [teamsRight, setTeamsRight] = useState([]);
   const [selectedTeamRight, setSelectedTeamRight] = useState(null);
 
-  // LEFT SIDE LOGIC
+  // ===== LEFT SIDE LOGIC =====
+
   useEffect(() => {
     if (!selectedCategoryLeft) {
       setTournamentsLeft([]);
@@ -106,7 +107,8 @@ const MatchReportPage = () => {
       .catch(console.error);
   }, [selectedTeamLeft]);
 
-  // RIGHT SIDE LOGIC
+  // ===== RIGHT SIDE LOGIC =====
+
   useEffect(() => {
     if (!selectedCategoryRight) {
       setTournamentsRight([]);
@@ -163,14 +165,14 @@ const MatchReportPage = () => {
     }
   }, [selectedMatchRight, matchesRight]);
 
-  // Generate Player Report
+  // Generate Player Report PDF
   const handleGeneratePlayerReport = () => {
     if (!selectedMatchLeft || !selectedPlayer) return;
     const url = `${api.defaults.baseURL}/match-report/${selectedMatchLeft}/player/${selectedPlayer}`;
     window.open(url, "_blank");
   };
 
-  // Generate Team Report
+  // Generate Team Report PDF
   const handleGenerateTeamReport = () => {
     if (!selectedMatchRight || !selectedTeamRight) return;
     const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchRight}/${selectedTeamRight.id}`;
@@ -237,12 +239,14 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamLeft || ""}
+              value={selectedTeamLeft ? selectedTeamLeft : ""}
               onChange={e => setSelectedTeamLeft(e.target.value)}
               disabled={!selectedMatchLeft}
             >
               <option value="">-- Select Team --</option>
-              {teamsLeft.map(t => <option key={t} value={t}>{t}</option>)}
+              {teamsLeft.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
           </div>
 
@@ -324,12 +328,14 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamRight || ""}
+              value={selectedTeamRight ? selectedTeamRight : ""}
               onChange={e => setSelectedTeamRight(e.target.value)}
               disabled={!selectedMatchRight}
             >
               <option value="">-- Select Team --</option>
-              {teamsRight.map(t => <option key={t} value={t}>{t}</option>)}
+              {teamsRight.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
             </select>
           </div>
 
