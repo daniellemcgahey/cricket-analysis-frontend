@@ -56,7 +56,7 @@ const CountryComparisonPage = () => {
   }, [teamCategory]);
 
   useEffect(() => {
-    if (!country || !selectedTournaments.length) {
+    if (!country1 || !selectedTournaments.length) {
       setMatchOptions([]);
       setSelectedMatches([]);
       setSelectAllMatches(true);
@@ -65,7 +65,7 @@ const CountryComparisonPage = () => {
 
     api.get("/matches", {
       params: {
-        country_name: country,
+        country_name: country1,
         tournaments: selectedTournaments,
         teamCategory,
       }
@@ -81,7 +81,7 @@ const CountryComparisonPage = () => {
       setSelectedMatches([]);
       setSelectAllMatches(true);
     });
-  }, [country, selectedTournaments, teamCategory]);
+  }, [country1, selectedTournaments, teamCategory]);
 
   const handleFetchStats = async () => {
     if (!selectedStats.length) {
