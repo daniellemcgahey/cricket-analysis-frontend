@@ -26,9 +26,9 @@ const CountryOverTournamentPage = () => {
   const [selectedStats, setSelectedStats] = useState([]);
   const [statsByTournament, setStatsByTournament] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [matchOptions, setMatchOptions] = useState([]);
   const [selectedMatches, setSelectedMatches] = useState([]);
+  const [selectAllMatches, setSelectAllMatches] = useState(true);
 
   useEffect(() => {
     if (!teamCategory) return;
@@ -49,6 +49,7 @@ const CountryOverTournamentPage = () => {
     if (!country || !selectedTournaments.length) {
       setMatchOptions([]);
       setSelectedMatches([]);
+      setSelectAllMatches(true);
       return;
     }
 
@@ -56,19 +57,22 @@ const CountryOverTournamentPage = () => {
       params: {
         country_name: country,
         tournaments: selectedTournaments,
-        teamCategory
+        teamCategory,
       }
     })
     .then(res => {
-      setMatchOptions(res.data); // Expect array of matches with at least { match_id, match_name } or similar
-      setSelectedMatches(res.data.map(m => m.match_id)); // default select all matches
+      setMatchOptions(res.data);
+      setSelectAllMatches(true);
+      // If selectAllMatches is true, select all match IDs automatically
+      setSelectedMatches(res.data.map(m => m.match_id));
     })
-    .catch(err => {
-      console.error("Error fetching matches:", err);
+    .catch(() => {
       setMatchOptions([]);
       setSelectedMatches([]);
+      setSelectAllMatches(true);
     });
   }, [country, selectedTournaments, teamCategory]);
+
 
 
   const handleFetchStats = async () => {
@@ -165,30 +169,70 @@ const CountryOverTournamentPage = () => {
               </Accordion.Item>
             </Accordion>
 
-            <div className="mb-3">
-              <label htmlFor="matchSelect" className="form-label fw-bold">Select Matches</label>
-              <select
-                id="matchSelect"
-                className="form-select"
-                multiple
-                size={Math.min(10, matchOptions.length)}
-                value={selectedMatches}
-                onChange={(e) => {
-                  const options = e.target.options;
-                  const selected = [];
-                  for (let i = 0; i < options.length; i++) {
-                    if (options[i].selected) selected.push(Number(options[i].value));
-                  }
-                  setSelectedMatches(selected);
+            {/* Match Selection */}
+            <div className="form-check mt-3 mb-2">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={selectAllMatches}
+                id="matchToggle"
+                onChange={() => {
+                  setSelectAllMatches(prev => {
+                    const newVal = !prev;
+                    if (newVal) {
+                      // Select all matches
+                      setSelectedMatches(matchOptions.map(m => m.match_id));
+                    } else {
+                      // Clear all matches
+                      setSelectedMatches([]);
+                    }
+                    return newVal;
+                  });
                 }}
-              >
-                {matchOptions.map(match => (
-                  <option key={match.match_id} value={match.match_id}>
-                    {match.match_name || `Match ${match.match_id}`}
-                  </option>
-                ))}
-              </select>
+              />
+              <label className="form-check-label" htmlFor="matchToggle">
+                Select All Matches
+              </label>
             </div>
+
+            {!selectAllMatches && (
+              <div className="mt-3">
+                <label className="form-label fw-bold">Select Matches</label>
+                <div
+                  className="dropdown border rounded p-2"
+                  style={{ maxHeight: "200px", overflowY: "auto" }}
+                >
+                  {matchOptions.length === 0 && (
+                    <div className="text-muted">No matches available</div>
+                  )}
+                  {matchOptions.map(m => {
+                    const matchLabel = `${m.tournament}: ${m.team_a} vs ${m.team_b} (${m.match_date})`;
+                    return (
+                      <div className="form-check" key={m.match_id}>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`match-${m.match_id}`}
+                          value={m.match_id}
+                          checked={selectedMatches.includes(m.match_id)}
+                          onChange={() => {
+                            setSelectedMatches(prev =>
+                              prev.includes(m.match_id)
+                                ? prev.filter(id => id !== m.match_id)
+                                : [...prev, m.match_id]
+                            );
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor={`match-${m.match_id}`}>
+                          {matchLabel}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
 
   
             {/* Fetch Button */}
