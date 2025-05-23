@@ -171,13 +171,15 @@ const MatchReportPage = () => {
     window.open(url, "_blank");
   };
 
-  // Generate team report PDF by opening in new tab
-  const handleGenerateTeamReport = () => {
+    // Generate team report PDF by opening in new tab
+    const handleGenerateTeamReport = () => {
     if (!selectedMatchRight || !selectedTeamRight) return;
-    // Assuming team names are unique, or else you need team_id
-    const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchRight}/${selectedTeamRight}`;
+
+    // selectedTeamRight should be an object like { id: number, name: string }
+    const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchRight}/${selectedTeamRight.id}`;
     window.open(url, "_blank");
-  };
+    };
+
 
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
