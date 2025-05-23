@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "../api"; // Your axios or fetch wrapper
+import api from "../api"; // your axios/fetch wrapper
 import DarkModeContext from '../DarkModeContext';
 
 const MatchReportPage = () => {
@@ -8,20 +8,21 @@ const MatchReportPage = () => {
   const [matches, setMatches] = useState([]);
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
-  const [teamOptions, setTeamOptions] = useState([]); // Array of {id, name}
-  const [selectedTeam, setSelectedTeam] = useState(null); // Selected team object
+  // now store teams as objects with id & name
+  const [teamOptions, setTeamOptions] = useState([]); 
+  const [selectedTeam, setSelectedTeam] = useState(null);
 
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
-  // Fetch matches on mount
+  // load all matches
   useEffect(() => {
     api.get("/matches")
       .then(res => setMatches(res.data))
       .catch(console.error);
   }, []);
 
-  // When match changes, update teams list
+  // when match changes, build teamOptions from team_a_id/team_b_id
   useEffect(() => {
     if (!selectedMatchId) {
       setTeamOptions([]);
@@ -42,7 +43,7 @@ const MatchReportPage = () => {
     }
   }, [selectedMatchId, matches]);
 
-  // When team changes, fetch players from that team
+  // when team changes, fetch players by country_name or country_id
   useEffect(() => {
     if (!selectedTeam) {
       setPlayers([]);
@@ -50,20 +51,20 @@ const MatchReportPage = () => {
       return;
     }
     api.get("/team-players", {
+      // if your backend supports team_id, use it; otherwise pass name:
       params: { team_id: selectedTeam.id }
+      // or: { country_name: selectedTeam.name }
     })
     .then(res => setPlayers(res.data))
     .catch(console.error);
   }, [selectedTeam]);
 
-  // Generate player report PDF by opening in new tab
   const handleGeneratePlayerReport = () => {
     if (!selectedMatchId || !selectedPlayerId) return;
     const url = `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`;
     window.open(url, "_blank");
   };
 
-  // Generate team report PDF by opening in new tab
   const handleGenerateTeamReport = () => {
     if (!selectedMatchId || !selectedTeam) return;
     const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${selectedTeam.id}`;
@@ -82,7 +83,7 @@ const MatchReportPage = () => {
         <select
           className="form-select"
           value={selectedMatchId || ""}
-          onChange={(e) => setSelectedMatchId(parseInt(e.target.value))}
+          onChange={e => setSelectedMatchId(parseInt(e.target.value))}
         >
           <option value="">-- Select Match --</option>
           {matches.map(m => (
@@ -100,15 +101,16 @@ const MatchReportPage = () => {
           <select
             className="form-select"
             value={selectedTeam ? selectedTeam.id : ""}
-            onChange={(e) => {
+            onChange={e => {
               const id = parseInt(e.target.value);
-              const team = teamOptions.find(t => t.id === id);
-              setSelectedTeam(team || null);
+              setSelectedTeam(teamOptions.find(t => t.id === id) || null);
             }}
           >
             <option value="">-- Select Team --</option>
             {teamOptions.map(team => (
-              <option key={team.id} value={team.id}>{team.name}</option>
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
             ))}
           </select>
         </div>
@@ -121,7 +123,7 @@ const MatchReportPage = () => {
           <select
             className="form-select"
             value={selectedPlayerId || ""}
-            onChange={(e) => setSelectedPlayerId(parseInt(e.target.value))}
+            onChange={e => setSelectedPlayerId(parseInt(e.target.value))}
           >
             <option value="">-- Select Player --</option>
             {players.map(p => (
@@ -131,6 +133,7 @@ const MatchReportPage = () => {
         </div>
       )}
 
+      {/* Buttons */}
       <div className="d-flex gap-3">
         <button
           className="btn btn-primary"
