@@ -24,7 +24,7 @@ const CountryComparisonPage = () => {
   const [tournamentOptions, setTournamentOptions] = useState([]);
   const [selectedTournaments, setSelectedTournaments] = useState([]);
   const [selectedPhases, setSelectedPhases] = useState(["Powerplay", "Middle Overs", "Death Overs"]);
-  const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Spin"]);
+  const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Leg Spin", "Off Spin"]);
   const [selectedBowlingArms, setSelectedBowlingArms] = useState(["Left", "Right"]);
 
   // Stats to display
@@ -33,6 +33,10 @@ const CountryComparisonPage = () => {
   // Backend response
   const [comparisonData, setComparisonData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [matchOptions, setMatchOptions] = useState([]);
+  const [selectedMatches, setSelectedMatches] = useState([]);
+  const [selectAllMatches, setSelectAllMatches] = useState(true);
 
   // Load countries and tournaments on mount
   useEffect(() => {
@@ -51,6 +55,34 @@ const CountryComparisonPage = () => {
 
   }, [teamCategory]);
 
+  useEffect(() => {
+    if (!country || !selectedTournaments.length) {
+      setMatchOptions([]);
+      setSelectedMatches([]);
+      setSelectAllMatches(true);
+      return;
+    }
+
+    api.get("/matches", {
+      params: {
+        country_name: country,
+        tournaments: selectedTournaments,
+        teamCategory,
+      }
+    })
+    .then(res => {
+      setMatchOptions(res.data);
+      setSelectAllMatches(true);
+      // If selectAllMatches is true, select all match IDs automatically
+      setSelectedMatches(res.data.map(m => m.match_id));
+    })
+    .catch(() => {
+      setMatchOptions([]);
+      setSelectedMatches([]);
+      setSelectAllMatches(true);
+    });
+  }, [country, selectedTournaments, teamCategory]);
+
   const handleFetchStats = async () => {
     if (!selectedStats.length) {
       setComparisonData(null); // Reset the data shown
@@ -66,6 +98,7 @@ const CountryComparisonPage = () => {
       bowler_type: selectedBowlerTypes,
       bowling_arm: selectedBowlingArms,
       teamCategory,
+      selectedMatches,
     };
 
     try {
@@ -83,10 +116,10 @@ const CountryComparisonPage = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
-      <div className="container my-4">
+      <div className="container-fluid my-4">
         <div className="row">
           {/* Left Column */}
-          <div className="col-md-4">
+          <div className="col-md-4" style={{ marginLeft: "0px" }}>
             <Accordion defaultActiveKey={null} className="mb-4">
               <Accordion.Item eventKey="-1">
                 <Accordion.Header>
@@ -151,6 +184,70 @@ const CountryComparisonPage = () => {
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>
+
+            {/* Match Selection */}
+            <div className="form-check mt-3 mb-2">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                checked={selectAllMatches}
+                id="matchToggle"
+                onChange={() => {
+                  setSelectAllMatches(prev => {
+                    const newVal = !prev;
+                    if (newVal) {
+                      // Select all matches
+                      setSelectedMatches(matchOptions.map(m => m.match_id));
+                    } else {
+                      // Clear all matches
+                      setSelectedMatches([]);
+                    }
+                    return newVal;
+                  });
+                }}
+              />
+              <label className="form-check-label" htmlFor="matchToggle">
+                Select All Matches
+              </label>
+            </div>
+
+            {!selectAllMatches && (
+              <div className="mt-3">
+                <label className="form-label fw-bold">Select Matches</label>
+                <div
+                  className="dropdown border rounded p-2"
+                  style={{ maxHeight: "200px", overflowY: "auto" }}
+                >
+                  {matchOptions.length === 0 && (
+                    <div className="text-muted">No matches available</div>
+                  )}
+                  {matchOptions.map(m => {
+                    const matchLabel = `${m.tournament}: ${m.team_a} vs ${m.team_b} (${m.match_date})`;
+                    return (
+                      <div className="form-check" key={m.match_id}>
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          id={`match-${m.match_id}`}
+                          value={m.match_id}
+                          checked={selectedMatches.includes(m.match_id)}
+                          onChange={() => {
+                            setSelectedMatches(prev =>
+                              prev.includes(m.match_id)
+                                ? prev.filter(id => id !== m.match_id)
+                                : [...prev, m.match_id]
+                            );
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor={`match-${m.match_id}`}>
+                          {matchLabel}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
   
             {/* Fetch Button */}
             <button className="btn btn-primary w-100 mt-3" onClick={handleFetchStats}>
