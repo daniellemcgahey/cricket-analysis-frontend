@@ -31,6 +31,7 @@ const MatchAnalysisTabs = () => {
         <h2 className="fw-bold display-4" style={{ color: "#1b5e20" }}>
             Match Analysis
         </h2>
+        </div>
         <Tabs defaultActiveKey="scorecard" className="mb-3" fill variant={isDarkMode ? "dark" : "tabs"}>
           <Tab eventKey="scorecard" title="Scorecard">
             <MatchScorecardPage />
@@ -49,7 +50,6 @@ const MatchAnalysisTabs = () => {
           </Tab>
         </Tabs>
       </div>
-    </div>
     </div>
   );
 };
