@@ -6,10 +6,10 @@ import BackButton from "../components/BackButton"; // <- Add this import
 import MatchScorecardPage from './MatchScorecardPage';
 import MatchPressurePage from './MatchPressurePage';
 import PartnershipStatsPage from './PartnershipStatPage';
+import MatchReportPage from './MatchReportPage';
 import "./TabStyles.css"; // 🔥 Custom styles here
 
 // Placeholder content — swap with real pages later
-const PlayerStatsPage = () => <div className="p-4">Player Stats Coming Soon</div>;
 const InGamePage = () => <div className="p-4">In-Game Analysis Coming Soon</div>;
 
 const MatchAnalysisTabs = () => {
@@ -36,8 +36,8 @@ const MatchAnalysisTabs = () => {
           <Tab eventKey="scorecard" title="Scorecard">
             <MatchScorecardPage />
           </Tab>
-          <Tab eventKey="player-stats" title="Player Statistics">
-            <PlayerStatsPage />
+          <Tab eventKey="player-report" title="Player Report">
+            <MatchReportPage />
           </Tab>
           <Tab eventKey="partnership-stats" title="Partnerships">
             <PartnershipStatsPage />
