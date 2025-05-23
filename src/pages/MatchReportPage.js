@@ -97,9 +97,6 @@ const MatchReportPage = () => {
         { id: match.team_a_id, name: match.team_a },
         { id: match.team_b_id, name: match.team_b },
       ]);
-      setSelectedTeamLeft(null);
-      setPlayersLeft([]);
-      setSelectedPlayer(null);
     }
   }, [selectedMatchLeft, matchesLeft]);
 
@@ -175,7 +172,6 @@ const MatchReportPage = () => {
         { id: match.team_a_id, name: match.team_a },
         { id: match.team_b_id, name: match.team_b },
       ]);
-      setSelectedTeamRight(null);
     }
   }, [selectedMatchRight, matchesRight]);
 
