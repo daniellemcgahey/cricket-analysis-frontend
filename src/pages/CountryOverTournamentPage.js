@@ -27,6 +27,9 @@ const CountryOverTournamentPage = () => {
   const [statsByTournament, setStatsByTournament] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [matchOptions, setMatchOptions] = useState([]);
+  const [selectedMatches, setSelectedMatches] = useState([]);
+
   useEffect(() => {
     if (!teamCategory) return;
 
@@ -42,6 +45,32 @@ const CountryOverTournamentPage = () => {
     });
   }, [teamCategory]);
 
+  useEffect(() => {
+    if (!country || !selectedTournaments.length) {
+      setMatchOptions([]);
+      setSelectedMatches([]);
+      return;
+    }
+
+    api.get("/matches", {
+      params: {
+        country_name: country,
+        tournaments: selectedTournaments,
+        teamCategory
+      }
+    })
+    .then(res => {
+      setMatchOptions(res.data); // Expect array of matches with at least { match_id, match_name } or similar
+      setSelectedMatches(res.data.map(m => m.match_id)); // default select all matches
+    })
+    .catch(err => {
+      console.error("Error fetching matches:", err);
+      setMatchOptions([]);
+      setSelectedMatches([]);
+    });
+  }, [country, selectedTournaments, teamCategory]);
+
+
   const handleFetchStats = async () => {
     if (!selectedStats.length) {
       setStatsByTournament(null);
@@ -56,6 +85,7 @@ const CountryOverTournamentPage = () => {
       bowler_type: selectedBowlerTypes,
       bowling_arm: selectedBowlingArms,
       teamCategory,
+      selectedMatches,
     };
 
     try {
@@ -134,6 +164,32 @@ const CountryOverTournamentPage = () => {
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>
+
+            <div className="mb-3">
+              <label htmlFor="matchSelect" className="form-label fw-bold">Select Matches</label>
+              <select
+                id="matchSelect"
+                className="form-select"
+                multiple
+                size={Math.min(10, matchOptions.length)}
+                value={selectedMatches}
+                onChange={(e) => {
+                  const options = e.target.options;
+                  const selected = [];
+                  for (let i = 0; i < options.length; i++) {
+                    if (options[i].selected) selected.push(Number(options[i].value));
+                  }
+                  setSelectedMatches(selected);
+                }}
+              >
+                {matchOptions.map(match => (
+                  <option key={match.match_id} value={match.match_id}>
+                    {match.match_name || `Match ${match.match_id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
   
             {/* Fetch Button */}
             <button className="btn btn-primary w-100 mt-3" onClick={handleFetchStats}>
