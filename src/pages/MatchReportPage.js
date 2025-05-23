@@ -53,10 +53,18 @@ const MatchReportPage = () => {
     .catch(console.error);
   }, [selectedTeam]);
 
-  // Generate report PDF by opening in new tab
-  const handleGenerateReport = () => {
+  // Generate player report PDF by opening in new tab
+  const handleGeneratePlayerReport = () => {
     if (!selectedMatchId || !selectedPlayerId) return;
     const url = `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`;
+    window.open(url, "_blank");
+  };
+
+  // Generate team report PDF by opening in new tab
+  const handleGenerateTeamReport = () => {
+    if (!selectedMatchId || !selectedTeam) return;
+    // Assuming team names are unique identifiers in the backend URL param
+    const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${encodeURIComponent(selectedTeam)}`;
     window.open(url, "_blank");
   };
 
@@ -64,7 +72,7 @@ const MatchReportPage = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh", padding: 20 }}>
-      <h2>Generate Player Match Report</h2>
+      <h2>Generate Player & Team Match Reports</h2>
 
       {/* Match Selector */}
       <div className="mb-3">
@@ -117,14 +125,24 @@ const MatchReportPage = () => {
         </div>
       )}
 
-      {/* Generate Report Button */}
-      <button
-        className="btn btn-primary"
-        disabled={!selectedMatchId || !selectedPlayerId}
-        onClick={handleGenerateReport}
-      >
-        Generate Player Report PDF
-      </button>
+      {/* Buttons */}
+      <div className="d-flex gap-3">
+        <button
+          className="btn btn-primary"
+          disabled={!selectedMatchId || !selectedPlayerId}
+          onClick={handleGeneratePlayerReport}
+        >
+          Generate Player Report PDF
+        </button>
+
+        <button
+          className="btn btn-secondary"
+          disabled={!selectedMatchId || !selectedTeam}
+          onClick={handleGenerateTeamReport}
+        >
+          Generate Team Report PDF
+        </button>
+      </div>
     </div>
   );
 };
