@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "../api";               // your axios/fetch wrapper
-import DarkModeContext from "../DarkModeContext";
+import api from "../api";               // your axios or fetch wrapper
+import DarkModeContext from '../DarkModeContext';
 
 const MatchReportPage = () => {
   const { isDarkMode } = useContext(DarkModeContext);
@@ -9,22 +9,22 @@ const MatchReportPage = () => {
   const [matches, setMatches] = useState([]);
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
-  // team picker: array of {id,name}
+  // teams as {id,name}
   const [teamOptions, setTeamOptions] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  // player picker
+  // players
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
-  // 1) load matches once
+  // 1) load matches
   useEffect(() => {
     api.get("/matches")
       .then(res => setMatches(res.data))
       .catch(console.error);
   }, []);
 
-  // 2) when match changes, build teamOptions from those ids/names
+  // 2) when match changes, build the two teams with their IDs
   useEffect(() => {
     if (!selectedMatchId) {
       setTeamOptions([]);
@@ -45,16 +45,18 @@ const MatchReportPage = () => {
     }
   }, [selectedMatchId, matches]);
 
-  // 3) when team changes, fetch players
+  // 3) when team changes, fetch players by country_name (your existing API)
   useEffect(() => {
     if (!selectedTeam) {
       setPlayers([]);
       setSelectedPlayerId(null);
       return;
     }
-    api.get("/team-players", { params: { team_id: selectedTeam.id } })
-      .then(res => setPlayers(res.data))
-      .catch(console.error);
+    api.get("/team-players", {
+      params: { country_name: selectedTeam.name }
+    })
+    .then(res => setPlayers(res.data))
+    .catch(console.error);
   }, [selectedTeam]);
 
   // open player-report PDF
@@ -66,11 +68,11 @@ const MatchReportPage = () => {
     );
   };
 
-  // open team-report PDF
+  // open team-report PDF – note the `/pdf` suffix
   const generateTeamReport = () => {
     if (!selectedMatchId || !selectedTeam) return;
     window.open(
-      `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${selectedTeam.id}`,
+      `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${selectedTeam.id}/pdf`,
       "_blank"
     );
   };
@@ -78,16 +80,16 @@ const MatchReportPage = () => {
   const themeClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
   return (
-    <div className={themeClass} style={{ padding: 20, minHeight: "100vh" }}>
+    <div className={themeClass} style={{ padding:20, minHeight:"100vh" }}>
       <h2>Generate Match Reports</h2>
 
-      {/* MATCH */}
+      {/* 1) Match */}
       <div className="mb-3">
         <label className="form-label">Match</label>
         <select
           className="form-select"
-          value={selectedMatchId || ""}
-          onChange={e => setSelectedMatchId(+e.target.value)}
+          value={selectedMatchId||""}
+          onChange={e=>setSelectedMatchId(+e.target.value)}
         >
           <option value="">-- select match --</option>
           {matches.map(m => (
@@ -98,42 +100,38 @@ const MatchReportPage = () => {
         </select>
       </div>
 
-      {/* TEAM */}
-      {teamOptions.length > 0 && (
+      {/* 2) Team */}
+      {teamOptions.length>0 && (
         <div className="mb-3">
           <label className="form-label">Team</label>
           <select
             className="form-select"
-            value={selectedTeam?.id || ""}
-            onChange={e => {
+            value={selectedTeam?.id||""}
+            onChange={e=>{
               const id = +e.target.value;
-              setSelectedTeam(teamOptions.find(t => t.id === id) || null);
+              setSelectedTeam(teamOptions.find(t=>t.id===id)||null);
             }}
           >
             <option value="">-- select team --</option>
-            {teamOptions.map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
+            {teamOptions.map(t=>(
+              <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
         </div>
       )}
 
-      {/* PLAYER */}
-      {players.length > 0 && (
+      {/* 3) Player */}
+      {players.length>0 && (
         <div className="mb-3">
           <label className="form-label">Player</label>
           <select
             className="form-select"
-            value={selectedPlayerId || ""}
-            onChange={e => setSelectedPlayerId(+e.target.value)}
+            value={selectedPlayerId||""}
+            onChange={e=>setSelectedPlayerId(+e.target.value)}
           >
             <option value="">-- select player --</option>
-            {players.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
+            {players.map(p=>(
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
         </div>
@@ -143,14 +141,14 @@ const MatchReportPage = () => {
       <div className="d-flex gap-2">
         <button
           className="btn btn-primary"
-          disabled={!selectedMatchId || !selectedPlayerId}
+          disabled={!selectedMatchId||!selectedPlayerId}
           onClick={generatePlayerReport}
         >
           Player Report
         </button>
         <button
           className="btn btn-secondary"
-          disabled={!selectedMatchId || !selectedTeam}
+          disabled={!selectedMatchId||!selectedTeam}
           onClick={generateTeamReport}
         >
           Team Report
