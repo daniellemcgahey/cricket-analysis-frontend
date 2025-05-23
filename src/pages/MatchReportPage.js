@@ -13,7 +13,7 @@ const MatchReportPage = () => {
   const [matchesLeft, setMatchesLeft] = useState([]);
   const [selectedMatchLeft, setSelectedMatchLeft] = useState(null);
   const [teamsLeft, setTeamsLeft] = useState([]);
-  const [selectedTeamLeft, setSelectedTeamLeft] = useState("");
+  const [selectedTeamLeft, setSelectedTeamLeft] = useState(null);
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
@@ -24,9 +24,11 @@ const MatchReportPage = () => {
   const [matchesRight, setMatchesRight] = useState([]);
   const [selectedMatchRight, setSelectedMatchRight] = useState(null);
   const [teamsRight, setTeamsRight] = useState([]);
-  const [selectedTeamRight, setSelectedTeamRight] = useState("");
+  const [selectedTeamRight, setSelectedTeamRight] = useState(null);
 
-  // Fetch tournaments when categoryLeft changes
+  // ===== LEFT SIDE LOGIC =====
+
+  // Fetch tournaments on category change (left)
   useEffect(() => {
     if (!selectedCategoryLeft) {
       setTournamentsLeft([]);
@@ -34,7 +36,7 @@ const MatchReportPage = () => {
       setMatchesLeft([]);
       setSelectedMatchLeft(null);
       setTeamsLeft([]);
-      setSelectedTeamLeft("");
+      setSelectedTeamLeft(null);
       setPlayers([]);
       setSelectedPlayer(null);
       return;
@@ -46,20 +48,20 @@ const MatchReportPage = () => {
         setMatchesLeft([]);
         setSelectedMatchLeft(null);
         setTeamsLeft([]);
-        setSelectedTeamLeft("");
+        setSelectedTeamLeft(null);
         setPlayers([]);
         setSelectedPlayer(null);
       })
       .catch(console.error);
   }, [selectedCategoryLeft]);
 
-  // Fetch matches when tournamentLeft changes
+  // Fetch matches on tournament change (left)
   useEffect(() => {
     if (!selectedTournamentLeft) {
       setMatchesLeft([]);
       setSelectedMatchLeft(null);
       setTeamsLeft([]);
-      setSelectedTeamLeft("");
+      setSelectedTeamLeft(null);
       setPlayers([]);
       setSelectedPlayer(null);
       return;
@@ -69,46 +71,50 @@ const MatchReportPage = () => {
         setMatchesLeft(res.data);
         setSelectedMatchLeft(null);
         setTeamsLeft([]);
-        setSelectedTeamLeft("");
+        setSelectedTeamLeft(null);
         setPlayers([]);
         setSelectedPlayer(null);
       })
       .catch(console.error);
   }, [selectedTournamentLeft, selectedCategoryLeft]);
 
-  // When matchLeft changes, update teamsLeft list
+  // Update teams on match change (left)
   useEffect(() => {
     if (!selectedMatchLeft) {
       setTeamsLeft([]);
-      setSelectedTeamLeft("");
+      setSelectedTeamLeft(null);
       setPlayers([]);
       setSelectedPlayer(null);
       return;
     }
     const match = matchesLeft.find(m => m.match_id === selectedMatchLeft);
     if (match) {
-      setTeamsLeft([match.team_a, match.team_b]);
-      setSelectedTeamLeft("");
+      // Teams as objects with id & name
+      setTeamsLeft([
+        { id: match.team_a_id, name: match.team_a },
+        { id: match.team_b_id, name: match.team_b }
+      ]);
+      setSelectedTeamLeft(null);
       setPlayers([]);
       setSelectedPlayer(null);
     }
   }, [selectedMatchLeft, matchesLeft]);
 
-  // When teamLeft changes, fetch players from that team
+  // Fetch players when team selected (left)
   useEffect(() => {
     if (!selectedTeamLeft) {
       setPlayers([]);
       setSelectedPlayer(null);
       return;
     }
-    api.get("/team-players", { params: { country_name: selectedTeamLeft }})
+    api.get("/team-players", { params: { team_id: selectedTeamLeft.id }})
       .then(res => setPlayers(res.data))
       .catch(console.error);
   }, [selectedTeamLeft]);
 
-  // ==== Right side logic ====
+  // ===== RIGHT SIDE LOGIC =====
 
-  // Fetch tournaments when categoryRight changes
+  // Fetch tournaments on category change (right)
   useEffect(() => {
     if (!selectedCategoryRight) {
       setTournamentsRight([]);
@@ -116,7 +122,7 @@ const MatchReportPage = () => {
       setMatchesRight([]);
       setSelectedMatchRight(null);
       setTeamsRight([]);
-      setSelectedTeamRight("");
+      setSelectedTeamRight(null);
       return;
     }
     api.get("/tournaments", { params: { teamCategory: selectedCategoryRight }})
@@ -126,18 +132,18 @@ const MatchReportPage = () => {
         setMatchesRight([]);
         setSelectedMatchRight(null);
         setTeamsRight([]);
-        setSelectedTeamRight("");
+        setSelectedTeamRight(null);
       })
       .catch(console.error);
   }, [selectedCategoryRight]);
 
-  // Fetch matches when tournamentRight changes
+  // Fetch matches on tournament change (right)
   useEffect(() => {
     if (!selectedTournamentRight) {
       setMatchesRight([]);
       setSelectedMatchRight(null);
       setTeamsRight([]);
-      setSelectedTeamRight("");
+      setSelectedTeamRight(null);
       return;
     }
     api.get("/matches", { params: { teamCategory: selectedCategoryRight, tournament: selectedTournamentRight }})
@@ -145,41 +151,41 @@ const MatchReportPage = () => {
         setMatchesRight(res.data);
         setSelectedMatchRight(null);
         setTeamsRight([]);
-        setSelectedTeamRight("");
+        setSelectedTeamRight(null);
       })
       .catch(console.error);
   }, [selectedTournamentRight, selectedCategoryRight]);
 
-  // When matchRight changes, update teamsRight list
+  // Update teams on match change (right)
   useEffect(() => {
     if (!selectedMatchRight) {
       setTeamsRight([]);
-      setSelectedTeamRight("");
+      setSelectedTeamRight(null);
       return;
     }
     const match = matchesRight.find(m => m.match_id === selectedMatchRight);
     if (match) {
-      setTeamsRight([match.team_a, match.team_b]);
-      setSelectedTeamRight("");
+      setTeamsRight([
+        { id: match.team_a_id, name: match.team_a },
+        { id: match.team_b_id, name: match.team_b }
+      ]);
+      setSelectedTeamRight(null);
     }
   }, [selectedMatchRight, matchesRight]);
 
-  // Generate player report PDF by opening in new tab
+  // Generate Player Report PDF
   const handleGeneratePlayerReport = () => {
     if (!selectedMatchLeft || !selectedPlayer) return;
     const url = `${api.defaults.baseURL}/match-report/${selectedMatchLeft}/player/${selectedPlayer}`;
     window.open(url, "_blank");
   };
 
-    // Generate team report PDF by opening in new tab
-    const handleGenerateTeamReport = () => {
+  // Generate Team Report PDF
+  const handleGenerateTeamReport = () => {
     if (!selectedMatchRight || !selectedTeamRight) return;
-
-    // selectedTeamRight should be an object like { id: number, name: string }
     const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchRight}/${selectedTeamRight.id}`;
     window.open(url, "_blank");
-    };
-
+  };
 
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
@@ -241,12 +247,18 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamLeft}
-              onChange={e => setSelectedTeamLeft(e.target.value)}
+              value={selectedTeamLeft ? selectedTeamLeft.id : ""}
+              onChange={e => {
+                const id = parseInt(e.target.value);
+                const team = teamsLeft.find(t => t.id === id);
+                setSelectedTeamLeft(team || null);
+              }}
               disabled={!selectedMatchLeft}
             >
               <option value="">-- Select Team --</option>
-              {teamsLeft.map(t => <option key={t} value={t}>{t}</option>)}
+              {teamsLeft.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
             </select>
           </div>
 
@@ -328,12 +340,18 @@ const MatchReportPage = () => {
             <label className="form-label">Select Team</label>
             <select
               className="form-select"
-              value={selectedTeamRight}
-              onChange={e => setSelectedTeamRight(e.target.value)}
+              value={selectedTeamRight ? selectedTeamRight.id : ""}
+              onChange={e => {
+                const id = parseInt(e.target.value);
+                const team = teamsRight.find(t => t.id === id);
+                setSelectedTeamRight(team || null);
+              }}
               disabled={!selectedMatchRight}
             >
               <option value="">-- Select Team --</option>
-              {teamsRight.map(t => <option key={t} value={t}>{t}</option>)}
+              {teamsRight.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
             </select>
           </div>
 
