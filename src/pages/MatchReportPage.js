@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import api from "../api"; // your axios or fetch wrapper
+import api from "../api"; // Your axios or fetch wrapper
 import DarkModeContext from '../DarkModeContext';
 
 const MatchReportPage = () => {
@@ -8,8 +8,8 @@ const MatchReportPage = () => {
   const [matches, setMatches] = useState([]);
   const [selectedMatchId, setSelectedMatchId] = useState(null);
 
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState("");
+  const [teamOptions, setTeamOptions] = useState([]); // Array of {id, name}
+  const [selectedTeam, setSelectedTeam] = useState(null); // Selected team object
 
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
@@ -25,15 +25,18 @@ const MatchReportPage = () => {
   useEffect(() => {
     if (!selectedMatchId) {
       setTeamOptions([]);
-      setSelectedTeam("");
+      setSelectedTeam(null);
       setPlayers([]);
       setSelectedPlayerId(null);
       return;
     }
     const match = matches.find(m => m.match_id === selectedMatchId);
     if (match) {
-      setTeamOptions([match.team_a, match.team_b]);
-      setSelectedTeam("");
+      setTeamOptions([
+        { id: match.team_a_id, name: match.team_a },
+        { id: match.team_b_id, name: match.team_b }
+      ]);
+      setSelectedTeam(null);
       setPlayers([]);
       setSelectedPlayerId(null);
     }
@@ -47,7 +50,7 @@ const MatchReportPage = () => {
       return;
     }
     api.get("/team-players", {
-      params: { country_name: selectedTeam }
+      params: { team_id: selectedTeam.id }
     })
     .then(res => setPlayers(res.data))
     .catch(console.error);
@@ -63,8 +66,7 @@ const MatchReportPage = () => {
   // Generate team report PDF by opening in new tab
   const handleGenerateTeamReport = () => {
     if (!selectedMatchId || !selectedTeam) return;
-    // Assuming team names are unique identifiers in the backend URL param
-    const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${encodeURIComponent(selectedTeam)}`;
+    const url = `${api.defaults.baseURL}/team-match-report/${selectedMatchId}/${selectedTeam.id}`;
     window.open(url, "_blank");
   };
 
@@ -72,7 +74,7 @@ const MatchReportPage = () => {
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh", padding: 20 }}>
-      <h2>Generate Player & Team Match Reports</h2>
+      <h2>Generate Match Reports</h2>
 
       {/* Match Selector */}
       <div className="mb-3">
@@ -97,12 +99,16 @@ const MatchReportPage = () => {
           <label className="form-label">Select Team</label>
           <select
             className="form-select"
-            value={selectedTeam}
-            onChange={(e) => setSelectedTeam(e.target.value)}
+            value={selectedTeam ? selectedTeam.id : ""}
+            onChange={(e) => {
+              const id = parseInt(e.target.value);
+              const team = teamOptions.find(t => t.id === id);
+              setSelectedTeam(team || null);
+            }}
           >
             <option value="">-- Select Team --</option>
             {teamOptions.map(team => (
-              <option key={team} value={team}>{team}</option>
+              <option key={team.id} value={team.id}>{team.name}</option>
             ))}
           </select>
         </div>
@@ -125,7 +131,6 @@ const MatchReportPage = () => {
         </div>
       )}
 
-      {/* Buttons */}
       <div className="d-flex gap-3">
         <button
           className="btn btn-primary"
