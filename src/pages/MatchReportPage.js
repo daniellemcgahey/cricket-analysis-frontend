@@ -6,7 +6,7 @@ import { Accordion, Card, Button, Alert, Row, Col } from "react-bootstrap";
 const MatchReportPage = () => {
   const { isDarkMode } = useContext(DarkModeContext);
 
-  const [teamCategory, setTeamCategory] = useState("");
+  const [teamCategory, setTeamCategory] = useState("Women");
   const [tournaments, setTournaments] = useState([]);
   const [selectedTournament, setSelectedTournament] = useState("");
   const [matches, setMatches] = useState([]);
@@ -122,10 +122,11 @@ const MatchReportPage = () => {
                   onChange={e => setTeamCategory(e.target.value)}
                 >
                   <option value="">-- Select Team Category --</option>
-                  <option value="Men">Men</option>
                   <option value="Women">Women</option>
-                  <option value="U19 Men">U19 Men</option>
+                  <option value="Men">Men</option>
                   <option value="U19 Women">U19 Women</option>
+                  <option value="U19 Men">U19 Men</option>
+                  <option value="Training">Training</option>
                   {/* Add any others */}
                 </select>
               </Accordion.Body>
