@@ -26,7 +26,7 @@ const PartnershipStatPage = () => {
   const [partnerships, setPartnerships] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const teamCategories = ["Men", "Women", "U19 Men", "U19 Women"];
+  const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
   useEffect(() => {
     api.get("/tournaments").then(res => setTournaments(res.data));
