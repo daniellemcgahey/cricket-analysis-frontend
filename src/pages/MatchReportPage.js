@@ -27,7 +27,7 @@ const MatchReportPage = () => {
       setSelectedMatchId(null);
       return;
     }
-    api.get("/tournaments", { params: { team_category: teamCategory } })
+    api.get("/tournaments", { params: { teamCategory } }) // <-- Fix here!
       .then(res => {
         setTournaments(res.data);
         setSelectedTournament("");
@@ -36,6 +36,7 @@ const MatchReportPage = () => {
       })
       .catch(console.error);
   }, [teamCategory]);
+
 
   // Load matches when team category or tournament changes
   useEffect(() => {
