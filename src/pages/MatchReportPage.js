@@ -115,7 +115,9 @@ const MatchReportPage = () => {
           <Accordion defaultActiveKey="0">
             {/* Team Category */}
             <Accordion.Item eventKey="0">
-              <Accordion.Header>Team Category</Accordion.Header>
+              <Accordion.Header>
+                <h5 className="fw-bold m-0">Team Category</h5>
+              </Accordion.Header>
               <Accordion.Body>
                 <select
                   className="form-select mb-2"
@@ -134,7 +136,9 @@ const MatchReportPage = () => {
 
             {/* Tournament */}
             <Accordion.Item eventKey="1">
-              <Accordion.Header>Tournament</Accordion.Header>
+              <Accordion.Header>
+                <h5 className="fw-bold m-0">Tournament</h5>
+              </Accordion.Header>
               <Accordion.Body>
                 <select
                   className="form-select mb-2"
@@ -155,7 +159,9 @@ const MatchReportPage = () => {
 
             {/* Match */}
             <Accordion.Item eventKey="2">
-              <Accordion.Header>Match</Accordion.Header>
+              <Accordion.Header>
+                <h5 className="fw-bold m-0">Match</h5>
+              </Accordion.Header>
               <Accordion.Body>
                 <select
                   className="form-select mb-2"
@@ -178,7 +184,9 @@ const MatchReportPage = () => {
 
             {/* Team */}
             <Accordion.Item eventKey="3">
-              <Accordion.Header>Team</Accordion.Header>
+              <Accordion.Header>
+                <h5 className="fw-bold m-0">Country</h5>
+              </Accordion.Header>
               <Accordion.Body>
                 <select
                   className="form-select mb-2"
@@ -202,7 +210,9 @@ const MatchReportPage = () => {
 
             {/* Player */}
             <Accordion.Item eventKey="4">
-              <Accordion.Header>Player</Accordion.Header>
+              <Accordion.Header>
+                <h5 className="fw-bold m-0">Player</h5>
+              </Accordion.Header>
               <Accordion.Body>
                 <select
                   className="form-select mb-2"
