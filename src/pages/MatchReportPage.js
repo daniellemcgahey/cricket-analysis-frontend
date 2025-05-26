@@ -128,93 +128,100 @@ const MatchReportPage = () => {
                   <option value="U19 Women">U19 Women</option>
                   <option value="U19 Men">U19 Men</option>
                   <option value="Training">Training</option>
-                  {/* Add any others */}
                 </select>
               </Accordion.Body>
             </Accordion.Item>
 
             {/* Tournament */}
-            {tournaments.length > 0 && (
-              <Accordion.Item eventKey="1">
-                <Accordion.Header>Tournament</Accordion.Header>
-                <Accordion.Body>
-                  <select
-                    className="form-select mb-2"
-                    value={selectedTournament}
-                    onChange={e => setSelectedTournament(e.target.value)}
-                  >
-                    <option value="">-- Select Tournament --</option>
-                    {tournaments.map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
-                  </select>
-                </Accordion.Body>
-              </Accordion.Item>
-            )}
-
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>Tournament</Accordion.Header>
+              <Accordion.Body>
+                <select
+                  className="form-select mb-2"
+                  value={selectedTournament}
+                  onChange={e => setSelectedTournament(e.target.value)}
+                  disabled={tournaments.length === 0}
+                >
+                  <option value="">-- Select Tournament --</option>
+                  {tournaments.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                {tournaments.length === 0 && (
+                  <small className="text-muted">No tournaments available</small>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
 
             {/* Match */}
-            {matches.length > 0 && (
-              <Accordion.Item eventKey="2">
-                <Accordion.Header>Match</Accordion.Header>
-                <Accordion.Body>
-                  <select
-                    className="form-select mb-2"
-                    value={selectedMatchId || ""}
-                    onChange={e => setSelectedMatchId(+e.target.value)}
-                  >
-                    <option value="">-- Select Match --</option>
-                    {matches.map(m => (
-                      <option key={m.match_id} value={m.match_id}>
-                        {m.team_a} vs {m.team_b} ({m.match_date})
-                      </option>
-                    ))}
-                  </select>
-                </Accordion.Body>
-              </Accordion.Item>
-            )}
+            <Accordion.Item eventKey="2">
+              <Accordion.Header>Match</Accordion.Header>
+              <Accordion.Body>
+                <select
+                  className="form-select mb-2"
+                  value={selectedMatchId || ""}
+                  onChange={e => setSelectedMatchId(+e.target.value)}
+                  disabled={matches.length === 0}
+                >
+                  <option value="">-- Select Match --</option>
+                  {matches.map(m => (
+                    <option key={m.match_id} value={m.match_id}>
+                      {m.team_a} vs {m.team_b} ({m.match_date})
+                    </option>
+                  ))}
+                </select>
+                {matches.length === 0 && (
+                  <small className="text-muted">No matches available</small>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
 
             {/* Team */}
-            {teamOptions.length > 0 && (
-              <Accordion.Item eventKey="3">
-                <Accordion.Header>Team</Accordion.Header>
-                <Accordion.Body>
-                  <select
-                    className="form-select mb-2"
-                    value={selectedTeam?.id || ""}
-                    onChange={e => {
-                      const id = +e.target.value;
-                      setSelectedTeam(teamOptions.find(t => t.id === id) || null);
-                    }}
-                  >
-                    <option value="">-- Select Team --</option>
-                    {teamOptions.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </select>
-                </Accordion.Body>
-              </Accordion.Item>
-            )}
+            <Accordion.Item eventKey="3">
+              <Accordion.Header>Team</Accordion.Header>
+              <Accordion.Body>
+                <select
+                  className="form-select mb-2"
+                  value={selectedTeam?.id || ""}
+                  onChange={e => {
+                    const id = +e.target.value;
+                    setSelectedTeam(teamOptions.find(t => t.id === id) || null);
+                  }}
+                  disabled={teamOptions.length === 0}
+                >
+                  <option value="">-- Select Team --</option>
+                  {teamOptions.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                {teamOptions.length === 0 && (
+                  <small className="text-muted">No teams available</small>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
 
             {/* Player */}
-            {players.length > 0 && (
-              <Accordion.Item eventKey="4">
-                <Accordion.Header>Player</Accordion.Header>
-                <Accordion.Body>
-                  <select
-                    className="form-select mb-2"
-                    value={selectedPlayerId || ""}
-                    onChange={e => setSelectedPlayerId(+e.target.value)}
-                  >
-                    <option value="">-- Select Player --</option>
-                    {players.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </Accordion.Body>
-              </Accordion.Item>
-            )}
+            <Accordion.Item eventKey="4">
+              <Accordion.Header>Player</Accordion.Header>
+              <Accordion.Body>
+                <select
+                  className="form-select mb-2"
+                  value={selectedPlayerId || ""}
+                  onChange={e => setSelectedPlayerId(+e.target.value)}
+                  disabled={players.length === 0}
+                >
+                  <option value="">-- Select Player --</option>
+                  {players.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                {players.length === 0 && (
+                  <small className="text-muted">No players available</small>
+                )}
+              </Accordion.Body>
+            </Accordion.Item>
           </Accordion>
+
         </Col>
 
         {/* Action Buttons */}
