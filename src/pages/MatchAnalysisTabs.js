@@ -36,7 +36,7 @@ const MatchAnalysisTabs = () => {
           <Tab eventKey="scorecard" title="Scorecard">
             <MatchScorecardPage />
           </Tab>
-          <Tab eventKey="player-report" title="Player Report">
+          <Tab eventKey="match-report" title="Match Reports">
             <MatchReportPage />
           </Tab>
           <Tab eventKey="partnership-stats" title="Partnerships">
