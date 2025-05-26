@@ -107,9 +107,6 @@ const MatchReportPage = () => {
   const themeClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
   return (
-    <div className={`${themeClass} p-4`} style={{ minHeight: "100vh" }}>
-      <h2 className="mb-4">Generate Match Reports</h2>
-
       <Row>
         <Col md={4}>
           <Accordion defaultActiveKey="0">
@@ -237,7 +234,9 @@ const MatchReportPage = () => {
         {/* Action Buttons */}
         <Col md={8} className="d-flex flex-column align-items-center justify-content-center">
           <Card className="p-3 shadow-sm w-100">
-            <h5 className="mb-3">Actions</h5>
+            {/* Add heading here! */}
+            <h2 className="fw-bold mb-3 text-center">Generate Match Reports</h2>
+
             <div className="d-flex gap-3 justify-content-center">
               <Button
                 variant="primary"
@@ -256,8 +255,8 @@ const MatchReportPage = () => {
             </div>
           </Card>
         </Col>
+
       </Row>
-    </div>
   );
 };
 
