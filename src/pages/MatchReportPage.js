@@ -144,18 +144,14 @@ const MatchReportPage = () => {
                     onChange={e => setSelectedTournament(e.target.value)}
                   >
                     <option value="">-- Select Tournament --</option>
-                    {tournaments.map(t => (
-                      <option key={t.tournament_id} value={t.tournament_name}>
-                        {t.tournament_name}
-                      </option>
+                    {tournaments.map(name => (
+                      <option key={name} value={name}>{name}</option>
                     ))}
                   </select>
-                  {tournaments.length === 0 && (
-                    <Alert variant="warning">No tournaments available</Alert>
-                  )}
                 </Accordion.Body>
               </Accordion.Item>
             )}
+
 
             {/* Match */}
             {matches.length > 0 && (
