@@ -197,7 +197,7 @@ const PartnershipStatPage = () => {
                       </div>
 
                       {/* Contribution bar */}
-                      <div className="my-2" style={{ height: "8px", width: "100%", borderRadius: "4px", overflow: "hidden" }}>
+                      <div className="my-2" style={{ height: "10px", width: "100%", borderRadius: "4px", overflow: "hidden" }}>
                         {(() => {
                           const total = p.partnership_runs || 1;
                           const maxWidth = 150;
