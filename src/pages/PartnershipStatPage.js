@@ -98,7 +98,9 @@ const PartnershipStatPage = () => {
               <Card.Body>
                 <Accordion alwaysOpen>
                   <Accordion.Item eventKey="0">
-                    <Accordion.Header>Team Category</Accordion.Header>
+                    <Accordion.Header>
+                      <h5 className="fw-bold m-0">Team Category</h5>
+                    </Accordion.Header>
                     <Accordion.Body>
                       <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
                         {teamCategories.map((cat, i) => (
@@ -108,7 +110,9 @@ const PartnershipStatPage = () => {
                     </Accordion.Body>
                   </Accordion.Item>
                   <Accordion.Item eventKey="1">
-                    <Accordion.Header>Tournament</Accordion.Header>
+                    <Accordion.Header>
+                      <h5 className="fw-bold m-0">Tournament</h5>
+                    </Accordion.Header>
                     <Accordion.Body>
                       <Form.Select
                         value={selectedTournament}
@@ -123,7 +127,9 @@ const PartnershipStatPage = () => {
                     </Accordion.Body>
                   </Accordion.Item>
                   <Accordion.Item eventKey="2">
-                    <Accordion.Header>Match</Accordion.Header>
+                    <Accordion.Header>
+                      <h5 className="fw-bold m-0">Match</h5>
+                    </Accordion.Header>
                     <Accordion.Body>
                       <Form.Select
                         value={selectedMatch}
