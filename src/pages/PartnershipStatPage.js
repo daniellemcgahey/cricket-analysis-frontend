@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
-import { Accordion, Spinner, Alert, Button, Form, Card } from "react-bootstrap";
+import { Accordion, Spinner, Alert, Button, Form, Card, ButtonGroup } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 
 const PartnershipStatPage = () => {
@@ -12,7 +12,8 @@ const PartnershipStatPage = () => {
   const [selectedTournament, setSelectedTournament] = useState("");
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState("");
-  const [partnershipsData, setPartnershipsData] = useState({});
+  const [partnershipsData, setPartnershipsData] = useState([]);
+  const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
@@ -39,54 +40,22 @@ const PartnershipStatPage = () => {
       tournament: selectedTournament,
       match_id: selectedMatch
     })
-    .then(res => {
-      setPartnershipsData(res.data.partnerships || {});
-      setLoading(false);
-    })
-    .catch(() => {
-      setLoading(false);
-      alert("Failed to fetch partnership data.");
-    });
+      .then(res => {
+        setPartnershipsData(res.data.partnerships || []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        alert("Failed to fetch partnership data.");
+      });
   };
 
-  const renderPartnershipsForTeam = (teamName, partnerships) => (
-    <div key={teamName} className="mb-4">
-      <h4 className="fw-bold mb-3">{teamName} Partnerships</h4>
-      {partnerships.length > 0 ? (
-        partnerships.map((p, idx) => (
-          <Card
-            key={idx}
-            className={`mb-2 ${isDarkMode ? "bg-dark text-white" : ""}`}
-          >
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <div>
-                  <strong>Wicket {p.start_wicket}{p.unbeaten === 1 && <sup>*</sup>}</strong>
-                  <div className="text-muted small">
-                    Overs: {p.start_over} – {p.end_over}
-                  </div>
-                </div>
-                <div className="text-end">
-                  <strong>Partnership:</strong> {p.partnership_runs} runs, {p.partnership_balls} balls
-                </div>
-              </div>
-
-              <div className="d-flex justify-content-between">
-                <div>
-                  <strong>{p.batter1_name}</strong>: {p.batter1_runs}({p.batter1_balls})
-                </div>
-                <div>
-                  <strong>{p.batter2_name}</strong>: {p.batter2_runs}({p.batter2_balls})
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        ))
-      ) : (
-        <Alert variant="info">No partnership data for {teamName}.</Alert>
-      )}
-    </div>
-  );
+  // Group partnerships by innings
+  const partnershipsByInnings = partnershipsData.reduce((acc, p) => {
+    if (!acc[p.innings_id]) acc[p.innings_id] = [];
+    acc[p.innings_id].push(p);
+    return acc;
+  }, {});
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -97,7 +66,6 @@ const PartnershipStatPage = () => {
             <Card className={isDarkMode ? "bg-dark text-white" : ""}>
               <Card.Body>
                 <Accordion alwaysOpen>
-                  {/* Team Category */}
                   <Accordion.Item eventKey="0">
                     <Accordion.Header>
                       <h5 className="fw-bold m-0">Team Category</h5>
@@ -114,7 +82,6 @@ const PartnershipStatPage = () => {
                     </Accordion.Body>
                   </Accordion.Item>
 
-                  {/* Tournament */}
                   <Accordion.Item eventKey="1">
                     <Accordion.Header>
                       <h5 className="fw-bold m-0">Tournament</h5>
@@ -133,7 +100,6 @@ const PartnershipStatPage = () => {
                     </Accordion.Body>
                   </Accordion.Item>
 
-                  {/* Match */}
                   <Accordion.Item eventKey="2">
                     <Accordion.Header>
                       <h5 className="fw-bold m-0">Match</h5>
@@ -174,20 +140,38 @@ const PartnershipStatPage = () => {
 
           {/* Partnerships Display */}
           <div className="col-md-9">
+            {partnershipsData.length > 0 && (
+              <div className="text-center mb-3">
+                <ButtonGroup>
+                  {[0, 1].map((idx) => (
+                    <Button
+                      key={idx}
+                      variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
+                      onClick={() => setSelectedInningsIndex(idx)}
+                    >
+                      {idx === 0
+                        ? `1st Innings — ${matches.find(m => m.match_id === selectedMatch)?.team_a || "Team 1"}`
+                        : `2nd Innings — ${matches.find(m => m.match_id === selectedMatch)?.team_b || "Team 2"}`}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              </div>
+            )}
+
             {loading ? (
               <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
                 <Spinner animation="border" />
               </div>
             ) : (
-              partnershipsData.length > 0 ? (
-                partnershipsData.map((p, idx) => (
+              (partnershipsByInnings[selectedInningsIndex + 1] || []).length > 0 ? (
+                partnershipsByInnings[selectedInningsIndex + 1].map((p, idx) => (
                   <Card key={idx} className={`mb-2 ${isDarkMode ? "bg-dark text-white" : ""}`}>
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div>
                           <strong>Wicket {p.start_wicket}</strong>
                           <div className="text-muted small">
-                            Overs: {p.start_ball} – {p.end_ball}
+                            Balls: {p.start_ball} – {p.end_ball}
                           </div>
                         </div>
                         <div className="text-end">
@@ -202,10 +186,9 @@ const PartnershipStatPage = () => {
                   </Card>
                 ))
               ) : (
-                <Alert variant="info">No partnership data available.</Alert>
+                <Alert variant="info">No partnership data available for this innings.</Alert>
               )
             )}
-
           </div>
         </div>
       </div>
