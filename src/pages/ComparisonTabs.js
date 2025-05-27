@@ -3,7 +3,6 @@ import React, { useContext } from "react";
 import { Tabs, Tab } from "react-bootstrap";
 import CountryComparisonPage from "./CountryComparisonPage";
 import CountryOverTournamentPage from "./CountryOverTournamentPage";
-import PlayerComparisonPage from "./PlayerComparisonPage";
 import PlayerOverTournamentPage from "./PlayerOverTournamentPage";
 import PressureTab from "./PressureTab";
 import WagonWheelComparisonPage from "./WagonWheelComparisonPage"
@@ -38,9 +37,6 @@ const ComparisonTabs = () => {
           </Tab>
           <Tab eventKey="country-tournament" title="Country Over Tournaments">
             <CountryOverTournamentPage />
-          </Tab>
-          <Tab eventKey="player" title="Player vs Player">
-            <PlayerComparisonPage />
           </Tab>
           <Tab eventKey="player-tournament" title="Player Over Tournaments">
             <PlayerOverTournamentPage />

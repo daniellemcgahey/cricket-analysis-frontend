@@ -682,36 +682,84 @@ const TrendsTab = () => {
         <BackButton isDarkMode={isDarkMode} />
 
         <div className="row">
-        <div className="col-md-4">
-          <BattingBowlingToggle selected={trendMode} onChange={setTrendMode} />
-            <Accordion defaultActiveKey="0">
+          <div className="col-md-3">
+            <BattingBowlingToggle selected={trendMode} onChange={setTrendMode} />
+            
+            <Accordion alwaysOpen>
+              {/* Team Category */}
               <Accordion.Item eventKey="0">
-                <Accordion.Header>Filters</Accordion.Header>
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Team Category</h5>
+                </Accordion.Header>
                 <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Team Category</Form.Label>
-                    <Form.Select value={teamCategory} onChange={(e) => setTeamCategory(e.target.value)}>
+                    <Form.Select
+                      value={teamCategory}
+                      onChange={(e) => setTeamCategory(e.target.value)}
+                    >
                       {["Men", "Women", "U19 Men", "U19 Women", "Training"].map(cat => (
-                        <option key={cat}>{cat}</option>
+                        <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </Form.Select>
                   </Form.Group>
+                </Accordion.Body>
+              </Accordion.Item>
+
+              {/* Country */}
+              <Accordion.Item eventKey="1">
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Country</h5>
+                </Accordion.Header>
+                <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Country</Form.Label>
-                    <Form.Select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)}>
+                    <Form.Select
+                      value={selectedCountry}
+                      onChange={(e) => setSelectedCountry(e.target.value)}
+                      disabled={countries.length === 0}
+                    >
                       <option value="">Select Country</option>
-                      {countries.map(c => <option key={c}>{c}</option>)}
+                      {countries.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
                     </Form.Select>
+                    {countries.length === 0 && (
+                      <small className="text-muted">No countries available</small>
+                    )}
                   </Form.Group>
+                </Accordion.Body>
+              </Accordion.Item>
+
+              {/* Player */}
+              <Accordion.Item eventKey="2">
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Player</h5>
+                </Accordion.Header>
+                <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Player</Form.Label>
-                    <Form.Select value={selectedPlayer} onChange={(e) => setSelectedPlayer(e.target.value)}>
+                    <Form.Select
+                      value={selectedPlayer}
+                      onChange={(e) => setSelectedPlayer(e.target.value)}
+                      disabled={players.length === 0}
+                    >
                       <option value="">Select Player</option>
-                      {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      {players.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
                     </Form.Select>
+                    {players.length === 0 && (
+                      <small className="text-muted">No players available</small>
+                    )}
                   </Form.Group>
+                </Accordion.Body>
+              </Accordion.Item>
+
+              {/* Tournaments */}
+              <Accordion.Item eventKey="3">
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Tournaments</h5>
+                </Accordion.Header>
+                <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Tournaments</Form.Label>
                     {tournaments.map(t => (
                       <Form.Check
                         key={t}
@@ -729,15 +777,30 @@ const TrendsTab = () => {
                         }}
                       />
                     ))}
+                    {tournaments.length === 0 && (
+                      <small className="text-muted">No tournaments available</small>
+                    )}
                   </Form.Group>
-
-                  <button className="btn btn-primary w-100" onClick={handleGenerate}>
-                    {loading ? <Spinner size="sm" animation="border" /> : "Generate Trends"}
-                  </button>
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>
+
+            {/* Generate Button outside accordion */}
+            <div className="mt-3">
+              <button
+                className="btn btn-primary w-100"
+                onClick={handleGenerate}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner size="sm" animation="border" />
+                ) : (
+                  "Generate Trends"
+                )}
+              </button>
+            </div>
           </div>
+
   
           <div className="col-md-8">
             {trendData && (
