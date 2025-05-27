@@ -66,30 +66,6 @@ const DetailedMatchTab = () => {
     return acc;
   }, {});
 
-  const renderBallDisplay = (ball) => {
-    if (ball.wicket) return "W";
-
-    const runsFromBat = ball.runs || 0;
-    const wides = ball.wides || 0;
-    const noBalls = ball.no_balls || 0;
-    const byes = ball.byes || 0;
-    const legByes = ball.leg_byes || 0;
-
-    const totalRuns = runsFromBat + wides + noBalls + byes + legByes;
-
-    if (wides > 0) return totalRuns > 0 ? `[Wd+${totalRuns}]` : "[Wd]";
-    if (noBalls > 0) {
-      if (runsFromBat > 0) return `[NB+${runsFromBat}]`;
-      if (byes > 0) return `[NB+${byes}B]`;
-      if (legByes > 0) return `[NB+${legByes}LB]`;
-      return "[NB]";
-    }
-    if (byes > 0) return `[${byes}B]`;
-    if (legByes > 0) return `[${legByes}LB]`;
-
-    return runsFromBat === 0 ? "." : runsFromBat;
-  };
-
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -215,7 +191,7 @@ const DetailedMatchTab = () => {
                             fontWeight: "bold"
                           }}
                         >
-                          {renderBallDisplay(ball)}
+                          {ball.outcome}
                         </span>
                       ))}
                     </div>
