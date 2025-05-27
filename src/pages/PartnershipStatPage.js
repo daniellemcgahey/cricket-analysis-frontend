@@ -196,6 +196,27 @@ const PartnershipStatPage = () => {
                         <div><strong>{p.batter2_name}</strong>: {p.batter2_runs}({p.batter2_legal_balls})</div>
                       </div>
 
+                      {/* Contribution bar */}
+                      <div className="my-2" style={{ height: "8px", width: "100%", backgroundColor: "#ddd", borderRadius: "4px", overflow: "hidden" }}>
+                        {(() => {
+                          const total = p.partnership_runs || 1;
+                          const maxWidth = 150; 
+                          const b1Width = Math.max((p.batter1_runs / maxWidth) * 100, 1);
+                          const b2Width = Math.max((p.batter2_runs / maxWidth) * 100, 1);
+                          const extras = total - (p.batter1_runs + p.batter2_runs);
+                          const extrasWidth = Math.max((extras / maxWidth) * 100, 1);
+
+                          return (
+                            <div style={{ display: "flex", height: "100%" }}>
+                              <div style={{ width: `${b1Width}%`, backgroundColor: "orange" }} />
+                              <div style={{ width: `${b2Width}%`, backgroundColor: "blue" }} />
+                              <div style={{ width: `${extrasWidth}%`, backgroundColor: "grey" }} />
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+
                       {expandedPartnershipId === p.partnership_id && partnershipDetails[p.partnership_id] && (
                         <Row className="mt-3">
                           <Col md={5}>
