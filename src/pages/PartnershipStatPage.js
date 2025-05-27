@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
-import { Accordion, Spinner, Alert, Button, Form, Card, ButtonGroup } from "react-bootstrap";
+import { Accordion, Spinner, Alert, Button, Form, Card, ButtonGroup, Table } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
+import WagonWheelChart from "./WagonWheelChart";
 
 const PartnershipStatPage = () => {
   const { isDarkMode } = useContext(DarkModeContext);
@@ -16,6 +17,10 @@ const PartnershipStatPage = () => {
   const [inningsOrder, setInningsOrder] = useState([]);
   const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Partnership details
+  const [expandedPartnershipId, setExpandedPartnershipId] = useState(null);
+  const [partnershipDetails, setPartnershipDetails] = useState({});
 
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
@@ -45,7 +50,6 @@ const PartnershipStatPage = () => {
         const data = res.data.partnerships || [];
         setPartnershipsData(data);
 
-        // Determine real innings order
         const uniqueInnings = [...new Set(data.map(p => p.innings_id))];
         setInningsOrder(uniqueInnings);
 
@@ -64,7 +68,6 @@ const PartnershipStatPage = () => {
     return acc;
   }, {});
 
-  // Get batting team name for each innings
   const getBattingTeamForInnings = (inningsId) => {
     const firstPartnership = partnershipsData.find(p => p.innings_id === inningsId);
     return firstPartnership ? firstPartnership.batting_team : `Innings ${inningsId}`;
@@ -72,6 +75,20 @@ const PartnershipStatPage = () => {
 
   const currentInningsId = inningsOrder[selectedInningsIndex];
   const partnershipsForInnings = partnershipsByInnings[currentInningsId] || [];
+
+  const handlePartnershipClick = (partnershipId) => {
+    if (expandedPartnershipId === partnershipId) {
+      setExpandedPartnershipId(null);
+    } else {
+      setExpandedPartnershipId(partnershipId);
+      if (!partnershipDetails[partnershipId]) {
+        api.get(`/partnership-details/${partnershipId}`)
+          .then(res => {
+            setPartnershipDetails(prev => ({ ...prev, [partnershipId]: res.data }));
+          });
+      }
+    }
+  };
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -180,7 +197,7 @@ const PartnershipStatPage = () => {
               partnershipsForInnings.length > 0 ? (
                 partnershipsForInnings.map((p, idx) => (
                   <Card key={idx} className={`mb-2 ${isDarkMode ? "bg-dark text-white" : ""}`}>
-                    <Card.Body>
+                    <Card.Body onClick={() => handlePartnershipClick(p.partnership_id)} style={{ cursor: "pointer" }}>
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div>
                           <strong>Wicket {p.start_wicket}</strong>
@@ -196,6 +213,35 @@ const PartnershipStatPage = () => {
                         <div><strong>{p.batter1_name}</strong>: {p.batter1_runs}({p.batter1_legal_balls})</div>
                         <div><strong>{p.batter2_name}</strong>: {p.batter2_runs}({p.batter2_legal_balls})</div>
                       </div>
+
+                      {expandedPartnershipId === p.partnership_id && (
+                        <div className="mt-3 d-flex">
+                          {/* Summary Table */}
+                          <div className="me-4">
+                            {partnershipDetails[p.partnership_id] ? (
+                              <Table striped bordered size="sm" className={isDarkMode ? "table-dark" : ""}>
+                                <tbody>
+                                  {Object.entries(partnershipDetails[p.partnership_id].summary).map(([key, val]) => (
+                                    <tr key={key}>
+                                      <td className="text-capitalize">{key.replace(/_/g, " ")}</td>
+                                      <td>{val}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </Table>
+                            ) : (
+                              <Spinner size="sm" animation="border" />
+                            )}
+                          </div>
+
+                          {/* Wagon Wheel Chart */}
+                          <div className="flex-fill">
+                            {partnershipDetails[p.partnership_id] && (
+                              <WagonWheelChart data={partnershipDetails[p.partnership_id].wagon_wheel} />
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </Card.Body>
                   </Card>
                 ))
