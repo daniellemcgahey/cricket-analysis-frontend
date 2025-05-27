@@ -94,35 +94,65 @@ const MatchPressurePage = () => {
     <div className="container-fluid py-4">
       <div className="row">
         {/* Filters */}
-        <div className="col-md-3" style={{ marginLeft: "0px" }}>
+        <div className="col-md-3">
           <Card className={isDarkMode ? "bg-dark text-white" : ""}>
             <Card.Body>
-              <Accordion defaultActiveKey="0">
+              <Accordion alwaysOpen>
+                {/* Team Category */}
                 <Accordion.Item eventKey="0">
-                  <Accordion.Header>Filter Options</Accordion.Header>
+                  <Accordion.Header>
+                    <h5 className="fw-bold m-0">Team Category</h5>
+                  </Accordion.Header>
                   <Accordion.Body>
                     <Form.Group className="mb-3">
-                      <Form.Label>Team Category</Form.Label>
-                      <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
+                      <Form.Select
+                        value={teamCategory}
+                        onChange={e => setTeamCategory(e.target.value)}
+                      >
                         {teamCategories.map((cat, i) => (
                           <option key={i} value={cat}>{cat}</option>
                         ))}
                       </Form.Select>
                     </Form.Group>
+                  </Accordion.Body>
+                </Accordion.Item>
 
+                {/* Tournament */}
+                <Accordion.Item eventKey="1">
+                  <Accordion.Header>
+                    <h5 className="fw-bold m-0">Tournament</h5>
+                  </Accordion.Header>
+                  <Accordion.Body>
                     <Form.Group className="mb-3">
-                      <Form.Label>Tournament</Form.Label>
-                      <Form.Select value={selectedTournament} onChange={e => setSelectedTournament(e.target.value)}>
+                      <Form.Select
+                        value={selectedTournament}
+                        onChange={e => setSelectedTournament(e.target.value)}
+                        disabled={tournaments.length === 0}
+                      >
                         <option value="">-- Select Tournament --</option>
                         {tournaments.map((t, i) => (
                           <option key={i} value={t}>{t}</option>
                         ))}
                       </Form.Select>
+                      {tournaments.length === 0 && (
+                        <small className="text-muted">No tournaments available</small>
+                      )}
                     </Form.Group>
+                  </Accordion.Body>
+                </Accordion.Item>
 
+                {/* Match */}
+                <Accordion.Item eventKey="2">
+                  <Accordion.Header>
+                    <h5 className="fw-bold m-0">Match</h5>
+                  </Accordion.Header>
+                  <Accordion.Body>
                     <Form.Group className="mb-3">
-                      <Form.Label>Match</Form.Label>
-                      <Form.Select value={selectedMatch} onChange={e => setSelectedMatch(e.target.value)}>
+                      <Form.Select
+                        value={selectedMatch}
+                        onChange={e => setSelectedMatch(e.target.value)}
+                        disabled={matches.length === 0}
+                      >
                         <option value="">-- Select Match --</option>
                         {matches.map((m, i) => (
                           <option key={i} value={m.match_id}>
@@ -130,10 +160,29 @@ const MatchPressurePage = () => {
                           </option>
                         ))}
                       </Form.Select>
+                      {matches.length === 0 && (
+                        <small className="text-muted">No matches available</small>
+                      )}
                     </Form.Group>
+                  </Accordion.Body>
+                </Accordion.Item>
 
-                    <Button onClick={fetchData} disabled={loading} className="w-100">
-                      {loading ? <Spinner size="sm" animation="border" /> : "Generate Momentum Graphs"}
+                {/* Generate Button */}
+                <Accordion.Item eventKey="3">
+                  <Accordion.Header>
+                    <h5 className="fw-bold m-0">Generate</h5>
+                  </Accordion.Header>
+                  <Accordion.Body>
+                    <Button
+                      onClick={fetchData}
+                      disabled={loading}
+                      className="w-100"
+                    >
+                      {loading ? (
+                        <Spinner size="sm" animation="border" />
+                      ) : (
+                        "Generate Momentum Graphs"
+                      )}
                     </Button>
                   </Accordion.Body>
                 </Accordion.Item>
@@ -141,6 +190,7 @@ const MatchPressurePage = () => {
             </Card.Body>
           </Card>
         </div>
+
 
         {/* Graphs */}
         <div className="col-md-8">
