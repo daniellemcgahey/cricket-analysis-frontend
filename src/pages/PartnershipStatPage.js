@@ -179,10 +179,33 @@ const PartnershipStatPage = () => {
                 <Spinner animation="border" />
               </div>
             ) : (
-              Object.entries(partnershipsData).map(([teamName, partnerships]) =>
-                renderPartnershipsForTeam(teamName, partnerships)
+              partnershipsData.length > 0 ? (
+                partnershipsData.map((p, idx) => (
+                  <Card key={idx} className={`mb-2 ${isDarkMode ? "bg-dark text-white" : ""}`}>
+                    <Card.Body>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                          <strong>Wicket {p.start_wicket}</strong>
+                          <div className="text-muted small">
+                            Overs: {p.start_ball} – {p.end_ball}
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <strong>Partnership:</strong> {p.partnership_runs} runs, {p.partnership_legal_balls} balls
+                        </div>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <div><strong>{p.batter1_name}</strong>: {p.batter1_runs}({p.batter1_legal_balls})</div>
+                        <div><strong>{p.batter2_name}</strong>: {p.batter2_runs}({p.batter2_legal_balls})</div>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))
+              ) : (
+                <Alert variant="info">No partnership data available.</Alert>
               )
             )}
+
           </div>
         </div>
       </div>
