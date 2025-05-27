@@ -61,7 +61,7 @@ const PartnershipStatPage = () => {
             <Card.Body>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                  <strong>Wicket {p.start_wicket + 1}{p.unbeaten === 1 && <sup>*</sup>}</strong>
+                  <strong>Wicket {p.start_wicket}{p.unbeaten === 1 && <sup>*</sup>}</strong>
                   <div className="text-muted small">
                     Overs: {p.start_over} – {p.end_over}
                   </div>
