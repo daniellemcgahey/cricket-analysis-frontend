@@ -40,7 +40,7 @@ const PartnershipStatPage = () => {
       match_id: selectedMatch
     })
     .then(res => {
-      setPartnershipsData(res.data.partnerships_by_innings || {});
+      setPartnershipsData(res.data.partnerships || {});
       setLoading(false);
     })
     .catch(() => {
