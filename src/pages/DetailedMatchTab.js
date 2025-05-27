@@ -66,6 +66,30 @@ const DetailedMatchTab = () => {
     return acc;
   }, {});
 
+  const getBallStyle = (ball) => {
+    const outcome = ball.outcome;
+
+    if (outcome === "W") {
+      return { backgroundColor: "red", color: "white", fontWeight: "bold" };
+    }
+
+    // Check for boundaries
+    if (outcome === "4" || outcome === "6") {
+      return { backgroundColor: "yellow", color: "black", fontWeight: "bold" };
+    }
+
+    // Check for extras (by presence of square brackets)
+    if (outcome.includes("[") && outcome.includes("]")) {
+      return { backgroundColor: "blue", color: "white", fontWeight: "bold" };
+    }
+
+    // Default style
+    return {
+      backgroundColor: isDarkMode ? "#333" : "#e9ecef",
+      fontWeight: "bold"
+    };
+  };
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -186,10 +210,7 @@ const DetailedMatchTab = () => {
                         <span
                           key={i}
                           className="border rounded px-2 py-1"
-                          style={{
-                            backgroundColor: isDarkMode ? "#333" : "#e9ecef",
-                            fontWeight: "bold"
-                          }}
+                          style={getBallStyle(ball)}
                         >
                           {ball.outcome}
                         </span>
