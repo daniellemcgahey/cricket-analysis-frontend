@@ -197,20 +197,20 @@ const PartnershipStatPage = () => {
                       </div>
 
                       {/* Contribution bar */}
-                      <div className="my-2" style={{ height: "8px", width: "100%", backgroundColor: "#ddd", borderRadius: "4px", overflow: "hidden" }}>
+                      <div className="my-2" style={{ height: "8px", width: "100%", borderRadius: "4px", overflow: "hidden" }}>
                         {(() => {
                           const total = p.partnership_runs || 1;
-                          const maxWidth = 150; 
-                          const b1Width = Math.max((p.batter1_runs / maxWidth) * 100, 1);
-                          const b2Width = Math.max((p.batter2_runs / maxWidth) * 100, 1);
+                          const maxWidth = 150;
+                          const b1Width = Math.max((p.batter1_runs / maxWidth) * 100, 0);
+                          const b2Width = Math.max((p.batter2_runs / maxWidth) * 100, 0);
                           const extras = total - (p.batter1_runs + p.batter2_runs);
-                          const extrasWidth = Math.max((extras / maxWidth) * 100, 1);
+                          const extrasWidth = Math.max((extras / maxWidth) * 100, 0);
 
                           return (
                             <div style={{ display: "flex", height: "100%" }}>
-                              <div style={{ width: `${b1Width}%`, backgroundColor: "orange" }} />
-                              <div style={{ width: `${b2Width}%`, backgroundColor: "blue" }} />
-                              <div style={{ width: `${extrasWidth}%`, backgroundColor: "grey" }} />
+                              {b1Width > 0 && <div style={{ width: `${b1Width}%`, backgroundColor: "orange" }} />}
+                              {b2Width > 0 && <div style={{ width: `${b2Width}%`, backgroundColor: "blue" }} />}
+                              {extrasWidth > 0 && <div style={{ width: `${extrasWidth}%`, backgroundColor: "grey" }} />}
                             </div>
                           );
                         })()}
