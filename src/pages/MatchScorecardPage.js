@@ -57,33 +57,63 @@ const ScorecardTab = () => {
       <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
         <div className="row">
-          <div className="col-md-3" style={{ marginLeft: "0px" }}>
-            <Accordion defaultActiveKey="0">
+          <div className="col-md-3">
+            <Accordion alwaysOpen>
+              {/* Team Category */}
               <Accordion.Item eventKey="0">
-                <Accordion.Header>Filters</Accordion.Header>
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Team Category</h5>
+                </Accordion.Header>
                 <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Team Category</Form.Label>
-                    <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
+                    <Form.Select
+                      value={teamCategory}
+                      onChange={e => setTeamCategory(e.target.value)}
+                    >
                       {["Men", "Women", "U19 Men", "U19 Women", "Training"].map(cat => (
-                        <option key={cat}>{cat}</option>
+                        <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </Form.Select>
                   </Form.Group>
+                </Accordion.Body>
+              </Accordion.Item>
 
+              {/* Tournament */}
+              <Accordion.Item eventKey="1">
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Tournament</h5>
+                </Accordion.Header>
+                <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Tournament</Form.Label>
-                    <Form.Select value={selectedTournament} onChange={e => setSelectedTournament(e.target.value)}>
+                    <Form.Select
+                      value={selectedTournament}
+                      onChange={e => setSelectedTournament(e.target.value)}
+                      disabled={tournaments.length === 0}
+                    >
                       <option value="">Select Tournament</option>
                       {tournaments.map((t, idx) => (
                         <option key={idx} value={t}>{t}</option>
                       ))}
                     </Form.Select>
+                    {tournaments.length === 0 && (
+                      <small className="text-muted">No tournaments available</small>
+                    )}
                   </Form.Group>
+                </Accordion.Body>
+              </Accordion.Item>
 
+              {/* Match */}
+              <Accordion.Item eventKey="2">
+                <Accordion.Header>
+                  <h5 className="fw-bold m-0">Match</h5>
+                </Accordion.Header>
+                <Accordion.Body>
                   <Form.Group className="mb-3">
-                    <Form.Label>Match</Form.Label>
-                    <Form.Select value={selectedMatch} onChange={e => setSelectedMatch(e.target.value)}>
+                    <Form.Select
+                      value={selectedMatch}
+                      onChange={e => setSelectedMatch(e.target.value)}
+                      disabled={matches.length === 0}
+                    >
                       <option value="">Select Match</option>
                       {matches.map((m, idx) => (
                         <option key={idx} value={m.match_id}>
@@ -91,15 +121,26 @@ const ScorecardTab = () => {
                         </option>
                       ))}
                     </Form.Select>
+                    {matches.length === 0 && (
+                      <small className="text-muted">No matches available</small>
+                    )}
                   </Form.Group>
-
-                  <button className="btn btn-primary w-100" onClick={handleGenerate}>
-                    {loading ? <Spinner size="sm" animation="border" /> : "Generate Scorecard"}
-                  </button>
                 </Accordion.Body>
               </Accordion.Item>
             </Accordion>
+
+            {/* Generate Button outside accordion */}
+            <div className="mt-3">
+              <button
+                className="btn btn-primary w-100"
+                onClick={handleGenerate}
+                disabled={loading}
+              >
+                {loading ? <Spinner size="sm" animation="border" /> : "Generate Scorecard"}
+              </button>
+            </div>
           </div>
+
 
           <div className="col-md-8">
             {loading ? (

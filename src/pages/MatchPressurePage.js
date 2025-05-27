@@ -166,27 +166,22 @@ const MatchPressurePage = () => {
                     </Form.Group>
                   </Accordion.Body>
                 </Accordion.Item>
-
-                {/* Generate Button */}
-                <Accordion.Item eventKey="3">
-                  <Accordion.Header>
-                    <h5 className="fw-bold m-0">Generate</h5>
-                  </Accordion.Header>
-                  <Accordion.Body>
-                    <Button
-                      onClick={fetchData}
-                      disabled={loading}
-                      className="w-100"
-                    >
-                      {loading ? (
-                        <Spinner size="sm" animation="border" />
-                      ) : (
-                        "Generate Momentum Graphs"
-                      )}
-                    </Button>
-                  </Accordion.Body>
-                </Accordion.Item>
               </Accordion>
+
+              {/* Generate Button outside accordion */}
+              <div className="mt-3">
+                <Button
+                  onClick={fetchData}
+                  disabled={loading}
+                  className="w-100"
+                >
+                  {loading ? (
+                    <Spinner size="sm" animation="border" />
+                  ) : (
+                    "Generate Graphs"
+                  )}
+                </Button>
+              </div>
             </Card.Body>
           </Card>
         </div>
