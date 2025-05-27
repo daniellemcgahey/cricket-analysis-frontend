@@ -7,6 +7,7 @@ import MatchScorecardPage from './MatchScorecardPage';
 import MatchPressurePage from './MatchPressurePage';
 import PartnershipStatsPage from './PartnershipStatPage';
 import MatchReportPage from './MatchReportPage';
+import DetailedMatchTab from './DetailedMatchTab';
 import "./TabStyles.css"; // 🔥 Custom styles here
 
 // Placeholder content — swap with real pages later
@@ -38,6 +39,9 @@ const MatchAnalysisTabs = () => {
           </Tab>
           <Tab eventKey="match-report" title="Match Reports">
             <MatchReportPage />
+          </Tab>
+          <Tab eventKey="detailed-match" title="Detailed Match">
+            <DetailedMatchTab />
           </Tab>
           <Tab eventKey="partnership-stats" title="Partnerships">
             <PartnershipStatsPage />
