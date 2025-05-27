@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
-import { Accordion, Spinner, Alert, Button, Form, Card, ButtonGroup, Table } from "react-bootstrap";
+import { Accordion, Spinner, Alert, Button, Form, Card, ButtonGroup, Table, Row, Col } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import WagonWheelChart from "./WagonWheelChart";
 
@@ -18,7 +18,6 @@ const PartnershipStatPage = () => {
   const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Partnership details
   const [expandedPartnershipId, setExpandedPartnershipId] = useState(null);
   const [partnershipDetails, setPartnershipDetails] = useState({});
 
@@ -61,7 +60,6 @@ const PartnershipStatPage = () => {
       });
   };
 
-  // Group partnerships by innings
   const partnershipsByInnings = partnershipsData.reduce((acc, p) => {
     if (!acc[p.innings_id]) acc[p.innings_id] = [];
     acc[p.innings_id].push(p);
@@ -100,25 +98,17 @@ const PartnershipStatPage = () => {
               <Card.Body>
                 <Accordion alwaysOpen>
                   <Accordion.Item eventKey="0">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Team Category</h5>
-                    </Accordion.Header>
+                    <Accordion.Header>Team Category</Accordion.Header>
                     <Accordion.Body>
-                      <Form.Select
-                        value={teamCategory}
-                        onChange={e => setTeamCategory(e.target.value)}
-                      >
+                      <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
                         {teamCategories.map((cat, i) => (
                           <option key={i} value={cat}>{cat}</option>
                         ))}
                       </Form.Select>
                     </Accordion.Body>
                   </Accordion.Item>
-
                   <Accordion.Item eventKey="1">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Tournament</h5>
-                    </Accordion.Header>
+                    <Accordion.Header>Tournament</Accordion.Header>
                     <Accordion.Body>
                       <Form.Select
                         value={selectedTournament}
@@ -132,11 +122,8 @@ const PartnershipStatPage = () => {
                       </Form.Select>
                     </Accordion.Body>
                   </Accordion.Item>
-
                   <Accordion.Item eventKey="2">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Match</h5>
-                    </Accordion.Header>
+                    <Accordion.Header>Match</Accordion.Header>
                     <Accordion.Body>
                       <Form.Select
                         value={selectedMatch}
@@ -153,18 +140,9 @@ const PartnershipStatPage = () => {
                     </Accordion.Body>
                   </Accordion.Item>
                 </Accordion>
-
                 <div className="mt-3">
-                  <Button
-                    onClick={fetchData}
-                    disabled={loading}
-                    className="w-100"
-                  >
-                    {loading ? (
-                      <Spinner size="sm" animation="border" />
-                    ) : (
-                      "Generate Partnerships"
-                    )}
+                  <Button onClick={fetchData} disabled={loading} className="w-100">
+                    {loading ? <Spinner size="sm" animation="border" /> : "Generate Partnerships"}
                   </Button>
                 </div>
               </Card.Body>
@@ -201,9 +179,7 @@ const PartnershipStatPage = () => {
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <div>
                           <strong>Wicket {p.start_wicket}</strong>
-                          <div className="text-muted small">
-                            Balls: {p.start_ball} – {p.end_ball}
-                          </div>
+                          <div className="text-muted small">Balls: {p.start_ball} – {p.end_ball}</div>
                         </div>
                         <div className="text-end">
                           <strong>Partnership:</strong> {p.partnership_runs} runs, {p.partnership_legal_balls} balls
@@ -214,33 +190,36 @@ const PartnershipStatPage = () => {
                         <div><strong>{p.batter2_name}</strong>: {p.batter2_runs}({p.batter2_legal_balls})</div>
                       </div>
 
-                      {expandedPartnershipId === p.partnership_id && (
-                        <div className="mt-3 d-flex">
-                          {/* Summary Table */}
-                          <div className="me-4">
-                            {partnershipDetails[p.partnership_id] ? (
-                              <Table striped bordered size="sm" className={isDarkMode ? "table-dark" : ""}>
-                                <tbody>
-                                  {Object.entries(partnershipDetails[p.partnership_id].summary).map(([key, val]) => (
-                                    <tr key={key}>
-                                      <td className="text-capitalize">{key.replace(/_/g, " ")}</td>
-                                      <td>{val}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </Table>
-                            ) : (
-                              <Spinner size="sm" animation="border" />
-                            )}
-                          </div>
-
-                          {/* Wagon Wheel Chart */}
-                          <div className="flex-fill">
-                            {partnershipDetails[p.partnership_id] && (
-                              <WagonWheelChart data={partnershipDetails[p.partnership_id].wagon_wheel} />
-                            )}
-                          </div>
-                        </div>
+                      {expandedPartnershipId === p.partnership_id && partnershipDetails[p.partnership_id] && (
+                        <Row className="mt-3">
+                          <Col md={5}>
+                            <Table bordered size="sm" style={{ minWidth: "300px" }}>
+                              <tbody>
+                                {Object.entries(partnershipDetails[p.partnership_id].summary).map(([key, val]) => (
+                                  <tr key={key}>
+                                    <td className="text-capitalize">{key.replace(/_/g, " ")}</td>
+                                    <td>{val}</td>
+                                  </tr>
+                                ))}
+                                <tr>
+                                  <td>Scoring Shot %</td>
+                                  <td>
+                                    {(() => {
+                                      const s = partnershipDetails[p.partnership_id].summary;
+                                      const scoringShots = s.ones + s.twos + s.threes + s.fours + s.sixes;
+                                      return s.total_balls > 0
+                                        ? ((scoringShots / s.total_balls) * 100).toFixed(1) + "%"
+                                        : "0%";
+                                    })()}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </Table>
+                          </Col>
+                          <Col md={7}>
+                            <WagonWheelChart data={partnershipDetails[p.partnership_id].wagon_wheel} perspective="Lines" />
+                          </Col>
+                        </Row>
                       )}
                     </Card.Body>
                   </Card>
