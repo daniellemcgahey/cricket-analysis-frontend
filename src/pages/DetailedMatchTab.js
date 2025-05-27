@@ -40,7 +40,8 @@ const DetailedMatchTab = () => {
     api.post("/match-ball-by-ball", { match_id: selectedMatch })
       .then(res => {
         const data = res.data.balls || [];
-        console.log("✅ Ball-by-ball data:", data); // Debug
+        console.log("✅ Ball-by-ball data:", data);
+
         setBallByBallData(data);
 
         const uniqueInnings = [...new Set(data.map(b => b.innings_id))];
@@ -68,27 +69,25 @@ const DetailedMatchTab = () => {
   const renderBallDisplay = (ball) => {
     if (ball.wicket) return "W";
 
-    const runs = ball.runs || 0;
+    const runsFromBat = ball.runs || 0;
     const wides = ball.wides || 0;
     const noBalls = ball.no_balls || 0;
     const byes = ball.byes || 0;
     const legByes = ball.leg_byes || 0;
 
-    if (wides > 0) {
-      return runs > 0 ? `[Wd+${runs}]` : `[Wd]`;
-    }
+    const totalRuns = runsFromBat + wides + noBalls + byes + legByes;
 
+    if (wides > 0) return totalRuns > 0 ? `[Wd+${totalRuns}]` : "[Wd]";
     if (noBalls > 0) {
-      if (runs > 0) return `[NB+${runs}]`;
+      if (runsFromBat > 0) return `[NB+${runsFromBat}]`;
       if (byes > 0) return `[NB+${byes}B]`;
       if (legByes > 0) return `[NB+${legByes}LB]`;
-      return `[NB]`;
+      return "[NB]";
     }
-
     if (byes > 0) return `[${byes}B]`;
     if (legByes > 0) return `[${legByes}LB]`;
 
-    return runs === 0 ? "." : runs;
+    return runsFromBat === 0 ? "." : runsFromBat;
   };
 
   return (
@@ -177,15 +176,20 @@ const DetailedMatchTab = () => {
             {inningsOrder.length > 0 && (
               <div className="text-center mb-3">
                 <ButtonGroup>
-                  {inningsOrder.map((inningsId, idx) => (
-                    <Button
-                      key={inningsId}
-                      variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
-                      onClick={() => setSelectedInningsIndex(idx)}
-                    >
-                      {`Innings ${idx + 1}`}
-                    </Button>
-                  ))}
+                  {inningsOrder.map((inningsId, idx) => {
+                    const inningsBalls = ballByBallData.filter(b => b.innings_id === inningsId);
+                    const battingTeam = inningsBalls[0]?.batting_team || "Unknown";
+
+                    return (
+                      <Button
+                        key={inningsId}
+                        variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
+                        onClick={() => setSelectedInningsIndex(idx)}
+                      >
+                        {`Innings ${idx + 1} — Batting: ${battingTeam}`}
+                      </Button>
+                    );
+                  })}
                 </ButtonGroup>
               </div>
             )}
