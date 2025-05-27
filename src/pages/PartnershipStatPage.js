@@ -64,6 +64,12 @@ const PartnershipStatPage = () => {
     return acc;
   }, {});
 
+  // Get batting team name for each innings
+  const getBattingTeamForInnings = (inningsId) => {
+    const firstPartnership = partnershipsData.find(p => p.innings_id === inningsId);
+    return firstPartnership ? firstPartnership.batting_team : `Innings ${inningsId}`;
+  };
+
   const currentInningsId = inningsOrder[selectedInningsIndex];
   const partnershipsForInnings = partnershipsByInnings[currentInningsId] || [];
 
@@ -155,13 +161,11 @@ const PartnershipStatPage = () => {
                 <ButtonGroup>
                   {inningsOrder.map((inningsId, idx) => (
                     <Button
-                      key={idx}
+                      key={inningsId}
                       variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
                       onClick={() => setSelectedInningsIndex(idx)}
                     >
-                      {idx === 0
-                        ? `1st Innings — ${matches.find(m => m.match_id === selectedMatch)?.team_a || "Team 1"}`
-                        : `2nd Innings — ${matches.find(m => m.match_id === selectedMatch)?.team_b || "Team 2"}`}
+                      {`Innings ${idx + 1} — ${getBattingTeamForInnings(inningsId)}`}
                     </Button>
                   ))}
                 </ButtonGroup>
