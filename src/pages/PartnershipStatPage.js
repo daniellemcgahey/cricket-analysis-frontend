@@ -13,6 +13,7 @@ const PartnershipStatPage = () => {
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState("");
   const [partnershipsData, setPartnershipsData] = useState([]);
+  const [inningsOrder, setInningsOrder] = useState([]);
   const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +42,13 @@ const PartnershipStatPage = () => {
       match_id: selectedMatch
     })
       .then(res => {
-        setPartnershipsData(res.data.partnerships || []);
+        const data = res.data.partnerships || [];
+        setPartnershipsData(data);
+
+        // Determine real innings order
+        const uniqueInnings = [...new Set(data.map(p => p.innings_id))];
+        setInningsOrder(uniqueInnings);
+
         setLoading(false);
       })
       .catch(() => {
@@ -56,6 +63,9 @@ const PartnershipStatPage = () => {
     acc[p.innings_id].push(p);
     return acc;
   }, {});
+
+  const currentInningsId = inningsOrder[selectedInningsIndex];
+  const partnershipsForInnings = partnershipsByInnings[currentInningsId] || [];
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -140,10 +150,10 @@ const PartnershipStatPage = () => {
 
           {/* Partnerships Display */}
           <div className="col-md-9">
-            {partnershipsData.length > 0 && (
+            {inningsOrder.length > 0 && (
               <div className="text-center mb-3">
                 <ButtonGroup>
-                  {[0, 1].map((idx) => (
+                  {inningsOrder.map((inningsId, idx) => (
                     <Button
                       key={idx}
                       variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
@@ -163,8 +173,8 @@ const PartnershipStatPage = () => {
                 <Spinner animation="border" />
               </div>
             ) : (
-              (partnershipsByInnings[selectedInningsIndex + 1] || []).length > 0 ? (
-                partnershipsByInnings[selectedInningsIndex + 1].map((p, idx) => (
+              partnershipsForInnings.length > 0 ? (
+                partnershipsForInnings.map((p, idx) => (
                   <Card key={idx} className={`mb-2 ${isDarkMode ? "bg-dark text-white" : ""}`}>
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center mb-2">
