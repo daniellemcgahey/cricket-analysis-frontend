@@ -39,21 +39,25 @@ const DetailedMatchTab = () => {
 
     api.post("/match-ball-by-ball", { match_id: selectedMatch })
       .then(res => {
-        const data = res.data || [];
+        const data = res.data.balls || [];
+        console.log("✅ Ball-by-ball data:", data); // Debug
         setBallByBallData(data);
 
         const uniqueInnings = [...new Set(data.map(b => b.innings_id))];
         setInningsOrder(uniqueInnings);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("❌ Error fetching data:", err);
         setLoading(false);
         alert("Failed to fetch ball-by-ball data.");
       });
   };
 
   const currentInningsId = inningsOrder[selectedInningsIndex];
-  const ballsForInnings = ballByBallData.filter(b => b.innings_id === currentInningsId);
+  const ballsForInnings = Array.isArray(ballByBallData)
+    ? ballByBallData.filter(b => b.innings_id === currentInningsId)
+    : [];
 
   const ballsByOver = ballsForInnings.reduce((acc, ball) => {
     if (!acc[ball.over_number]) acc[ball.over_number] = [];
@@ -190,30 +194,32 @@ const DetailedMatchTab = () => {
               <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
                 <Spinner animation="border" />
               </div>
-            ) : ballsForInnings.length > 0 ? (
-              Object.entries(ballsByOver).map(([over, balls], idx) => (
-                <div key={idx} className="mb-2">
-                  <div className="fw-bold mb-1">
-                    Over {over} — {balls[0].bowler_name}
-                  </div>
-                  <div className="d-flex flex-wrap gap-2">
-                    {balls.map((ball, i) => (
-                      <span
-                        key={i}
-                        className="border rounded px-2 py-1"
-                        style={{
-                          backgroundColor: isDarkMode ? "#333" : "#e9ecef",
-                          fontWeight: "bold"
-                        }}
-                      >
-                        {renderBallDisplay(ball)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))
             ) : (
-              <Alert variant="info">No ball-by-ball data available.</Alert>
+              Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
+                Object.entries(ballsByOver).map(([over, balls], idx) => (
+                  <div key={idx} className="mb-2">
+                    <div className="fw-bold mb-1">
+                      Over {over} — {balls[0]?.bowler_name || "Unknown"}
+                    </div>
+                    <div className="d-flex flex-wrap gap-2">
+                      {balls.map((ball, i) => (
+                        <span
+                          key={i}
+                          className="border rounded px-2 py-1"
+                          style={{
+                            backgroundColor: isDarkMode ? "#333" : "#e9ecef",
+                            fontWeight: "bold"
+                          }}
+                        >
+                          {renderBallDisplay(ball)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <Alert variant="info">No ball-by-ball data available for this innings.</Alert>
+              )
             )}
           </div>
         </div>
