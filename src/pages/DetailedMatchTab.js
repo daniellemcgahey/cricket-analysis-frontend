@@ -73,22 +73,49 @@ const DetailedMatchTab = () => {
       return { backgroundColor: "red", color: "white", fontWeight: "bold" };
     }
 
-    // Check for boundaries
     if (outcome === "4" || outcome === "6") {
       return { backgroundColor: "yellow", color: "black", fontWeight: "bold" };
     }
 
-    // Check for extras (by presence of square brackets)
     if (outcome.includes("[") && outcome.includes("]")) {
       return { backgroundColor: "blue", color: "white", fontWeight: "bold" };
     }
 
-    // Default style
     return {
       backgroundColor: isDarkMode ? "#333" : "#e9ecef",
       fontWeight: "bold"
     };
   };
+
+  const getInningsDotOneStreaks = (balls) => {
+    const streaks = [];
+    let currentStreak = 0;
+
+    for (const ball of balls) {
+      const outcome = ball.outcome;
+
+      if (outcome === "W" || outcome === "0" || outcome === "1") {
+        currentStreak += 1;
+      } else {
+        const isExtra = outcome.includes("[");
+        const runVal = parseInt(outcome);
+
+        if (isExtra || (!isNaN(runVal) && runVal > 1)) {
+          if (currentStreak > 0) streaks.push(currentStreak);
+          currentStreak = 0;
+        } else {
+          currentStreak += 1;
+        }
+      }
+    }
+
+    if (currentStreak > 0) streaks.push(currentStreak);
+
+    streaks.sort((a, b) => b - a);
+    return streaks.slice(0, 3);
+  };
+
+  const inningsStreaks = getInningsDotOneStreaks(ballsForInnings);
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -199,28 +226,39 @@ const DetailedMatchTab = () => {
                 <Spinner animation="border" />
               </div>
             ) : (
-              Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
-                Object.entries(ballsByOver).map(([over, balls], idx) => (
-                  <div key={idx} className="mb-2">
-                    <div className="fw-bold mb-1">
-                      Over {over} — {balls[0]?.bowler_name || "Unknown"}
-                    </div>
-                    <div className="d-flex flex-wrap gap-2">
-                      {balls.map((ball, i) => (
-                        <span
-                          key={i}
-                          className="border rounded px-2 py-1"
-                          style={getBallStyle(ball)}
-                        >
-                          {ball.outcome}
-                        </span>
-                      ))}
-                    </div>
+              <>
+                {ballsForInnings.length > 0 && (
+                  <div className="mb-3 text-muted small">
+                    <div>Maximum Dot and One Streak: {inningsStreaks[0] || 0}</div>
+                    <div>Second Dot and One Streak: {inningsStreaks[1] || 0}</div>
+                    <div>Third Dot and One Streak: {inningsStreaks[2] || 0}</div>
                   </div>
-                ))
-              ) : (
-                <Alert variant="info">No ball-by-ball data available for this innings.</Alert>
-              )
+                )}
+
+                {Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
+                  Object.entries(ballsByOver).map(([over, balls], idx) => (
+                    <div key={idx} className="mb-2">
+                      <div className="fw-bold mb-1">
+                        Over {over} — {balls[0]?.bowler_name || "Unknown"}
+                      </div>
+
+                      <div className="d-flex flex-wrap gap-2">
+                        {balls.map((ball, i) => (
+                          <span
+                            key={i}
+                            className="border rounded px-2 py-1"
+                            style={getBallStyle(ball)}
+                          >
+                            {ball.outcome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <Alert variant="info">No ball-by-ball data available for this innings.</Alert>
+                )}
+              </>
             )}
           </div>
         </div>
