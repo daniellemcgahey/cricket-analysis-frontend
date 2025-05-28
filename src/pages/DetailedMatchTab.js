@@ -68,9 +68,9 @@ const DetailedMatchTab = () => {
       backgroundColor: isDarkMode ? "#333" : "#e9ecef",
       fontWeight: "bold",
       border: "1px solid #ccc",
-      borderRadius: "4px",
+      borderRadius: "6px",
       padding: "2px 6px",
-      margin: "2px",
+      margin: "3px",
     };
 
     if (outcome === "W") baseStyle = { ...baseStyle, backgroundColor: "red", color: "white" };
@@ -182,7 +182,7 @@ const DetailedMatchTab = () => {
                 ballsForInnings.length > 0 ? (
                   Object.entries(ballsByOver).map(([over, balls], idx) => (
                     <div key={idx} className="mb-2">
-                      <div className="fw-bold mb-1">Over {over + 1} — {balls[0]?.bowler_name || "Unknown"}</div>
+                      <div className="fw-bold mb-1">Over {[over+1]} — {balls[0]?.bowler_name || "Unknown"}</div>
                       <div className="d-flex flex-wrap gap-2">
                         {balls.map((ball, i) => {
                           const globalIndex = ballsForInnings.findIndex(b => b === ball);
