@@ -64,23 +64,10 @@ const DetailedMatchTab = () => {
 
   const getBallStyle = (ball) => {
     const outcome = ball.outcome;
-
-    if (outcome === "W") {
-      return { backgroundColor: "red", color: "white", fontWeight: "bold" };
-    }
-
-    if (outcome === "4" || outcome === "6") {
-      return { backgroundColor: "yellow", color: "black", fontWeight: "bold" };
-    }
-
-    if (outcome.includes("[") && outcome.includes("]")) {
-      return { backgroundColor: "blue", color: "white", fontWeight: "bold" };
-    }
-
-    return {
-      backgroundColor: isDarkMode ? "#333" : "#e9ecef",
-      fontWeight: "bold"
-    };
+    if (outcome === "W") return { backgroundColor: "red", color: "white", fontWeight: "bold" };
+    if (outcome === "4" || outcome === "6") return { backgroundColor: "yellow", color: "black", fontWeight: "bold" };
+    if (outcome.includes("[") && outcome.includes("]")) return { backgroundColor: "blue", color: "white", fontWeight: "bold" };
+    return { backgroundColor: isDarkMode ? "#333" : "#e9ecef", fontWeight: "bold" };
   };
 
   const getInningsDotOneStreaks = (balls) => {
@@ -90,18 +77,14 @@ const DetailedMatchTab = () => {
 
     balls.forEach((ball, idx) => {
       const outcome = ball.outcome;
-
       if (outcome === "W" || outcome === "0" || outcome === "1" || outcome === "[1LB]") {
         if (currentStreak === 0) streakStartIndex = idx;
         currentStreak += 1;
       } else {
         const isExtra = outcome.includes("[");
         const runVal = parseInt(outcome);
-
         if (isExtra || (!isNaN(runVal) && runVal > 1)) {
-          if (currentStreak > 0) {
-            streaks.push({ length: currentStreak, start: streakStartIndex, end: idx - 1 });
-          }
+          if (currentStreak > 0) streaks.push({ length: currentStreak, start: streakStartIndex, end: idx - 1 });
           currentStreak = 0;
         } else {
           currentStreak += 1;
@@ -109,9 +92,7 @@ const DetailedMatchTab = () => {
       }
     });
 
-    if (currentStreak > 0) {
-      streaks.push({ length: currentStreak, start: streakStartIndex, end: balls.length - 1 });
-    }
+    if (currentStreak > 0) streaks.push({ length: currentStreak, start: streakStartIndex, end: balls.length - 1 });
 
     streaks.sort((a, b) => b.length - a.length);
     return streaks.slice(0, 3);
@@ -176,8 +157,9 @@ const DetailedMatchTab = () => {
             </Card>
           </div>
 
-          {/* Main data (left 9) and streak table (right 3) */}
+          {/* Data and Sidebar */}
           <div className="col-md-9 d-flex">
+            {/* Main data */}
             <div className="flex-grow-1 me-3">
               {inningsOrder.length > 0 && (
                 <div className="text-center mb-3">
@@ -211,17 +193,14 @@ const DetailedMatchTab = () => {
                       <div className="d-flex flex-wrap gap-2">
                         {balls.map((ball, i) => {
                           const globalIndex = ballsForInnings.findIndex(b => b === ball);
-                          let borderColor = "";
-                          if (inningsStreaks[0] && globalIndex >= inningsStreaks[0].start && globalIndex <= inningsStreaks[0].end) borderColor = "red";
-                          else if (inningsStreaks[1] && globalIndex >= inningsStreaks[1].start && globalIndex <= inningsStreaks[1].end) borderColor = "orange";
-                          else if (inningsStreaks[2] && globalIndex >= inningsStreaks[2].start && globalIndex <= inningsStreaks[2].end) borderColor = "green";
+                          const isMaxStreak = inningsStreaks[0] && globalIndex >= inningsStreaks[0].start && globalIndex <= inningsStreaks[0].end;
                           return (
                             <span
                               key={i}
                               className="border rounded px-2 py-1"
                               style={{
                                 ...getBallStyle(ball),
-                                borderBottom: borderColor ? `3px solid ${borderColor}` : "none"
+                                border: isMaxStreak ? "2px solid purple" : undefined
                               }}
                             >
                               {ball.outcome}
@@ -237,13 +216,12 @@ const DetailedMatchTab = () => {
               )}
             </div>
 
+            {/* Streak Sidebar */}
             {ballsForInnings.length > 0 && (
               <div style={{ minWidth: "200px" }}>
                 <h6 className="fw-bold">Top Dot and One Streaks</h6>
                 <table className={`table table-sm ${isDarkMode ? "table-dark" : "table-light"} mb-2`}>
-                  <thead>
-                    <tr><th>Rank</th><th>Length</th></tr>
-                  </thead>
+                  <thead><tr><th>Rank</th><th>Length</th></tr></thead>
                   <tbody>
                     <tr><td>Maximum</td><td>{inningsStreaks[0]?.length || 0}</td></tr>
                     <tr><td>Second</td><td>{inningsStreaks[1]?.length || 0}</td></tr>
