@@ -228,7 +228,7 @@ const DetailedMatchTab = () => {
             ) : (
               <>
                 {ballsForInnings.length > 0 && (
-                  <div className="mb-3 text-muted small">
+                  <div className="mb-3">
                     <div>Maximum Dot and One Streak: {inningsStreaks[0] || 0}</div>
                     <div>Second Dot and One Streak: {inningsStreaks[1] || 0}</div>
                     <div>Third Dot and One Streak: {inningsStreaks[2] || 0}</div>
