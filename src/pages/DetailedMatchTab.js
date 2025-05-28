@@ -47,7 +47,7 @@ const DetailedMatchTab = () => {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("❌ Error fetching data:", err);
+        console.error(err);
         setLoading(false);
         alert("Failed to fetch ball-by-ball data.");
       });
@@ -62,12 +62,23 @@ const DetailedMatchTab = () => {
     return acc;
   }, {});
 
-  const getBallStyle = (ball) => {
+  const getBallStyle = (ball, isMaxStreak) => {
     const outcome = ball.outcome;
-    if (outcome === "W") return { backgroundColor: "red", color: "white", fontWeight: "bold" };
-    if (outcome === "4" || outcome === "6") return { backgroundColor: "yellow", color: "black", fontWeight: "bold" };
-    if (outcome.includes("[") && outcome.includes("]")) return { backgroundColor: "blue", color: "white", fontWeight: "bold" };
-    return { backgroundColor: isDarkMode ? "#333" : "#e9ecef", fontWeight: "bold" };
+    let baseStyle = {
+      backgroundColor: isDarkMode ? "#333" : "#e9ecef",
+      fontWeight: "bold",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+      padding: "2px 6px",
+    };
+
+    if (outcome === "W") baseStyle = { ...baseStyle, backgroundColor: "red", color: "white" };
+    else if (outcome === "4" || outcome === "6") baseStyle = { ...baseStyle, backgroundColor: "yellow", color: "black" };
+    else if (outcome.includes("[") && outcome.includes("]")) baseStyle = { ...baseStyle, backgroundColor: "blue", color: "white" };
+
+    if (isMaxStreak) baseStyle = { ...baseStyle, border: "2px solid purple" };
+
+    return baseStyle;
   };
 
   const getInningsDotOneStreaks = (balls) => {
@@ -104,46 +115,33 @@ const DetailedMatchTab = () => {
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
         <div className="row">
-          {/* Filters */}
           <div className="col-md-3">
             <Card className={isDarkMode ? "bg-dark text-white" : ""}>
               <Card.Body>
                 <Accordion alwaysOpen>
                   <Accordion.Item eventKey="0">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Team Category</h5>
-                    </Accordion.Header>
+                    <Accordion.Header><h5 className="fw-bold m-0">Team Category</h5></Accordion.Header>
                     <Accordion.Body>
                       <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
-                        {teamCategories.map((cat, i) => (
-                          <option key={i} value={cat}>{cat}</option>
-                        ))}
+                        {teamCategories.map((cat, i) => (<option key={i} value={cat}>{cat}</option>))}
                       </Form.Select>
                     </Accordion.Body>
                   </Accordion.Item>
                   <Accordion.Item eventKey="1">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Tournament</h5>
-                    </Accordion.Header>
+                    <Accordion.Header><h5 className="fw-bold m-0">Tournament</h5></Accordion.Header>
                     <Accordion.Body>
                       <Form.Select value={selectedTournament} onChange={e => setSelectedTournament(e.target.value)} disabled={tournaments.length === 0}>
                         <option value="">-- Select Tournament --</option>
-                        {tournaments.map((t, i) => (
-                          <option key={i} value={t}>{t}</option>
-                        ))}
+                        {tournaments.map((t, i) => (<option key={i} value={t}>{t}</option>))}
                       </Form.Select>
                     </Accordion.Body>
                   </Accordion.Item>
                   <Accordion.Item eventKey="2">
-                    <Accordion.Header>
-                      <h5 className="fw-bold m-0">Match</h5>
-                    </Accordion.Header>
+                    <Accordion.Header><h5 className="fw-bold m-0">Match</h5></Accordion.Header>
                     <Accordion.Body>
                       <Form.Select value={selectedMatch} onChange={e => setSelectedMatch(e.target.value)} disabled={matches.length === 0}>
                         <option value="">-- Select Match --</option>
-                        {matches.map((m, i) => (
-                          <option key={i} value={m.match_id}>{`${new Date(m.match_date).toLocaleDateString()} — ${m.team_a} vs ${m.team_b}`}</option>
-                        ))}
+                        {matches.map((m, i) => (<option key={i} value={m.match_id}>{`${new Date(m.match_date).toLocaleDateString()} — ${m.team_a} vs ${m.team_b}`}</option>))}
                       </Form.Select>
                     </Accordion.Body>
                   </Accordion.Item>
@@ -157,9 +155,7 @@ const DetailedMatchTab = () => {
             </Card>
           </div>
 
-          {/* Data and Sidebar */}
           <div className="col-md-9 d-flex">
-            {/* Main data */}
             <div className="flex-grow-1 me-3">
               {inningsOrder.length > 0 && (
                 <div className="text-center mb-3">
@@ -168,11 +164,7 @@ const DetailedMatchTab = () => {
                       const inningsBalls = ballByBallData.filter(b => b.innings_id === inningsId);
                       const battingTeam = inningsBalls[0]?.batting_team || "Unknown";
                       return (
-                        <Button
-                          key={inningsId}
-                          variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
-                          onClick={() => setSelectedInningsIndex(idx)}
-                        >
+                        <Button key={inningsId} variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"} onClick={() => setSelectedInningsIndex(idx)}>
                           {`Innings ${idx + 1} — Batting: ${battingTeam}`}
                         </Button>
                       );
@@ -186,7 +178,7 @@ const DetailedMatchTab = () => {
                   <Spinner animation="border" />
                 </div>
               ) : (
-                Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
+                ballsForInnings.length > 0 ? (
                   Object.entries(ballsByOver).map(([over, balls], idx) => (
                     <div key={idx} className="mb-2">
                       <div className="fw-bold mb-1">Over {over} — {balls[0]?.bowler_name || "Unknown"}</div>
@@ -195,14 +187,7 @@ const DetailedMatchTab = () => {
                           const globalIndex = ballsForInnings.findIndex(b => b === ball);
                           const isMaxStreak = inningsStreaks[0] && globalIndex >= inningsStreaks[0].start && globalIndex <= inningsStreaks[0].end;
                           return (
-                            <span
-                              key={i}
-                              className="border rounded px-2 py-1"
-                              style={{
-                                ...getBallStyle(ball),
-                                border: isMaxStreak ? "2px solid purple" : undefined
-                              }}
-                            >
+                            <span key={i} style={getBallStyle(ball, isMaxStreak)}>
                               {ball.outcome}
                             </span>
                           );
@@ -216,7 +201,6 @@ const DetailedMatchTab = () => {
               )}
             </div>
 
-            {/* Streak Sidebar */}
             {ballsForInnings.length > 0 && (
               <div style={{ minWidth: "200px" }}>
                 <h6 className="fw-bold">Top Dot and One Streaks</h6>
