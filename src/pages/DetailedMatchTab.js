@@ -40,8 +40,6 @@ const DetailedMatchTab = () => {
     api.post("/match-ball-by-ball", { match_id: selectedMatch })
       .then(res => {
         const data = res.data.balls || [];
-        console.log("✅ Ball-by-ball data:", data);
-
         setBallByBallData(data);
 
         const uniqueInnings = [...new Set(data.map(b => b.innings_id))];
@@ -56,9 +54,7 @@ const DetailedMatchTab = () => {
   };
 
   const currentInningsId = inningsOrder[selectedInningsIndex];
-  const ballsForInnings = Array.isArray(ballByBallData)
-    ? ballByBallData.filter(b => b.innings_id === currentInningsId)
-    : [];
+  const ballsForInnings = ballByBallData.filter(b => b.innings_id === currentInningsId);
 
   const ballsByOver = ballsForInnings.reduce((acc, ball) => {
     if (!acc[ball.over_number]) acc[ball.over_number] = [];
@@ -94,7 +90,7 @@ const DetailedMatchTab = () => {
     for (const ball of balls) {
       const outcome = ball.outcome;
 
-      if (outcome === "W" || outcome === "0" || outcome === "1") {
+      if (outcome === "W" || outcome === "0" || outcome === "1" || outcome === "[1LB]") {
         currentStreak += 1;
       } else {
         const isExtra = outcome.includes("[");
@@ -198,44 +194,37 @@ const DetailedMatchTab = () => {
             </Card>
           </div>
 
-          {/* Ball-by-ball display */}
-          <div className="col-md-9">
-            {inningsOrder.length > 0 && (
-              <div className="text-center mb-3">
-                <ButtonGroup>
-                  {inningsOrder.map((inningsId, idx) => {
-                    const inningsBalls = ballByBallData.filter(b => b.innings_id === inningsId);
-                    const battingTeam = inningsBalls[0]?.batting_team || "Unknown";
+          {/* Data and Streak Table */}
+          <div className="col-md-9 d-flex">
+            {/* Ball-by-ball data (left) */}
+            <div className="flex-grow-1 me-3">
+              {inningsOrder.length > 0 && (
+                <div className="text-center mb-3">
+                  <ButtonGroup>
+                    {inningsOrder.map((inningsId, idx) => {
+                      const inningsBalls = ballByBallData.filter(b => b.innings_id === inningsId);
+                      const battingTeam = inningsBalls[0]?.batting_team || "Unknown";
 
-                    return (
-                      <Button
-                        key={inningsId}
-                        variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
-                        onClick={() => setSelectedInningsIndex(idx)}
-                      >
-                        {`Innings ${idx + 1} — Batting: ${battingTeam}`}
-                      </Button>
-                    );
-                  })}
-                </ButtonGroup>
-              </div>
-            )}
+                      return (
+                        <Button
+                          key={inningsId}
+                          variant={selectedInningsIndex === idx ? "success" : isDarkMode ? "outline-light" : "outline-dark"}
+                          onClick={() => setSelectedInningsIndex(idx)}
+                        >
+                          {`Innings ${idx + 1} — Batting: ${battingTeam}`}
+                        </Button>
+                      );
+                    })}
+                  </ButtonGroup>
+                </div>
+              )}
 
-            {loading ? (
-              <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
-                <Spinner animation="border" />
-              </div>
-            ) : (
-              <>
-                {ballsForInnings.length > 0 && (
-                  <div className="mb-3">
-                    <div>Maximum Dot and One Streak: {inningsStreaks[0] || 0}</div>
-                    <div>Second Dot and One Streak: {inningsStreaks[1] || 0}</div>
-                    <div>Third Dot and One Streak: {inningsStreaks[2] || 0}</div>
-                  </div>
-                )}
-
-                {Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
+              {loading ? (
+                <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
+                  <Spinner animation="border" />
+                </div>
+              ) : (
+                Array.isArray(ballsForInnings) && ballsForInnings.length > 0 ? (
                   Object.entries(ballsByOver).map(([over, balls], idx) => (
                     <div key={idx} className="mb-2">
                       <div className="fw-bold mb-1">
@@ -257,8 +246,37 @@ const DetailedMatchTab = () => {
                   ))
                 ) : (
                   <Alert variant="info">No ball-by-ball data available for this innings.</Alert>
-                )}
-              </>
+                )
+              )}
+            </div>
+
+            {/* Streak table (right) */}
+            {ballsForInnings.length > 0 && (
+              <div style={{ minWidth: "200px" }}>
+                <h6 className="fw-bold">Top Dot and One Streaks (Innings)</h6>
+                <table className={`table table-sm ${isDarkMode ? "table-dark" : "table-light"} mb-2`}>
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Streak</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Maximum</td>
+                      <td>{inningsStreaks[0] || 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Second</td>
+                      <td>{inningsStreaks[1] || 0}</td>
+                    </tr>
+                    <tr>
+                      <td>Third</td>
+                      <td>{inningsStreaks[2] || 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
