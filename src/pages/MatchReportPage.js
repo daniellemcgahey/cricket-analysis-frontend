@@ -98,23 +98,25 @@ const MatchReportPage = () => {
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
-    // 1️⃣ Generate the wagon wheel chart (or retrieve it from canvas/chart)
+    // 🔥 Explicitly upload wagon wheel before generating PDF
     const canvas = document.getElementById("wagonWheelCanvas");
     if (canvas) {
       const base64Image = canvas.toDataURL("image/png");
 
-      // 2️⃣ Upload it
-      await uploadWagonWheel(base64Image);
+      // Upload it
+      await api.post("/api/upload-wagon-wheel", { image: base64Image });
+      console.log("✅ Explicit wagon wheel image uploaded.");
     } else {
-      console.warn("⚠️ No wagon wheel canvas found! Skipping image upload.");
+      console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
     }
 
-    // 3️⃣ THEN generate the player PDF
+    // THEN generate the PDF
     window.open(
       `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
       "_blank"
     );
   };
+
 
   const generateTeamReport = () => {
     if (selectedMatchId && selectedTeam) {
