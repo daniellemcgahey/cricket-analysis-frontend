@@ -86,6 +86,15 @@ const MatchReportPage = () => {
       .catch(console.error);
   }, [selectedTeam]);
 
+  const uploadWagonWheel = async (base64Image) => {
+  try {
+    await api.post("/api/upload-wagon-wheel", { image: base64Image });
+    console.log("✅ Wagon wheel image uploaded successfully");
+  } catch (error) {
+    console.error("❌ Failed to upload wagon wheel image", error);
+  }
+};
+
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
