@@ -98,19 +98,21 @@ const MatchReportPage = () => {
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
-    // 🔥 Explicitly upload wagon wheel before generating PDF
     const canvas = document.getElementById("wagonWheelCanvas");
     if (canvas) {
       const base64Image = canvas.toDataURL("image/png");
 
-      // Upload it
-      await api.post("/api/upload-wagon-wheel", { image: base64Image });
-      console.log("✅ Explicit wagon wheel image uploaded.");
+      try {
+        await api.post("/api/upload-wagon-wheel", { image: base64Image });
+        console.log("✅ Wagon wheel image uploaded successfully");
+      } catch (error) {
+        console.error("❌ Error uploading wagon wheel image:", error);
+      }
     } else {
       console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
     }
 
-    // THEN generate the PDF
+    // THEN open the PDF generator
     window.open(
       `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
       "_blank"
