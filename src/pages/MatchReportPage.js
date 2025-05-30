@@ -19,6 +19,8 @@ const MatchReportPage = () => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
+  const [wagonWheelData, setWagonWheelData] = useState([]);
+
   // Load tournaments when team category changes
   useEffect(() => {
     if (!teamCategory) {
@@ -87,14 +89,31 @@ const MatchReportPage = () => {
       .catch(console.error);
   }, [selectedTeam]);
 
+  useEffect(() => {
+    if (!selectedPlayerId || !selectedMatchId) {
+      setWagonWheelData([]);
+      return;
+    }
+
+    api.get("/player-wagon-wheel-data", {
+      params: { matchId: selectedMatchId, playerId: selectedPlayerId }
+    })
+    .then(res => setWagonWheelData(res.data))
+    .catch(err => {
+      console.error("❌ Error fetching wagon wheel data:", err);
+      setWagonWheelData([]);
+    });
+  }, [selectedPlayerId, selectedMatchId]);
+
+
   const uploadWagonWheel = async (base64Image) => {
-  try {
-    await api.post("/api/upload-wagon-wheel", { image: base64Image });
-    console.log("✅ Wagon wheel image uploaded successfully");
-  } catch (error) {
-    console.error("❌ Failed to upload wagon wheel image", error);
-  }
-};
+    try {
+      await api.post("/api/upload-wagon-wheel", { image: base64Image });
+      console.log("✅ Wagon wheel image uploaded successfully");
+    } catch (error) {
+      console.error("❌ Failed to upload wagon wheel image", error);
+    }
+  };
 
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
