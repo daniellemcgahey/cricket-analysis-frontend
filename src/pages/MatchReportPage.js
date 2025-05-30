@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
 import DarkModeContext from "../DarkModeContext";
+import WagonWheelChart from "./WagonWheelChart";
 import { Accordion, Card, Button, Alert, Row, Col } from "react-bootstrap";
 
 const MatchReportPage = () => {
@@ -279,6 +280,14 @@ const MatchReportPage = () => {
               </Button>
             </div>
           </Card>
+
+          {/* 🔥 Include your WagonWheelChart here */}
+          <div className="mt-3">
+            <WagonWheelChart
+              data={wagonWheelData} // Make sure to pass your actual data
+              perspective="Lines"
+            />
+          </div>
         </Col>
 
       </Row>
