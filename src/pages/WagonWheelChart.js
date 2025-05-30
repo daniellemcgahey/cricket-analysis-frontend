@@ -303,7 +303,22 @@ const WagonWheelChart = ({ data, perspective }) => {
       }
       
       
-    
+    const imageData = canvas.toDataURL("image/png");
+
+    fetch("/api/upload-wagon-wheel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ image: imageData, type: "wagon_wheel" })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("✅ Wagon wheel image uploaded automatically:", data);
+    })
+    .catch(err => {
+      console.error("❌ Error uploading wagon wheel image:", err);
+    });
       
 
   }, [filteredData, perspective]);
