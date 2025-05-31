@@ -326,6 +326,7 @@ const WagonWheelChart = ({ data, perspective }) => {
   return (
     <div className="text-center">
       <canvas
+        id="wagonWheelCanvas"
         ref={canvasRef}
         width={500}
         height={500}
