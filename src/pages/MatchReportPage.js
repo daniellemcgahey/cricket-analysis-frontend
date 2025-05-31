@@ -101,12 +101,21 @@ const MatchReportPage = () => {
     api.get("/player-wagon-wheel-data", {
       params: { matchId: selectedMatchId, playerId: selectedPlayerId }
     })
-    .then(res => setWagonWheelData(res.data))
+    .then(res => {
+      // Remap to the expected format
+      const remappedData = res.data.map(shot => ({
+        x: shot.shot_x,
+        y: shot.shot_y,
+        runs: shot.runs
+      }));
+      setWagonWheelData(remappedData);
+    })
     .catch(err => {
       console.error("❌ Error fetching wagon wheel data:", err);
       setWagonWheelData([]);
     });
   }, [selectedPlayerId, selectedMatchId]);
+
 
 
   const uploadWagonWheel = async (base64Image) => {
