@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef , useState, useMemo } from "react";
 import DarkModeContext from "../DarkModeContext";
+import api from "../api";
 
 const runToColor = (runs) => {
   if (runs === 0) return "gray";
@@ -305,16 +306,12 @@ const WagonWheelChart = ({ data, perspective }) => {
       
     const imageData = canvas.toDataURL("image/png");
 
-    fetch("/api/upload-wagon-wheel", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ image: imageData, type: "wagon_wheel" })
+    api.post("/api/upload-wagon-wheel", {
+      image: imageData,
+      type: "wagon_wheel"
     })
-    .then(res => res.json())
-    .then(data => {
-      console.log("✅ Wagon wheel image uploaded automatically:", data);
+    .then(res => {
+      console.log("✅ Wagon wheel image uploaded automatically:", res.data);
     })
     .catch(err => {
       console.error("❌ Error uploading wagon wheel image:", err);
