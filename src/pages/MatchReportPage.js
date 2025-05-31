@@ -21,6 +21,9 @@ const MatchReportPage = () => {
 
   const [wagonWheelData, setWagonWheelData] = useState([]);
 
+  const wagonWheelRef = useRef(null);
+
+
   // Load tournaments when team category changes
   useEffect(() => {
     if (!teamCategory) {
@@ -118,7 +121,7 @@ const MatchReportPage = () => {
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
-    const canvas = document.getElementById("wagonWheelCanvas");
+    const canvas = wagonWheelRef.current;
     if (canvas) {
       const base64Image = canvas.toDataURL("image/png");
 
@@ -132,12 +135,12 @@ const MatchReportPage = () => {
       console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
     }
 
-    // THEN open the PDF generator
     window.open(
       `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
       "_blank"
     );
   };
+
 
 
   const generateTeamReport = () => {
@@ -303,8 +306,9 @@ const MatchReportPage = () => {
           {/* 🔥 Include your WagonWheelChart here */}
           <div className="mt-3">
             <WagonWheelChart
-              data={wagonWheelData} // Make sure to pass your actual data
+              data={wagonWheelData}
               perspective="Lines"
+              canvasRef={wagonWheelRef} // ✅ Pass down ref
             />
           </div>
         </Col>
