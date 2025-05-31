@@ -118,33 +118,32 @@ const MatchReportPage = () => {
 
 
 
-  const uploadWagonWheel = async (base64Image, type) => {
+  const uploadWagonWheel = async (base64Image) => {
     try {
-      await api.post("/api/upload-wagon-wheel", { image: base64Image, type });
-      console.log(`✅ Wagon wheel (${type}) image uploaded successfully`);
+      await api.post("/api/upload-wagon-wheel", { image: base64Image });
+      console.log("✅ Wagon wheel image uploaded successfully");
     } catch (error) {
-      console.error(`❌ Error uploading wagon wheel (${type}) image:`, error);
+      console.error("❌ Failed to upload wagon wheel image", error);
     }
   };
 
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
-    // Render and upload Lines perspective
-    const linesCanvas = document.getElementById("wagonWheelCanvasLines");
-    if (linesCanvas) {
-      const base64Image = linesCanvas.toDataURL("image/png");
-      await uploadWagonWheel(base64Image, "wagon_wheel_lines");
+    const canvas = wagonWheelRef.current;
+    if (canvas) {
+      const base64Image = canvas.toDataURL("image/png");
+
+      try {
+        await api.post("/api/upload-wagon-wheel", { image: base64Image });
+        console.log("✅ Wagon wheel image uploaded successfully");
+      } catch (error) {
+        console.error("❌ Error uploading wagon wheel image:", error);
+      }
+    } else {
+      console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
     }
 
-    // Render and upload Zones perspective
-    const zonesCanvas = document.getElementById("wagonWheelCanvasZones");
-    if (zonesCanvas) {
-      const base64Image = zonesCanvas.toDataURL("image/png");
-      await uploadWagonWheel(base64Image, "wagon_wheel_zones");
-    }
-
-    // THEN open the PDF generator
     window.open(
       `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
       "_blank"
@@ -316,14 +315,9 @@ const MatchReportPage = () => {
           {/* 🔥 Include your WagonWheelChart here */}
           <div style={{ display: "none" }}>
             <WagonWheelChart
-              id="wagonWheelCanvasLines"
               data={wagonWheelData}
               perspective="Lines"
-            />
-            <WagonWheelChart
-              id="wagonWheelCanvasZones"
-              data={wagonWheelData}
-              perspective="Zones"
+              canvasRef={wagonWheelRef} // ✅ Pass down ref
             />
           </div>
         </Col>
