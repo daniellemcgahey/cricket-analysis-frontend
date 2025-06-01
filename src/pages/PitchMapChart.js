@@ -204,55 +204,61 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.strokeStyle = "white";
       ctx.lineWidth = 4;
 
-      // Calculate Y positions for bowling and popping creases (in meters)
-      const bowlingM = 0;
-      const poppingM = 1.22;
-
-      const bowlingY = metersToY(bowlingM);
-      const poppingY = metersToY(poppingM);
+      // Calculate Y positions for bowling and popping creases
+      const bowlingY = metersToY(0);
+      const poppingY = metersToY(1.22);
 
       // Utility: project an X offset at a given Y
       const projectXOffset = (offset, y) => {
         const t = (y - paddingTop) / (height - paddingTop);
         const w = topW + (bottomW - topW) * t;
-        return centerX + offset * (w / 2); // 🟢 direction fix: no sign flip here
+        return offset * (w / 2);
       };
 
-      // 1️⃣ Bowling crease
+      // 1️⃣ Bowling crease (full width line)
+      const bowlingLeft = centerX + projectXOffset(-1, bowlingY);
+      const bowlingRight = centerX + projectXOffset(1, bowlingY);
       ctx.beginPath();
-      ctx.moveTo(projectXOffset(-1, bowlingY), bowlingY);
-      ctx.lineTo(projectXOffset(1, bowlingY), bowlingY);
+      ctx.moveTo(bowlingLeft, bowlingY);
+      ctx.lineTo(bowlingRight, bowlingY);
       ctx.stroke();
 
-      // 2️⃣ Popping crease
+      // 2️⃣ Popping crease (full width line)
+      const poppingLeft = centerX + projectXOffset(-1, poppingY);
+      const poppingRight = centerX + projectXOffset(1, poppingY);
       ctx.beginPath();
-      ctx.moveTo(projectXOffset(-1, poppingY), poppingY);
-      ctx.lineTo(projectXOffset(1, poppingY), poppingY);
+      ctx.moveTo(poppingLeft, poppingY);
+      ctx.lineTo(poppingRight, poppingY);
       ctx.stroke();
 
-      // 3️⃣ Return creases (0.6m offset) – use sign flip to keep inwards
+      // 3️⃣ Return creases (1.32m total width)
       const returnOffset = 0.6;
       [-1, 1].forEach(dir => {
-        const x = projectXOffset(dir * returnOffset, poppingY); // 🔄 sign flip
-        const yTop = poppingY ;
-        const yBottom = poppingY - 0.5 * (height / visibleLength);
+        // Get starting X at poppingY
+        const xStart = centerX + projectXOffset(dir * returnOffset, poppingY);
+        const yStart = poppingY;
+
+        // For the bottom Y of the line, calculate new offset (projection adjustment!)
+        const yEnd = poppingY - 50; // vertical extent (canvas pixels, adjust as needed)
+        const xEnd = centerX + projectXOffset(dir * returnOffset, yEnd);
 
         ctx.beginPath();
-        ctx.moveTo(x, yTop);
-        ctx.lineTo(x, yBottom);
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
         ctx.stroke();
       });
 
       // 4️⃣ Wide lines (0.45m offset)
       const wideOffset = 0.45;
       [-1, 1].forEach(dir => {
-        const x = projectXOffset(-dir * wideOffset, poppingY); // 🔄 sign flip
-        const yTop = bowlingY + 0.2 * (height / visibleLength);
-        const yBottom = bowlingY - 0.3 * (height / visibleLength);
+        const xStart = centerX + projectXOffset(dir * wideOffset, bowlingY);
+        const yStart = bowlingY;
+        const yEnd = bowlingY + 30; // adjust vertical extent
+        const xEnd = centerX + projectXOffset(dir * wideOffset, yEnd);
 
         ctx.beginPath();
-        ctx.moveTo(x, yTop);
-        ctx.lineTo(x, yBottom);
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
         ctx.stroke();
       });
     };
