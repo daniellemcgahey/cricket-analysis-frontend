@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import api from "../api";
 import DarkModeContext from "../DarkModeContext";
 import WagonWheelChart from "./WagonWheelChart";
+import PitchMapChart from "./PitchMapChart";
+
 import { Accordion, Card, Button, Alert, Row, Col } from "react-bootstrap";
 
 const MatchReportPage = () => {
@@ -20,6 +22,7 @@ const MatchReportPage = () => {
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
 
   const [wagonWheelData, setWagonWheelData] = useState([]);
+  const [pitchMapData, setPitchMapData] = useState([]);
 
   const wagonWheelRef = useRef(null);
   const pitchMapRef = useRef(null);
