@@ -409,28 +409,27 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const zones = createZones(); 
       const dpr = window.devicePixelRatio || 1;
-      const width = canvas.offsetWidth;
-      const height = canvas.offsetHeight;
+
+      // 🔄 Use getBoundingClientRect() for exact visible area
+      const { width, height } = canvas.getBoundingClientRect();
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    
+
       drawPitch(ctx, width, height, zones);
-    
+
       if (filteredData?.length) {
         if (viewMode === "Heat") {
-          updateZoneStats(filteredData, zones); // ✅ Only update here
+          updateZoneStats(filteredData, zones);
           drawHeatMap(ctx, width, height, filteredData);
         } else {
-          drawBalls(ctx, width, height, filteredData, zones); // ✅ let it update zones here
+          drawBalls(ctx, width, height, filteredData, zones);
         }
       }
-    
-      drawZoneLabels(ctx, width, height, zones); 
 
-      
+      drawZoneLabels(ctx, width, height, zones);
+
       const imageData = canvas.toDataURL("image/png");
-
       api.post("/api/upload-pitch-map", {
         image: imageData,
         type: "pitch_map"
@@ -442,6 +441,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         console.error("❌ Error uploading pitch map image:", err);
       });
     };
+
 
     resize();
     window.addEventListener("resize", resize);
