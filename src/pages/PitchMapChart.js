@@ -204,34 +204,37 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.strokeStyle = "white";
       ctx.lineWidth = 4;
 
-      // Calculate Y positions for bowling and popping creases
-      const bowlingY = metersToY(0);
-      const poppingY = metersToY(1.22);
+      // Calculate Y positions for bowling and popping creases (in meters)
+      const bowlingM = 0;
+      const poppingM = 1.22;
 
-      // Function to project X offset from center at given Y
+      const bowlingY = metersToY(bowlingM);
+      const poppingY = metersToY(poppingM);
+
+      // Utility: project an X offset at a given Y
       const projectXOffset = (offset, y) => {
         const t = (y - paddingTop) / (height - paddingTop);
         const w = topW + (bottomW - topW) * t;
         return centerX + offset * (w / 2);
       };
 
-      // Bowling crease
+      // 1️⃣ Bowling crease (full width)
       ctx.beginPath();
       ctx.moveTo(projectXOffset(-1, bowlingY), bowlingY);
       ctx.lineTo(projectXOffset(1, bowlingY), bowlingY);
       ctx.stroke();
 
-      // Popping crease
+      // 2️⃣ Popping crease (full width)
       ctx.beginPath();
       ctx.moveTo(projectXOffset(-1, poppingY), poppingY);
       ctx.lineTo(projectXOffset(1, poppingY), poppingY);
       ctx.stroke();
 
-      // Return creases - typically 1.32m (4 ft 4 in) from center (0.275 of width at poppingY)
+      // 3️⃣ Return creases – typically ~0.6m from center at poppingY
       const returnOffset = 0.6;
       [-1, 1].forEach(dir => {
         const x = projectXOffset(dir * returnOffset, poppingY);
-        const yTop = poppingY - 50; // vertical extent of return crease
+        const yTop = poppingY - 0.5 * (height / visibleLength); // 0.5m height
         const yBottom = poppingY;
 
         ctx.beginPath();
@@ -239,27 +242,13 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.lineTo(x, yBottom);
         ctx.stroke();
       });
-      
-      // Return creases - typically 1.32m (4 ft 4 in) from center (0.275 of width at poppingY)
-      const wideOffset = 0.5;
+
+      // 4️⃣ Wide lines – typically ~0.45m from center at poppingY
+      const wideOffset = 0.45;
       [-1, 1].forEach(dir => {
         const x = projectXOffset(dir * wideOffset, poppingY);
-        const yTop = poppingY - 50; // vertical extent of return crease
-        const yBottom = poppingY;
-
-        ctx.beginPath();
-        ctx.moveTo(x, yTop);
-        ctx.lineTo(x, yBottom);
-        ctx.stroke();
-      });
-      
-
-      // Wide lines - typically 0.89m (35 in) from center at popping crease
-      const wideLineOffset = 0.2;
-      [-1, 1].forEach(dir => {
-        const x = projectXOffset(dir * wideLineOffset, poppingY);
-        const yTop = bowlingY - 10;
-        const yBottom = bowlingY + 20;
+        const yTop = bowlingY - 0.2 * (height / visibleLength); // 0.2m above bowling crease
+        const yBottom = bowlingY + 0.3 * (height / visibleLength); // 0.3m below
 
         ctx.beginPath();
         ctx.moveTo(x, yTop);
@@ -267,6 +256,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.stroke();
       });
     };
+
 
 
     drawCreases();
