@@ -248,7 +248,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.stroke();
       });
             // 3️⃣ Return creases (1.32m total width)
-      const wideOffset = 0.8;
+      const wideOffset = 0.72;
       [-1, 1].forEach(dir => {
         // Get starting X at poppingY
         const xStart = centerX + projectXOffset(dir * wideOffset, poppingY);
