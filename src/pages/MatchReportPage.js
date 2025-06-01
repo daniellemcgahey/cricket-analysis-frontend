@@ -22,6 +22,7 @@ const MatchReportPage = () => {
   const [wagonWheelData, setWagonWheelData] = useState([]);
 
   const wagonWheelRef = useRef(null);
+  const pitchMapRef = useRef(null);
 
 
   // Load tournaments when team category changes
@@ -115,6 +116,29 @@ const MatchReportPage = () => {
       setWagonWheelData([]);
     });
   }, [selectedPlayerId, selectedMatchId]);
+
+  useEffect(() => {
+    if (!selectedPlayerId || !selectedMatchId) {
+      setPitchMapData([]);
+      return;
+    }
+
+    api.get("/player-pitch-map-data", {
+      params: { matchId: selectedMatchId, playerId: selectedPlayerId }
+    })
+    .then(res => {
+      const remappedData = res.data.map(ball => ({
+        x: ball.pitch_x,
+        y: ball.pitch_y
+      }));
+      setPitchMapData(remappedData);
+    })
+    .catch(err => {
+      console.error("❌ Error fetching pitch map data:", err);
+      setPitchMapData([]);
+    });
+  }, [selectedPlayerId, selectedMatchId]);
+
 
 
 
@@ -318,6 +342,14 @@ const MatchReportPage = () => {
               data={wagonWheelData}
               perspective="Lines"
               canvasRef={wagonWheelRef} // ✅ Pass down ref
+            />
+          </div>
+
+          {/* 🔥 Include your PitchMapChart here */}
+          <div style={{ display: "none" }}>
+            <PitchMapChart
+              data={pitchMapData}
+              canvasRef={pitchMapRef} // ✅ Pass down ref
             />
           </div>
         </Col>
