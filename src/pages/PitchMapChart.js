@@ -1,5 +1,6 @@
 import React, { useRef, useEffect , useState , useMemo } from "react";
 import simpleheat from 'simpleheat';
+import api from "../api";
 
 
 const createZones = () => [
