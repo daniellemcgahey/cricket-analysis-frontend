@@ -233,7 +233,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       // 3️⃣ Return creases (0.6m offset) – use sign flip to keep inwards
       const returnOffset = 0.6;
       [-1, 1].forEach(dir => {
-        const x = projectXOffset(-dir * returnOffset, poppingY); // 🔄 sign flip
+        const x = projectXOffset(dir * returnOffset, poppingY); // 🔄 sign flip
         const yTop = poppingY - 0.5 * (height / visibleLength);
         const yBottom = poppingY;
 
