@@ -349,7 +349,7 @@ const MatchReportPage = () => {
           </div>
 
           {/* 🔥 Include your PitchMapChart here */}
-          <div style={{ display: "none" }}>
+          <div>
             <PitchMapChart
               data={pitchMapData}
               canvasRef={pitchMapRef} // ✅ Pass down ref
