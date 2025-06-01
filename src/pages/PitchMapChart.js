@@ -228,7 +228,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.stroke();
 
       // Return creases - typically 1.32m (4 ft 4 in) from center (0.275 of width at poppingY)
-      const returnOffset = 0.275;
+      const returnOffset = 0.6;
       [-1, 1].forEach(dir => {
         const x = projectXOffset(dir * returnOffset, poppingY);
         const yTop = poppingY - 50; // vertical extent of return crease
@@ -239,13 +239,27 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.lineTo(x, yBottom);
         ctx.stroke();
       });
+      
+      // Return creases - typically 1.32m (4 ft 4 in) from center (0.275 of width at poppingY)
+      const wideOffset = 0.5;
+      [-1, 1].forEach(dir => {
+        const x = projectXOffset(dir * wideOffset, poppingY);
+        const yTop = poppingY - 50; // vertical extent of return crease
+        const yBottom = poppingY;
+
+        ctx.beginPath();
+        ctx.moveTo(x, yTop);
+        ctx.lineTo(x, yBottom);
+        ctx.stroke();
+      });
+      
 
       // Wide lines - typically 0.89m (35 in) from center at popping crease
-      const wideLineOffset = 0.3;
+      const wideLineOffset = 0.2;
       [-1, 1].forEach(dir => {
         const x = projectXOffset(dir * wideLineOffset, poppingY);
-        const yTop = poppingY - 20;
-        const yBottom = poppingY + 20;
+        const yTop = bowlingY - 10;
+        const yBottom = bowlingY + 20;
 
         ctx.beginPath();
         ctx.moveTo(x, yTop);
