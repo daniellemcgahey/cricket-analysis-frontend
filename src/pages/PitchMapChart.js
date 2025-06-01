@@ -232,7 +232,23 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.stroke();
 
       // 3️⃣ Return creases (1.32m total width)
-      const returnOffset = 0.6;
+      const returnOffset = 1;
+      [-1, 1].forEach(dir => {
+        // Get starting X at poppingY
+        const xStart = centerX + projectXOffset(dir * returnOffset, poppingY);
+        const yStart = poppingY;
+
+        // For the bottom Y of the line, calculate new offset (projection adjustment!)
+        const yEnd = poppingY - 50; // vertical extent (canvas pixels, adjust as needed)
+        const xEnd = centerX + projectXOffset(dir * returnOffset, yEnd);
+
+        ctx.beginPath();
+        ctx.moveTo(xStart, yStart);
+        ctx.lineTo(xEnd, yEnd);
+        ctx.stroke();
+      });
+            // 3️⃣ Return creases (1.32m total width)
+      const wideOffset = 0.8;
       [-1, 1].forEach(dir => {
         // Get starting X at poppingY
         const xStart = centerX + projectXOffset(dir * returnOffset, poppingY);
@@ -249,12 +265,12 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       });
 
       // 4️⃣ Wide lines (0.45m offset)
-      const wideOffset = 0.45;
+      const widelegOffset = 0.25;
       [-1, 1].forEach(dir => {
-        const xStart = centerX + projectXOffset(dir * wideOffset, bowlingY);
+        const xStart = centerX + projectXOffset(dir * widelegOffset, bowlingY);
         const yStart = bowlingY;
-        const yEnd = bowlingY + 30; // adjust vertical extent
-        const xEnd = centerX + projectXOffset(dir * wideOffset, yEnd);
+        const yEnd = bowlingY + 15; // adjust vertical extent
+        const xEnd = centerX + projectXOffset(dir * widelegOffset, yEnd);
 
         ctx.beginPath();
         ctx.moveTo(xStart, yStart);
