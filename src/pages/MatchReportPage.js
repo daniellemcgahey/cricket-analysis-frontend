@@ -129,17 +129,20 @@ const MatchReportPage = () => {
     api.get("/player-pitch-map-data", {
       params: { matchId: selectedMatchId, playerId: selectedPlayerId }
     })
-    .then(res => {
-      const remappedData = res.data.map(ball => ({
-        x: ball.pitch_x,
-        y: ball.pitch_y
-      }));
-      setPitchMapData(remappedData);
-    })
-    .catch(err => {
-      console.error("❌ Error fetching pitch map data:", err);
-      setPitchMapData([]);
-    });
+      .then(res => {
+        console.log("✅ Pitch map data received from server:", res.data);
+        const remappedData = res.data.map(ball => ({
+          pitch_x: ball.pitch_x,
+          pitch_y: ball.pitch_y,
+          runs: ball.runs || 0,
+          dismissal_type: ball.dismissal_type || null
+        }));
+        setPitchMapData(remappedData);
+      })
+      .catch(err => {
+        console.error("❌ Error fetching pitch map data:", err);
+        setPitchMapData([]);
+      });
   }, [selectedPlayerId, selectedMatchId]);
 
 
@@ -153,6 +156,15 @@ const MatchReportPage = () => {
       console.error("❌ Failed to upload wagon wheel image", error);
     }
   };
+
+  const uploadPitchMap = async (base64Image) => {
+  try {
+    await api.post("/api/upload-pitch-map", { image: base64Image });
+    console.log("✅ Pitch map image uploaded successfully");
+  } catch (error) {
+    console.error("❌ Failed to upload pitch map image", error);
+  }
+};
 
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
