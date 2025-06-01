@@ -247,8 +247,8 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       const wideOffset = 0.45;
       [-1, 1].forEach(dir => {
         const x = projectXOffset(-dir * wideOffset, poppingY); // 🔄 sign flip
-        const yTop = bowlingY - 0.2 * (height / visibleLength);
-        const yBottom = bowlingY + 0.3 * (height / visibleLength);
+        const yTop = bowlingY + 0.2 * (height / visibleLength);
+        const yBottom = bowlingY - 0.3 * (height / visibleLength);
 
         ctx.beginPath();
         ctx.moveTo(x, yTop);
