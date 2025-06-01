@@ -215,26 +215,26 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       const projectXOffset = (offset, y) => {
         const t = (y - paddingTop) / (height - paddingTop);
         const w = topW + (bottomW - topW) * t;
-        return centerX + offset * (w / 2);
+        return centerX + offset * (w / 2); // 🟢 direction fix: no sign flip here
       };
 
-      // 1️⃣ Bowling crease (full width)
+      // 1️⃣ Bowling crease
       ctx.beginPath();
       ctx.moveTo(projectXOffset(-1, bowlingY), bowlingY);
       ctx.lineTo(projectXOffset(1, bowlingY), bowlingY);
       ctx.stroke();
 
-      // 2️⃣ Popping crease (full width)
+      // 2️⃣ Popping crease
       ctx.beginPath();
       ctx.moveTo(projectXOffset(-1, poppingY), poppingY);
       ctx.lineTo(projectXOffset(1, poppingY), poppingY);
       ctx.stroke();
 
-      // 3️⃣ Return creases – typically ~0.6m from center at poppingY
+      // 3️⃣ Return creases (0.6m offset) – use sign flip to keep inwards
       const returnOffset = 0.6;
       [-1, 1].forEach(dir => {
-        const x = projectXOffset(dir * returnOffset, poppingY);
-        const yTop = poppingY - 0.5 * (height / visibleLength); // 0.5m height
+        const x = projectXOffset(-dir * returnOffset, poppingY); // 🔄 sign flip
+        const yTop = poppingY - 0.5 * (height / visibleLength);
         const yBottom = poppingY;
 
         ctx.beginPath();
@@ -243,12 +243,12 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.stroke();
       });
 
-      // 4️⃣ Wide lines – typically ~0.45m from center at poppingY
+      // 4️⃣ Wide lines (0.45m offset)
       const wideOffset = 0.45;
       [-1, 1].forEach(dir => {
-        const x = projectXOffset(dir * wideOffset, poppingY);
-        const yTop = bowlingY - 0.2 * (height / visibleLength); // 0.2m above bowling crease
-        const yBottom = bowlingY + 0.3 * (height / visibleLength); // 0.3m below
+        const x = projectXOffset(-dir * wideOffset, poppingY); // 🔄 sign flip
+        const yTop = bowlingY - 0.2 * (height / visibleLength);
+        const yBottom = bowlingY + 0.3 * (height / visibleLength);
 
         ctx.beginPath();
         ctx.moveTo(x, yTop);
@@ -256,6 +256,7 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         ctx.stroke();
       });
     };
+
 
 
 
