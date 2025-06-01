@@ -204,64 +204,56 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.strokeStyle = "white";
       ctx.lineWidth = 4;
 
+      // Calculate Y positions for bowling and popping creases
       const bowlingY = metersToY(0);
       const poppingY = metersToY(1.22);
 
-      const tPop = (poppingY - paddingTop + 600) / (height - paddingTop);
-      const tBowl = (bowlingY - paddingTop) / (height - paddingTop);
-      const popW = topW + (bottomW - topW) * tPop;
-      const bowlW = topW + (bottomW - topW) * tBowl;
+      // Function to project X offset from center at given Y
+      const projectXOffset = (offset, y) => {
+        const t = (y - paddingTop) / (height - paddingTop);
+        const w = topW + (bottomW - topW) * t;
+        return centerX + offset * (w / 2);
+      };
 
-      const popLeft = centerX - popW / 2;
-      const popRight = centerX + popW / 2;
-      const bowlLeft = centerX - bowlW / 2;
-      const bowlRight = centerX + bowlW / 2;
-
+      // Bowling crease
       ctx.beginPath();
-      ctx.moveTo(popLeft, poppingY);
-      ctx.lineTo(popRight, poppingY);
+      ctx.moveTo(projectXOffset(-1, bowlingY), bowlingY);
+      ctx.lineTo(projectXOffset(1, bowlingY), bowlingY);
       ctx.stroke();
 
+      // Popping crease
       ctx.beginPath();
-      ctx.moveTo(bowlLeft, bowlingY);
-      ctx.lineTo(bowlRight, bowlingY);
+      ctx.moveTo(projectXOffset(-1, poppingY), poppingY);
+      ctx.lineTo(projectXOffset(1, poppingY), poppingY);
       ctx.stroke();
 
-      const returnOffset = popW * 0.275;
+      // Return creases - typically 1.32m (4 ft 4 in) from center (0.275 of width at poppingY)
+      const returnOffset = 0.275;
       [-1, 1].forEach(dir => {
-        const x = centerX + dir * returnOffset;
-        const [rx1, ry1] = projectPoint(x, poppingY, width, height, topW, bottomW, paddingTop);
-        const [rx2, ry2] = projectPoint(x, poppingY - 50, width, height, topW, bottomW, paddingTop);
-        const [rx3, ry3] = projectPoint(240, poppingY - 40, width, height, topW, bottomW, paddingTop);
-        const [rx4, ry4] = projectPoint(240, poppingY - 50, width, height, topW, bottomW, paddingTop);
-        const [rx5, ry5] = projectPoint(360, poppingY - 40, width, height, topW, bottomW, paddingTop);
-        const [rx6, ry6] = projectPoint(360, poppingY - 50, width, height, topW, bottomW, paddingTop);
-        const [rx7, ry7] = projectPoint(0, poppingY - 90, width, height, topW, bottomW, paddingTop);
-        const [rx8, ry8] = projectPoint(0, poppingY, width, height, topW, bottomW, paddingTop);
-        const [rx9, ry9] = projectPoint(600, poppingY - 90, width, height, topW, bottomW, paddingTop);
-        const [rx10, ry10] = projectPoint(600, poppingY, width, height, topW, bottomW, paddingTop);
+        const x = projectXOffset(dir * returnOffset, poppingY);
+        const yTop = poppingY - 50; // vertical extent of return crease
+        const yBottom = poppingY;
+
         ctx.beginPath();
-        ctx.moveTo(rx1, ry1);
-        ctx.lineTo(rx2, ry2);
+        ctx.moveTo(x, yTop);
+        ctx.lineTo(x, yBottom);
         ctx.stroke();
+      });
+
+      // Wide lines - typically 0.89m (35 in) from center at popping crease
+      const wideLineOffset = 0.3;
+      [-1, 1].forEach(dir => {
+        const x = projectXOffset(dir * wideLineOffset, poppingY);
+        const yTop = poppingY - 20;
+        const yBottom = poppingY + 20;
+
         ctx.beginPath();
-        ctx.moveTo(rx3, ry3);
-        ctx.lineTo(rx4, ry4);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(rx5, ry5);
-        ctx.lineTo(rx6, ry6);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(rx7, ry7);
-        ctx.lineTo(rx8, ry8);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(rx9, ry9);
-        ctx.lineTo(rx10, ry10);
+        ctx.moveTo(x, yTop);
+        ctx.lineTo(x, yBottom);
         ctx.stroke();
       });
     };
+
 
     drawCreases();
 
@@ -409,27 +401,28 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const zones = createZones(); 
       const dpr = window.devicePixelRatio || 1;
-
-      // 🔄 Use getBoundingClientRect() for exact visible area
-      const { width, height } = canvas.getBoundingClientRect();
+      const width = canvas.offsetWidth;
+      const height = canvas.offsetHeight;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
+    
       drawPitch(ctx, width, height, zones);
-
+    
       if (filteredData?.length) {
         if (viewMode === "Heat") {
-          updateZoneStats(filteredData, zones);
+          updateZoneStats(filteredData, zones); // ✅ Only update here
           drawHeatMap(ctx, width, height, filteredData);
         } else {
-          drawBalls(ctx, width, height, filteredData, zones);
+          drawBalls(ctx, width, height, filteredData, zones); // ✅ let it update zones here
         }
       }
+    
+      drawZoneLabels(ctx, width, height, zones); 
 
-      drawZoneLabels(ctx, width, height, zones);
-
+      
       const imageData = canvas.toDataURL("image/png");
+
       api.post("/api/upload-pitch-map", {
         image: imageData,
         type: "pitch_map"
@@ -441,7 +434,6 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
         console.error("❌ Error uploading pitch map image:", err);
       });
     };
-
 
     resize();
     window.addEventListener("resize", resize);
