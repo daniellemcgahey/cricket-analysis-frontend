@@ -427,22 +427,21 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
       }
     
       drawZoneLabels(ctx, width, height, zones); 
+
+      
+      const imageData = canvas.toDataURL("image/png");
+
+      api.post("/api/upload-pitch-map", {
+        image: imageData,
+        type: "pitch_map"
+      })
+      .then(res => {
+        console.log("✅ Pitch map image uploaded automatically:", res.data);
+      })
+      .catch(err => {
+        console.error("❌ Error uploading pitch map image:", err);
+      });
     };
-
-    const imageData = canvas.toDataURL("image/png");
-
-    api.post("/api/upload-pitch-map", {
-      image: imageData,
-      type: "pitch_map"
-    })
-    .then(res => {
-      console.log("✅ Pitch map image uploaded automatically:", res.data);
-    })
-    .catch(err => {
-      console.error("❌ Error uploading pitch map image:", err);
-    });
-
-
 
     resize();
     window.addEventListener("resize", resize);
