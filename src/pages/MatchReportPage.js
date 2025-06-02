@@ -362,11 +362,7 @@ const MatchReportPage = () => {
 
           {/* 🔥 Include your PitchMapChart here */}
           <div style={{
-            opacity: 0,
-            pointerEvents: "none",
-            position: "relative",
-            width: "300px",
-            height: "400px",
+            opacity: 0
           }}>
             <PitchMapChart
               data={pitchMapData}
