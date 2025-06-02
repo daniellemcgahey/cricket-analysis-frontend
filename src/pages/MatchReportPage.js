@@ -365,8 +365,6 @@ const MatchReportPage = () => {
             position: "absolute",
             top: "-9999px",
             left: "-9999px",
-            width: "300px", // match your desired canvas width
-            height: "400px",
             overflow: "hidden"
           }}>
             <PitchMapChart
