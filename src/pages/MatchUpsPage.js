@@ -174,21 +174,21 @@ const MatchUpsPage = () => {
                   <tbody>
                     <tr>
                       <td>Avg RPB vs Pace</td>
-                      <td>{playerDetail.avg_rpb_pace}</td>
+                      <td>{playerDetail.avg_rpb_medium}</td>
                       <td>Avg RPB vs Spin</td>
-                      <td>{playerDetail.avg_rpb_spin}</td>
+                      <td>{playerDetail.avg_rpb_off_spin}</td>
                     </tr>
                     <tr>
                       <td>Dismissal % vs Pace</td>
-                      <td>{playerDetail.dismissal_pct_pace}%</td>
+                      <td>{playerDetail.dismissal_pct_medium}%</td>
                       <td>vs Spin</td>
-                      <td>{playerDetail.dismissal_pct_spin}%</td>
+                      <td>{playerDetail.dismissal_pct_off_spin}%</td>
                     </tr>
                     <tr>
                       <td>Dot % vs Pace</td>
-                      <td>{playerDetail.dot_pct_pace}%</td>
+                      <td>{playerDetail.dot_pct_medium}%</td>
                       <td>vs Spin</td>
-                      <td>{playerDetail.dot_pct_spin}%</td>
+                      <td>{playerDetail.dot_pct_off_spin}%</td>
                     </tr>
                     <tr>
                       <td>Recommended Bowler Type</td>
