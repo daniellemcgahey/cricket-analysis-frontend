@@ -351,26 +351,40 @@ const MatchReportPage = () => {
             </div>
           </Card>
 
-          {/* 🔥 Include your WagonWheelChart here */}
-          <div>
-            <WagonWheelChart
-              data={wagonWheelData}
-              perspective="Lines"
-              canvasRef={wagonWheelRef} // ✅ Pass down ref
-            />
-          </div>
+          <Accordion
+            defaultActiveKey="0"
+            alwaysClosed
+            className={`mt-4 ${isDarkMode ? "bg-dark text-white" : "bg-light text-dark"}`}
+          >
+            <Accordion.Item eventKey="0" className={isDarkMode ? "bg-dark text-white" : ""}>
+              <Accordion.Header>Pitch Map and Wagon Wheel</Accordion.Header>
+              <Accordion.Body>
+                {/* 🔥 Include your WagonWheelChart here */}
+                <div>
+                  <WagonWheelChart
+                    data={wagonWheelData}
+                    perspective="Lines"
+                    canvasRef={wagonWheelRef} // ✅ Pass down ref
+                  />
+                </div>
 
-          {/* 🔥 Include your PitchMapChart here */}
-          <div>
-            <PitchMapChart
-              data={pitchMapData}
-              canvasRef={pitchMapRef} // ✅ Pass down ref
-            />
-          </div>
+                {/* 🔥 Include your PitchMapChart here */}
+                <div>
+                  <PitchMapChart
+                    data={pitchMapData}
+                    canvasRef={pitchMapRef} // ✅ Pass down ref
+                  />
+                </div>
+              </Accordion.Body> 
+            </Accordion.Item>
+          </Accordion>
         </Col>
 
       </Row>
   );
 };
+
+
+
 
 export default MatchReportPage;
