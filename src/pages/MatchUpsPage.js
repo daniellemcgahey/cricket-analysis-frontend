@@ -7,9 +7,6 @@ const MatchUpsPage = () => {
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("");
 
-  const [teamOptions, setTeamOptions] = useState([]);
-  const [selectedTeam, setSelectedTeam] = useState(null);
-
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [playerDetail, setPlayerDetail] = useState(null);
@@ -19,55 +16,27 @@ const MatchUpsPage = () => {
 
   // Load countries when team category changes
   useEffect(() => {
-    if (!teamCategory) {
-      setCountries([]);
-      setSelectedCountry("");
-      setTeamOptions([]);
-      setSelectedTeam(null);
-      setPlayers([]);
-      setSelectedPlayerId(null);
-      return;
-    }
     api.get("/countries", { params: { teamCategory } })
       .then(res => {
         setCountries(res.data);
         setSelectedCountry("");
-        setTeamOptions([]);
-        setSelectedTeam(null);
         setPlayers([]);
         setSelectedPlayerId(null);
       })
       .catch(console.error);
   }, [teamCategory]);
 
-  // Update team options when country changes
+  // Load players when country changes
   useEffect(() => {
     if (!selectedCountry) {
-      setTeamOptions([]);
-      setSelectedTeam(null);
       setPlayers([]);
       setSelectedPlayerId(null);
       return;
     }
-    setTeamOptions([
-      { id: selectedCountry, name: selectedCountry } // 🔥 In your app, teams are basically countries for this view
-    ]);
-    setSelectedTeam(null);
-    setPlayers([]);
-    setSelectedPlayerId(null);
-  }, [selectedCountry]);
-
-  // Load players when team changes
-  useEffect(() => {
-    if (!selectedTeam) {
-      setPlayers([]);
-      setSelectedPlayerId(null);
-      return;
-    }
-    api.get("/team-players", { params: { country_name: selectedTeam.name } })
+    api.get("/team-players", { params: { country_name: selectedCountry } })
       .then(res => setPlayers(res.data))
       .catch(console.error);
-  }, [selectedTeam]);
+  }, [selectedCountry]);
 
   const fetchPlayerDetails = () => {
     if (!selectedPlayerId) return;
@@ -114,7 +83,7 @@ const MatchUpsPage = () => {
               <Form.Group className="mb-3">
                 <Form.Label>Team Category</Form.Label>
                 <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
-                  {["Women", "Men", "U19 Women", "U19 Men"].map(cat => (
+                  {["Women", "Men", "U19 Women", "U19 Men", "Training"].map(cat => (
                     <option key={cat}>{cat}</option>
                   ))}
                 </Form.Select>
@@ -129,27 +98,8 @@ const MatchUpsPage = () => {
                 </Form.Select>
               </Form.Group>
 
-              {/* 3️⃣ Team */}
+              {/* 3️⃣ Individual Player */}
               {selectedCountry && (
-                <Form.Group className="mb-3">
-                  <Form.Label>Team</Form.Label>
-                  <Form.Select
-                    value={selectedTeam ? selectedTeam.name : ""}
-                    onChange={e => {
-                      const team = teamOptions.find(t => t.name === e.target.value);
-                      setSelectedTeam(team);
-                    }}
-                  >
-                    <option value="">Select</option>
-                    {teamOptions.map(t => (
-                      <option key={t.id}>{t.name}</option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              )}
-
-              {/* 4️⃣ Individual Player */}
-              {selectedTeam && (
                 <>
                   <Form.Group className="mb-3">
                     <Form.Label>Individual Player</Form.Label>
@@ -168,8 +118,8 @@ const MatchUpsPage = () => {
                 </>
               )}
 
-              {/* 5️⃣ Multi-Select for Game Plan Sheet */}
-              {selectedTeam && (
+              {/* 4️⃣ Multi-Select for Game Plan Sheet */}
+              {selectedCountry && (
                 <div className="mt-4">
                   <Form.Label>Select Players for Game Plan Sheet</Form.Label>
                   <Form.Check
@@ -225,38 +175,20 @@ const MatchUpsPage = () => {
                     <tr>
                       <td>Avg RPB vs Pace</td>
                       <td>{playerDetail.avg_rpb_pace}</td>
-                      <td>Avg RPB vs Medium</td>
-                      <td>{playerDetail.avg_rpb_medium}</td>
-                    </tr>
-                    <tr>
-                      <td>Avg RPB vs Off-Spin</td>
-                      <td>{playerDetail.avg_rpb_off_spin}</td>
-                      <td>Avg RPB vs Leg-Spin</td>
-                      <td>{playerDetail.avg_rpb_leg_spin}</td>
+                      <td>Avg RPB vs Spin</td>
+                      <td>{playerDetail.avg_rpb_spin}</td>
                     </tr>
                     <tr>
                       <td>Dismissal % vs Pace</td>
                       <td>{playerDetail.dismissal_pct_pace}%</td>
-                      <td>vs Medium</td>
-                      <td>{playerDetail.dismissal_pct_medium}%</td>
-                    </tr>
-                    <tr>
-                      <td>vs Off-Spin</td>
-                      <td>{playerDetail.dismissal_pct_off_spin}%</td>
-                      <td>vs Leg-Spin</td>
-                      <td>{playerDetail.dismissal_pct_leg_spin}%</td>
+                      <td>vs Spin</td>
+                      <td>{playerDetail.dismissal_pct_spin}%</td>
                     </tr>
                     <tr>
                       <td>Dot % vs Pace</td>
                       <td>{playerDetail.dot_pct_pace}%</td>
-                      <td>vs Medium</td>
-                      <td>{playerDetail.dot_pct_medium}%</td>
-                    </tr>
-                    <tr>
-                      <td>vs Off-Spin</td>
-                      <td>{playerDetail.dot_pct_off_spin}%</td>
-                      <td>vs Leg-Spin</td>
-                      <td>{playerDetail.dot_pct_leg_spin}%</td>
+                      <td>vs Spin</td>
+                      <td>{playerDetail.dot_pct_spin}%</td>
                     </tr>
                     <tr>
                       <td>Recommended Bowler Type</td>
