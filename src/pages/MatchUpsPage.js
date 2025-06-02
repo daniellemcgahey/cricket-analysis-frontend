@@ -1,147 +1,222 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
-import { Form, Button, Table, Spinner } from "react-bootstrap";
+import { Form, Button, Spinner, Table, Alert, Card, Col, Row } from "react-bootstrap";
 
 const MatchUpsPage = () => {
-  const [battingTeam, setBattingTeam] = useState("");
-  const [bowlingTeam, setBowlingTeam] = useState("");
-  const [selectedPhases, setSelectedPhases] = useState(["Powerplay"]);
   const [teamCategory, setTeamCategory] = useState("Women");
-
   const [countries, setCountries] = useState([]);
-  const [matchups, setMatchups] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [players, setPlayers] = useState([]);
+
+  const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [playerDetail, setPlayerDetail] = useState(null);
+
+  const [selectedPlayersForSheet, setSelectedPlayersForSheet] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState("my_batting"); // "my_batting" or "opposition_batting"
 
-
+  // Load country list on mount
   useEffect(() => {
-    api.get("/countries", { params: { teamCategory: "Women" } }).then(res => setCountries(res.data));
-  }, []);
+    api.get("/countries", { params: { teamCategory } }).then(res => setCountries(res.data));
+  }, [teamCategory]);
 
+  // Load players for selected country
+  useEffect(() => {
+    if (selectedCountry) {
+      api.get("/players", { params: { country: selectedCountry, teamCategory } })
+        .then(res => setPlayers(res.data));
+    } else {
+      setPlayers([]);
+    }
+  }, [selectedCountry, teamCategory]);
 
-  const fetchMatchups = () => {
-    if (!battingTeam || !bowlingTeam || !selectedPhases) {
-      alert("Please select all filters");
+  const fetchPlayerDetails = () => {
+    if (!selectedPlayer) return;
+    setLoading(true);
+    api.post("/tactical-matchup-detailed", {
+      player_id: selectedPlayer,
+      team_category: teamCategory
+    })
+    .then(res => setPlayerDetail(res.data))
+    .finally(() => setLoading(false));
+  };
+
+  const generateGamePlanPDF = () => {
+    if (selectedPlayersForSheet.length === 0) {
+      alert("Select at least one player!");
       return;
     }
-
     setLoading(true);
-    api.post("/tactical-matchups", {
-      batting_team: battingTeam,
-      bowling_team: bowlingTeam,
-      selected_phases: selectedPhases,
-      team_category: teamCategory,
-      analyze_role: viewMode === "opposition_batting" ? "opposition_batting" : "batting"
+    api.post("/generate-game-plan-pdf", {
+      player_ids: selectedPlayersForSheet,
+      team_category: teamCategory
+    }, { responseType: "blob" })
+    .then(res => {
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "game_plan_sheet.pdf");
+      document.body.appendChild(link);
+      link.click();
     })
-    .then(res => setMatchups(res.data.matchups || []))
     .finally(() => setLoading(false));
-
   };
 
   return (
     <div className="p-4">
       <h3 className="mb-4">Tactical Matchups</h3>
 
-      <div className="mb-3 d-flex gap-3">
-        <Button
-            variant={viewMode === "my_batting" ? "success" : "outline-secondary"}
-            onClick={() => setViewMode("my_batting")}
-        >
-            Us Batting
-        </Button>
-        <Button
-            variant={viewMode === "opposition_batting" ? "danger" : "outline-secondary"}
-            onClick={() => setViewMode("opposition_batting")}
-        >
-            Opposition Batting
-        </Button>
-    </div>
+      <Row>
+        {/* 🔹 Left Column: Filters and Multi-Select */}
+        <Col md={4}>
+          <Card className="mb-4">
+            <Card.Body>
+              {/* 1️⃣ Team Category */}
+              <Form.Group className="mb-3">
+                <Form.Label>Team Category</Form.Label>
+                <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
+                  {["Women", "Men", "U19 Women", "U19 Men", "Training"].map(cat => (
+                    <option key={cat}>{cat}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
 
-      <Form className="row g-3 mb-4">
-        <Form.Group className="col-md-3">
-          <Form.Label>Country A</Form.Label>
-          <Form.Select value={battingTeam} onChange={e => setBattingTeam(e.target.value)}>
-            <option value="">Select</option>
-            {countries.map(c => <option key={c}>{c}</option>)}
-          </Form.Select>
-        </Form.Group>
+              {/* 2️⃣ Opposition Country */}
+              <Form.Group className="mb-3">
+                <Form.Label>Opposition Country</Form.Label>
+                <Form.Select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)}>
+                  <option value="">Select</option>
+                  {countries.map(c => <option key={c}>{c}</option>)}
+                </Form.Select>
+              </Form.Group>
 
-        <Form.Group className="col-md-3">
-          <Form.Label>Country B</Form.Label>
-          <Form.Select value={bowlingTeam} onChange={e => setBowlingTeam(e.target.value)}>
-            <option value="">Select</option>
-            {countries.map(c => <option key={c}>{c}</option>)}
-          </Form.Select>
-        </Form.Group>
+              {/* 3️⃣ Individual Player */}
+              {selectedCountry && (
+                <>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Individual Player</Form.Label>
+                    <Form.Select
+                      value={selectedPlayer}
+                      onChange={e => setSelectedPlayer(e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </Form.Select>
+                  </Form.Group>
 
-        <Form.Group className="col-md-3">
-            <Form.Label>Game Phase</Form.Label>
-            <div>
-                {["Powerplay", "Middle Overs", "Death Overs"].map(phase => (
-                <Form.Check
-                    inline
-                    key={phase}
+                  <Button variant="primary" onClick={fetchPlayerDetails}>
+                    Get Player Detail
+                  </Button>
+                </>
+              )}
+
+              {/* 4️⃣ Multi-Select for Game Plan Sheet */}
+              {selectedCountry && (
+                <div className="mt-4">
+                  <Form.Label>Select Players for Game Plan Sheet</Form.Label>
+                  <Form.Check
                     type="checkbox"
-                    label={phase}
-                    checked={selectedPhases.includes(phase)}
-                    onChange={() => {
-                    setSelectedPhases(prev =>
-                        prev.includes(phase)
-                        ? prev.filter(p => p !== phase)
-                        : [...prev, phase]
-                    );
+                    label="Select All"
+                    checked={selectedPlayersForSheet.length === players.length}
+                    onChange={e => {
+                      setSelectedPlayersForSheet(
+                        e.target.checked ? players.map(p => p.id) : []
+                      );
                     }}
-                />
-                ))}
-            </div>
-        </Form.Group>
+                  />
+                  {players.map(p => (
+                    <Form.Check
+                      key={p.id}
+                      type="checkbox"
+                      label={p.name}
+                      checked={selectedPlayersForSheet.includes(p.id)}
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setSelectedPlayersForSheet(prev => [...prev, p.id]);
+                        } else {
+                          setSelectedPlayersForSheet(prev =>
+                            prev.filter(id => id !== p.id)
+                          );
+                        }
+                      }}
+                    />
+                  ))}
+                  <Button
+                    variant="success"
+                    className="mt-2"
+                    onClick={generateGamePlanPDF}
+                  >
+                    Generate Game Plan Sheet (PDF)
+                  </Button>
+                </div>
+              )}
 
-        <Form.Group className="col-md-1 d-flex align-items-end">
-          <Button variant="success" onClick={fetchMatchups}>Go</Button>
-        </Form.Group>
-      </Form>
+              {loading && <Spinner animation="border" className="mt-3" />}
+            </Card.Body>
+          </Card>
+        </Col>
 
-      {loading && <Spinner animation="border" />}
-
-        {!loading && matchups.length === 0 && (
-        <div className="alert alert-warning">
-            No inferred matchups found — not enough historical data for this team, tournament, or phase.
-        </div>
-        )}
-
-        {matchups.length > 0 && (
-        <Table striped bordered hover responsive>
-            <thead>
-            <tr>
-                <th>Batter</th>
-                <th>Bowler Type</th>
-                <th>Arm</th>
-                <th>Balls</th>
-                <th>Avg RPB</th>
-                <th>Dot %</th>
-                <th>Dismissal %</th>
-                <th>Grade</th>
-            </tr>
-            </thead>
-            <tbody>
-            {matchups.map((m, idx) => (
-                <tr key={idx} className={
-                m.grade === "Favorable" ? "table-success" :
-                m.grade === "Unfavorable" ? "table-danger" : ""
-                }>
-                <td>{m.batter}</td>
-                <td>{m.bowler_type}</td>
-                <td>{m.bowling_arm}</td>
-                <td>{m.balls_faced}</td>
-                <td>{m.avg_runs_per_ball}</td>
-                <td>{m.dot_rate}%</td>
-                <td>{m.dismissal_rate}%</td>
-                <td><strong>{m.grade}</strong></td>
-                </tr>
-            ))}
-            </tbody>
-        </Table>
-        )}
+        {/* 🔹 Right Column: Player Detailed Stats */}
+        <Col md={8}>
+          {playerDetail && (
+            <Card>
+              <Card.Header>{playerDetail.batter}</Card.Header>
+              <Card.Body>
+                <Table size="sm" bordered responsive>
+                  <tbody>
+                    <tr>
+                      <td>Avg RPB vs Pace</td>
+                      <td>{playerDetail.avg_rpb_pace}</td>
+                      <td>Avg RPB vs Medium</td>
+                      <td>{playerDetail.avg_rpb_medium}</td>
+                    </tr>
+                    <tr>
+                      <td>Avg RPB vs Off-Spin</td>
+                      <td>{playerDetail.avg_rpb_off_spin}</td>
+                      <td>Avg RPB vs Leg-Spin</td>
+                      <td>{playerDetail.avg_rpb_leg_spin}</td>
+                    </tr>
+                    <tr>
+                      <td>Dismissal % vs Pace</td>
+                      <td>{playerDetail.dismissal_pct_pace}%</td>
+                      <td>vs Medium</td>
+                      <td>{playerDetail.dismissal_pct_medium}%</td>
+                    </tr>
+                    <tr>
+                      <td>vs Off-Spin</td>
+                      <td>{playerDetail.dismissal_pct_off_spin}%</td>
+                      <td>vs Leg-Spin</td>
+                      <td>{playerDetail.dismissal_pct_leg_spin}%</td>
+                    </tr>
+                    <tr>
+                      <td>Dot % vs Pace</td>
+                      <td>{playerDetail.dot_pct_pace}%</td>
+                      <td>vs Medium</td>
+                      <td>{playerDetail.dot_pct_medium}%</td>
+                    </tr>
+                    <tr>
+                      <td>vs Off-Spin</td>
+                      <td>{playerDetail.dot_pct_off_spin}%</td>
+                      <td>vs Leg-Spin</td>
+                      <td>{playerDetail.dot_pct_leg_spin}%</td>
+                    </tr>
+                    <tr>
+                      <td>Recommended Bowler Type</td>
+                      <td colSpan="3">{playerDetail.recommended_bowler_type}</td>
+                    </tr>
+                    <tr>
+                      <td>Recommended Zones</td>
+                      <td colSpan="3">{playerDetail.recommended_zones.length} length & {playerDetail.recommended_zones.line} line</td>
+                    </tr>
+                  </tbody>
+                </Table>
+                <Alert variant="info">
+                  <strong>Plan:</strong> {playerDetail.summary}
+                </Alert>
+              </Card.Body>
+            </Card>
+          )}
+        </Col>
+      </Row>
     </div>
   );
 };
