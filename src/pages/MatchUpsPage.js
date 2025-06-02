@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
-import { Form, Button, Spinner, Table, Alert, Card, Col, Row } from "react-bootstrap";
+import { Accordion, Form, Button, Spinner, Table, Alert, Card, Col, Row } from "react-bootstrap";
 
 const MatchUpsPage = () => {
   const [teamCategory, setTeamCategory] = useState("Women");
