@@ -42,10 +42,14 @@ const MatchUpsPage = () => {
       .catch(console.error);
   }, [selectedCountry, teamCategory]);
 
-  // Load Brasil bowlers
+  // Load Brasil bowlers dynamically based on team category
   useEffect(() => {
-    api.get("/team-players", { params: { country_name: "Brasil", team_category: teamCategory } })
-      .then(res => setBrasilBowlers(res.data.filter(p => p.bowling_style)))
+    const brasilTeamName = `Brasil ${teamCategory === "Women" ? "Women" : teamCategory === "Men" ? "Men" : "Women"}`;
+    api.get("/team-players", { params: { country_name: brasilTeamName, team_category: teamCategory } })
+      .then(res => {
+        console.log("Brasil Bowlers Response:", res.data); // 🟩 Debug
+        setBrasilBowlers(res.data.filter(p => p.bowling_style));
+      })
       .catch(console.error);
   }, [teamCategory]);
 
