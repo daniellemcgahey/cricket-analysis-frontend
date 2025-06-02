@@ -73,7 +73,8 @@ const MatchUpsPage = () => {
     api.post("/generate-game-plan-pdf", {
       player_ids: selectedPlayersForSheet,
       bowler_ids: selectedBrasilBowlers,
-      team_category: teamCategory
+      team_category: teamCategory,
+      opponent_country: selectedCountry
     }, { responseType: "blob" })
       .then(res => {
         const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
