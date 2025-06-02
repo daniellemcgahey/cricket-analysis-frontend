@@ -351,32 +351,21 @@ const MatchReportPage = () => {
             </div>
           </Card>
 
+          {/* 🔥 Include your WagonWheelChart here */}
           <div>
-            <Accordion defaultActiveKey="0">
+            <WagonWheelChart
+              data={wagonWheelData}
+              perspective="Lines"
+              canvasRef={wagonWheelRef} // ✅ Pass down ref
+            />
+          </div>
 
-              {/* 🟩 Wagon Wheel Section */}
-              <Accordion.Item eventKey="0">
-                <Accordion.Header>Wagon Wheel</Accordion.Header>
-                <Accordion.Body>
-                  <WagonWheelChart
-                    data={wagonWheelData}
-                    canvasRef={wagonWheelRef}
-                  />
-                </Accordion.Body>
-              </Accordion.Item>
-
-              {/* 🟦 Pitch Map Section */}
-              <Accordion.Item eventKey="1">
-                <Accordion.Header>Pitch Map</Accordion.Header>
-                <Accordion.Body>
-                  <PitchMapChart
-                    data={pitchMapData}
-                    canvasRef={pitchMapRef}
-                  />
-                </Accordion.Body>
-              </Accordion.Item>
-
-            </Accordion>
+          {/* 🔥 Include your PitchMapChart here */}
+          <div>
+            <PitchMapChart
+              data={pitchMapData}
+              canvasRef={pitchMapRef} // ✅ Pass down ref
+            />
           </div>
         </Col>
 
