@@ -352,7 +352,7 @@ const MatchReportPage = () => {
           </Card>
 
           {/* 🔥 Include your WagonWheelChart here */}
-          <div style={{hidden}}>
+          <div style={{ display: "none" }}>
             <WagonWheelChart
               data={wagonWheelData}
               perspective="Lines"
