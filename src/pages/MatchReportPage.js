@@ -351,98 +351,32 @@ const MatchReportPage = () => {
             </div>
           </Card>
 
-          {/* 🔥 Include your WagonWheelChart here */}
-          <div style={{ display: "none" }}>
-            <WagonWheelChart
-              data={wagonWheelData}
-              perspective="Lines"
-              canvasRef={wagonWheelRef} // ✅ Pass down ref
-            />
-          </div>
-
-          {/* 🔥 Include your PitchMapChart here */}
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
           <div>
-            <PitchMapChart
-              data={pitchMapData}
-              canvasRef={pitchMapRef} // ✅ Pass down ref
-            />
+            <Accordion defaultActiveKey="0">
+
+              {/* 🟩 Wagon Wheel Section */}
+              <Accordion.Item eventKey="0">
+                <Accordion.Header>Wagon Wheel</Accordion.Header>
+                <Accordion.Body>
+                  <WagonWheelChart
+                    data={wagonWheelData}
+                    canvasRef={wagonWheelRef}
+                  />
+                </Accordion.Body>
+              </Accordion.Item>
+
+              {/* 🟦 Pitch Map Section */}
+              <Accordion.Item eventKey="1">
+                <Accordion.Header>Pitch Map</Accordion.Header>
+                <Accordion.Body>
+                  <PitchMapChart
+                    data={pitchMapData}
+                    canvasRef={pitchMapRef}
+                  />
+                </Accordion.Body>
+              </Accordion.Item>
+
+            </Accordion>
           </div>
         </Col>
 
