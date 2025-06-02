@@ -71,11 +71,11 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
   
       ctx.fillStyle = "black";
       ctx.font = "bold 16px Arial";
-      ctx.fillText(zone.label, labelX - 25, labelY - 10);
+      ctx.fillText(zone.label, labelX - 24, labelY - 10);
   
       ctx.font = "bold 10px Arial";
-      ctx.fillText(`${zone.runs} (${zone.balls})`, labelX - 25, labelY + 5);  // Line 2: Runs (Balls)
-      ctx.fillText(`${zone.wickets} Wicket${zone.wickets === 1 ? "" : "s"}`, labelX -27, labelY + 20);  // Line 3: Wickets
+      ctx.fillText(`${zone.runs} (${zone.balls})`, labelX - 24, labelY + 5);  // Line 2: Runs (Balls)
+      ctx.fillText(`${zone.wickets} Wicket${zone.wickets === 1 ? "" : "s"}`, labelX -24, labelY + 20);  // Line 3: Wickets
     });
   };
   
