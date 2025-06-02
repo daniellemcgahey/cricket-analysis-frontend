@@ -22,7 +22,7 @@ const MatchUpsPage = () => {
   // Load players for selected country
   useEffect(() => {
     if (selectedCountry) {
-      api.get("/players", { params: { country: selectedCountry, teamCategory } })
+      api.get("/team-players", { params: { country: selectedCountry, teamCategory } })
         .then(res => setPlayers(res.data));
     } else {
       setPlayers([]);
