@@ -6,38 +6,78 @@ const MatchUpsPage = () => {
   const [teamCategory, setTeamCategory] = useState("Women");
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [players, setPlayers] = useState([]);
 
-  const [selectedPlayer, setSelectedPlayer] = useState("");
+  const [teamOptions, setTeamOptions] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+  const [players, setPlayers] = useState([]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null);
   const [playerDetail, setPlayerDetail] = useState(null);
 
   const [selectedPlayersForSheet, setSelectedPlayersForSheet] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Load country list on mount
+  // Load countries when team category changes
   useEffect(() => {
-    api.get("/countries", { params: { teamCategory } }).then(res => setCountries(res.data));
+    if (!teamCategory) {
+      setCountries([]);
+      setSelectedCountry("");
+      setTeamOptions([]);
+      setSelectedTeam(null);
+      setPlayers([]);
+      setSelectedPlayerId(null);
+      return;
+    }
+    api.get("/countries", { params: { teamCategory } })
+      .then(res => {
+        setCountries(res.data);
+        setSelectedCountry("");
+        setTeamOptions([]);
+        setSelectedTeam(null);
+        setPlayers([]);
+        setSelectedPlayerId(null);
+      })
+      .catch(console.error);
   }, [teamCategory]);
 
-  // Load players for selected country
+  // Update team options when country changes
   useEffect(() => {
-    if (selectedCountry) {
-      api.get("/team-players", { params: { country: selectedCountry, teamCategory } })
-        .then(res => setPlayers(res.data));
-    } else {
+    if (!selectedCountry) {
+      setTeamOptions([]);
+      setSelectedTeam(null);
       setPlayers([]);
+      setSelectedPlayerId(null);
+      return;
     }
-  }, [selectedCountry, teamCategory]);
+    setTeamOptions([
+      { id: selectedCountry, name: selectedCountry } // 🔥 In your app, teams are basically countries for this view
+    ]);
+    setSelectedTeam(null);
+    setPlayers([]);
+    setSelectedPlayerId(null);
+  }, [selectedCountry]);
+
+  // Load players when team changes
+  useEffect(() => {
+    if (!selectedTeam) {
+      setPlayers([]);
+      setSelectedPlayerId(null);
+      return;
+    }
+    api.get("/team-players", { params: { country_name: selectedTeam.name } })
+      .then(res => setPlayers(res.data))
+      .catch(console.error);
+  }, [selectedTeam]);
 
   const fetchPlayerDetails = () => {
-    if (!selectedPlayer) return;
+    if (!selectedPlayerId) return;
     setLoading(true);
     api.post("/tactical-matchup-detailed", {
-      player_id: selectedPlayer,
+      player_id: selectedPlayerId,
       team_category: teamCategory
     })
-    .then(res => setPlayerDetail(res.data))
-    .finally(() => setLoading(false));
+      .then(res => setPlayerDetail(res.data))
+      .finally(() => setLoading(false));
   };
 
   const generateGamePlanPDF = () => {
@@ -50,15 +90,15 @@ const MatchUpsPage = () => {
       player_ids: selectedPlayersForSheet,
       team_category: teamCategory
     }, { responseType: "blob" })
-    .then(res => {
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "game_plan_sheet.pdf");
-      document.body.appendChild(link);
-      link.click();
-    })
-    .finally(() => setLoading(false));
+      .then(res => {
+        const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "game_plan_sheet.pdf");
+        document.body.appendChild(link);
+        link.click();
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -74,29 +114,48 @@ const MatchUpsPage = () => {
               <Form.Group className="mb-3">
                 <Form.Label>Team Category</Form.Label>
                 <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
-                  {["Women", "Men", "U19 Women", "U19 Men", "Training"].map(cat => (
+                  {["Women", "Men", "U19 Women", "U19 Men"].map(cat => (
                     <option key={cat}>{cat}</option>
                   ))}
                 </Form.Select>
               </Form.Group>
 
-              {/* 2️⃣ Opposition Country */}
+              {/* 2️⃣ Country */}
               <Form.Group className="mb-3">
-                <Form.Label>Opposition Country</Form.Label>
+                <Form.Label>Country</Form.Label>
                 <Form.Select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)}>
                   <option value="">Select</option>
                   {countries.map(c => <option key={c}>{c}</option>)}
                 </Form.Select>
               </Form.Group>
 
-              {/* 3️⃣ Individual Player */}
+              {/* 3️⃣ Team */}
               {selectedCountry && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Team</Form.Label>
+                  <Form.Select
+                    value={selectedTeam ? selectedTeam.name : ""}
+                    onChange={e => {
+                      const team = teamOptions.find(t => t.name === e.target.value);
+                      setSelectedTeam(team);
+                    }}
+                  >
+                    <option value="">Select</option>
+                    {teamOptions.map(t => (
+                      <option key={t.id}>{t.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              )}
+
+              {/* 4️⃣ Individual Player */}
+              {selectedTeam && (
                 <>
                   <Form.Group className="mb-3">
                     <Form.Label>Individual Player</Form.Label>
                     <Form.Select
-                      value={selectedPlayer}
-                      onChange={e => setSelectedPlayer(e.target.value)}
+                      value={selectedPlayerId || ""}
+                      onChange={e => setSelectedPlayerId(e.target.value)}
                     >
                       <option value="">Select</option>
                       {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -109,8 +168,8 @@ const MatchUpsPage = () => {
                 </>
               )}
 
-              {/* 4️⃣ Multi-Select for Game Plan Sheet */}
-              {selectedCountry && (
+              {/* 5️⃣ Multi-Select for Game Plan Sheet */}
+              {selectedTeam && (
                 <div className="mt-4">
                   <Form.Label>Select Players for Game Plan Sheet</Form.Label>
                   <Form.Check
