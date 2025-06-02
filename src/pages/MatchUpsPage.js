@@ -174,21 +174,39 @@ const MatchUpsPage = () => {
                   <tbody>
                     <tr>
                       <td>Avg RPB vs Pace</td>
+                      <td>{playerDetail.avg_rpb_pace}</td>
+                      <td>Avg RPB vs Medium</td>
                       <td>{playerDetail.avg_rpb_medium}</td>
-                      <td>Avg RPB vs Spin</td>
+                    </tr>
+                    <tr>
+                      <td>Avg RPB vs Off Spin</td>
                       <td>{playerDetail.avg_rpb_off_spin}</td>
+                      <td>Avg RPB vs Leg Spin</td>
+                      <td>{playerDetail.avg_rpb_leg_spin}</td>
                     </tr>
                     <tr>
                       <td>Dismissal % vs Pace</td>
+                      <td>{playerDetail.dismissal_pct_pace}%</td>
+                      <td>vs Medium</td>
                       <td>{playerDetail.dismissal_pct_medium}%</td>
-                      <td>vs Spin</td>
+                    </tr>
+                    <tr>
+                      <td>vs Off Spin</td>
                       <td>{playerDetail.dismissal_pct_off_spin}%</td>
+                      <td>vs Leg Spin</td>
+                      <td>{playerDetail.dismissal_pct_leg_spin}%</td>
                     </tr>
                     <tr>
                       <td>Dot % vs Pace</td>
+                      <td>{playerDetail.dot_pct_pace}%</td>
+                      <td>vs Medium</td>
                       <td>{playerDetail.dot_pct_medium}%</td>
-                      <td>vs Spin</td>
+                    </tr>
+                    <tr>
+                      <td>vs Off Spin</td>
                       <td>{playerDetail.dot_pct_off_spin}%</td>
+                      <td>vs Leg Spin</td>
+                      <td>{playerDetail.dot_pct_leg_spin}%</td>
                     </tr>
                     <tr>
                       <td>Recommended Bowler Type</td>
@@ -203,6 +221,41 @@ const MatchUpsPage = () => {
                 <Alert variant="info">
                   <strong>Plan:</strong> {playerDetail.summary}
                 </Alert>
+
+                {/* 🔹 Zones Grid */}
+                <Accordion className="mt-3">
+                  <Accordion.Item eventKey="0">
+                    <Accordion.Header>Detailed Zone Analysis</Accordion.Header>
+                    <Accordion.Body>
+                      <Table size="sm" bordered responsive>
+                        <thead>
+                          <tr>
+                            <th>Length</th>
+                            <th>Line</th>
+                            <th>Balls</th>
+                            <th>Runs</th>
+                            <th>Dismissals</th>
+                            <th>Avg RPB</th>
+                            <th>Dismissal %</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {playerDetail.zone_data.map((zone, idx) => (
+                            <tr key={idx}>
+                              <td>{zone.length}</td>
+                              <td>{zone.line}</td>
+                              <td>{zone.balls}</td>
+                              <td>{zone.runs}</td>
+                              <td>{zone.dismissals}</td>
+                              <td>{zone.avg_rpb}</td>
+                              <td>{zone.dismissal_pct}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </Accordion.Body>
+                  </Accordion.Item>
+                </Accordion>
               </Card.Body>
             </Card>
           )}
