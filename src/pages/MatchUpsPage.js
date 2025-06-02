@@ -65,15 +65,15 @@ const MatchUpsPage = () => {
   };
 
   const generateGamePlanPDF = () => {
-    if (selectedPlayersForSheet.length === 0) {
-      alert("Select at least one player!");
+    if (selectedPlayersForSheet.length === 0 || selectedBrasilBowlers.length === 0) {
+      alert("Select at least one batter and one Brasil bowler!");
       return;
     }
     setLoading(true);
     api.post("/generate-game-plan-pdf", {
       player_ids: selectedPlayersForSheet,
-      team_category: teamCategory,
-      brasil_bowlers: selectedBrasilBowlers
+      bowler_ids: selectedBrasilBowlers,
+      team_category: teamCategory
     }, { responseType: "blob" })
       .then(res => {
         const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
