@@ -169,25 +169,43 @@ const MatchReportPage = () => {
   const generatePlayerReport = async () => {
     if (!selectedMatchId || !selectedPlayerId) return;
 
-    const canvas = wagonWheelRef.current;
-    if (canvas) {
-      const base64Image = canvas.toDataURL("image/png");
+    const wagonWheelCanvas = wagonWheelRef.current;
+    const pitchMapCanvas = pitchMapRef.current;
 
-      try {
-        await api.post("/api/upload-wagon-wheel", { image: base64Image });
-        console.log("✅ Wagon wheel image uploaded successfully");
-      } catch (error) {
-        console.error("❌ Error uploading wagon wheel image:", error);
+    try {
+      // ✅ Upload Wagon Wheel (if canvas exists)
+      if (wagonWheelCanvas) {
+        const base64Wagon = wagonWheelCanvas.toDataURL("image/png");
+        await api.post("/api/upload-wagon-wheel", { image: base64Wagon });
+        console.log("✅ Wagon wheel image uploaded");
+      } else {
+        console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
       }
-    } else {
-      console.warn("⚠️ No wagon wheel canvas found, skipping upload.");
-    }
 
-    window.open(
-      `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
-      "_blank"
-    );
+      // ✅ Upload Pitch Map (if canvas exists)
+      if (pitchMapCanvas) {
+        const base64Pitch = pitchMapCanvas.toDataURL("image/png");
+        await api.post("/api/upload-pitch-map", { image: base64Pitch });
+        console.log("✅ Pitch map image uploaded");
+      } else {
+        console.warn("⚠️ No pitch map canvas found, skipping upload.");
+      }
+
+      // ✅ Delay to allow backend to finalize saves on slow networks
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // ✅ Open the report
+      window.open(
+        `${api.defaults.baseURL}/match-report/${selectedMatchId}/player/${selectedPlayerId}`,
+        "_blank"
+      );
+
+    } catch (error) {
+      console.error("❌ Error uploading images or generating report:", error);
+      alert("Something went wrong while generating the report. Please try again.");
+    }
   };
+
 
 
 
