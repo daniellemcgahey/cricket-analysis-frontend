@@ -386,74 +386,7 @@ const IndividualBattingTab = () => {
                   </Accordion.Body>
                 </Accordion.Item>
 
-                <Accordion.Item eventKey="3" className={isDarkMode ? "bg-dark text-white" : ""}>
-                  <Accordion.Header>Batting by Position</Accordion.Header>
-                    <Accordion.Body>
-                {battingStats.by_position?.length > 0 ? (
-                  <Table striped bordered hover variant={isDarkMode ? "dark" : "light"}>
-                    <thead className="table-secondary text-center">
-                      <tr>
-                        <th>Position</th>
-                        <th>Innings</th>
-                        <th>Runs</th>
-                        <th>Avg</th> 
-                        <th>SR</th>
-                        <th>Scoring %</th>
-                        <th>4s</th>
-                        <th>6s</th>
-                        <th>HS</th>
-                        <th>Intent</th>  
-                      </tr>
-                    </thead>
-
-                    <tbody className="text-center">
-                      {battingStats.by_position.map((row, idx) => {
-                        const sr = row.balls_faced > 0 ? ((row.total_runs / row.balls_faced) * 100).toFixed(2) : "–";
-                        const position = row.batting_position === 1 ? "Opening" : row.batting_position;
-
-                        return (
-                          <tr key={idx}>
-                            <td>{position}</td>
-                            <td>{row.innings}</td>
-                            <td>{row.total_runs}</td>
-                            <td>
-                              {row.dismissals > 0
-                                ? (row.total_runs / row.dismissals).toFixed(2)
-                                : "–"}
-                            </td>
-                            <td>
-                              {row.balls_faced > 0
-                                ? ((row.total_runs / row.balls_faced) * 100).toFixed(2)
-                                : "–"}
-                            </td>
-                            <td>
-                              {row.balls_faced > 0
-                                ? ((row.scoring_balls / row.balls_faced) * 100).toFixed(1) + "%"
-                                : "–"}
-                            </td>
-                            <td>{row.fours}</td>
-                            <td>{row.sixes}</td>
-                            <td>
-                              {row.high_score !== null ? (
-                                <>
-                                  {row.high_score}
-                                  {row.high_score_dismissed === 0 && <sup>*</sup>}
-                                </>
-                              ) : "–"}
-                            </td>
-                            <td>{row.avg_intent?.toFixed(2) || "–"}</td>
-
-
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </Table>
-                ) : (
-                  <Alert variant="info">No batting position data available</Alert>
-                )}
-                  </Accordion.Body>
-                </Accordion.Item>
+                
                 </Accordion>
               ) : (
                 <Alert variant="info">Please generate a report to view stats.</Alert>

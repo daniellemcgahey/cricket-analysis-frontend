@@ -58,7 +58,10 @@ const IndividualBowlingTab = () => {
       return;
     }
     setLoading(true);
-    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
+    const player_ids =
+    typeof selectedPlayer === "string"
+      ? selectedPlayer.split(",").map(id => parseInt(id))
+      : [selectedPlayer];
 
     api.post("/player-bowling-analysis", {
       player_ids,
@@ -294,26 +297,6 @@ const IndividualBowlingTab = () => {
                             <td>{avg}</td>
                         ];
                         }
-                    )}
-                    </Accordion.Body>
-                </Accordion.Item>
-
-                <Accordion.Item eventKey="3" className={isDarkMode ? "bg-dark text-white" : ""}>
-                    <Accordion.Header>Bowling by Spell Over</Accordion.Header>
-                    <Accordion.Body>
-                    {renderTable(
-                        "Bowling by Spell Over",
-                        bowlingStats.by_spell_position,
-                        ["Spell Over", "Overs", "Runs", "Wickets", "Econ", "Strike Rate", "Average"],
-                        (row) => [
-                        <td>{row.spell_over}</td>,
-                        <td>{row.overs}</td>,
-                        <td>{row.runs}</td>,
-                        <td>{row.wickets}</td>,
-                        <td>{row.economy}</td>,
-                        <td>{row.strike_rate}</td>,
-                        <td>{row.average}</td>
-                        ]
                     )}
                     </Accordion.Body>
                 </Accordion.Item>
