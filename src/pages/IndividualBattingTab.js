@@ -56,7 +56,11 @@ const IndividualBattingTab = () => {
       return;
     }
     setLoading(true);
-    const player_ids = selectedPlayer.split(",").map(id => parseInt(id));
+    const player_ids =
+    typeof selectedPlayer === "string"
+      ? selectedPlayer.split(",").map(id => parseInt(id))
+      : [selectedPlayer];
+
 
     api.post("/player-batting-analysis", {
       player_ids,
