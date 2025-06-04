@@ -2,33 +2,40 @@ import React from "react";
 
 // 🔁 Flag lookup helper
 const getFlagEmoji = (country) => {
+  if (!country) return "🏳️";
+
+  // Normalize input
+  const normalized = country.trim().toLowerCase().replace(/\s+/g, "");
+
+  // Map of normalized country keys
   const flags = {
-    Argentina: "🇦🇷",
-    Brasil: "🇧🇷",
-    Brazil: "🇧🇷", // support both spellings
-    Canada: "🇨🇦",
-    USA: "🇺🇸",
-    England: "🇬🇧",
-    India: "🇮🇳",
-    Australia: "🇦🇺",
-    Germany: "🇩🇪",
-    SouthAfrica: "🇿🇦",
-    SriLanka: "🇱🇰",
-    Pakistan: "🇵🇰",
-    Bangladesh: "🇧🇩",
-    Nepal: "🇳🇵",
-    Nigeria: "🇳🇬",
-    Uganda: "🇺🇬",
-    Kenya: "🇰🇪",
-    Zimbabwe: "🇿🇼",
-    Namibia: "🇳🇦"
-    // Add more as needed
+    argentina: "🇦🇷",
+    brazil: "🇧🇷",
+    canada: "🇨🇦",
+    usa: "🇺🇸",
+    england: "🇬🇧",
+    india: "🇮🇳",
+    australia: "🇦🇺",
+    germany: "🇩🇪",
+    southafrica: "🇿🇦",
+    srilanka: "🇱🇰",
+    pakistan: "🇵🇰",
+    bangladesh: "🇧🇩",
+    nepal: "🇳🇵",
+    nigeria: "🇳🇬",
+    uganda: "🇺🇬",
+    kenya: "🇰🇪",
+    zimbabwe: "🇿🇼",
+    namibia: "🇳🇦"
   };
 
-  if (!country) return "🏳️";
-  const trimmed = country.trim();
-  return flags[trimmed] || "🏳️";
+  const emoji = flags[normalized];
+  if (!emoji) {
+    console.warn("⚠️ Unrecognized country for flag:", country, "(normalized:", normalized + ")");
+  }
+  return emoji || "🏳️";
 };
+
 
 const TopBottomPlayers = ({ data }) => {
   const renderCategory = (label, players) => {
