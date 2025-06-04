@@ -54,6 +54,7 @@ const PressureTab = () => {
     }
 
     setLoading(true);
+
     const payload = {
       country1,
       country2,
@@ -87,9 +88,13 @@ const PressureTab = () => {
           topBottomPlayers: res.data.topBottomPlayers,
         });
       })
+      .catch((err) => {
+        console.error("Failed to fetch pressure analysis:", err);
+        alert("Failed to fetch pressure data. Please check your filters.");
+      })
       .finally(() => setLoading(false));
-
   };
+
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
