@@ -2,39 +2,34 @@ import React from "react";
 
 // 🔁 Flag lookup helper
 const getFlagEmoji = (country) => {
-  if (!country) return "🏳️";
+  if (!country) return "\u{1F3F3}"; // White flag
 
-  // Normalize input
   const normalized = country.trim().toLowerCase().replace(/\s+/g, "");
 
-  // Map of normalized country keys
   const flags = {
-    argentina: "🇦🇷",
-    brazil: "🇧🇷",
-    canada: "🇨🇦",
-    usa: "🇺🇸",
-    england: "🇬🇧",
-    india: "🇮🇳",
-    australia: "🇦🇺",
-    germany: "🇩🇪",
-    southafrica: "🇿🇦",
-    srilanka: "🇱🇰",
-    pakistan: "🇵🇰",
-    bangladesh: "🇧🇩",
-    nepal: "🇳🇵",
-    nigeria: "🇳🇬",
-    uganda: "🇺🇬",
-    kenya: "🇰🇪",
-    zimbabwe: "🇿🇼",
-    namibia: "🇳🇦"
+    argentina: "\u{1F1E6}\u{1F1F7}", // 🇦🇷
+    brazil: "\u{1F1E7}\u{1F1F7}",    // 🇧🇷
+    canada: "\u{1F1E8}\u{1F1E6}",    // 🇨🇦
+    usa: "\u{1F1FA}\u{1F1F8}",       // 🇺🇸
+    england: "\u{1F1EC}\u{1F1E7}",   // 🇬🇧
+    india: "\u{1F1EE}\u{1F1F3}",     // 🇮🇳
+    australia: "\u{1F1E6}\u{1F1FA}", // 🇦🇺
+    germany: "\u{1F1E9}\u{1F1EA}",   // 🇩🇪
+    southafrica: "\u{1F1FF}\u{1F1E6}", // 🇿🇦
+    srilanka: "\u{1F1F1}\u{1F1F0}",  // 🇱🇰
+    pakistan: "\u{1F1F5}\u{1F1F0}",  // 🇵🇰
+    bangladesh: "\u{1F1E7}\u{1F1E9}",// 🇧🇩
+    nepal: "\u{1F1F3}\u{1F1F5}",     // 🇳🇵
+    nigeria: "\u{1F1F3}\u{1F1EC}",   // 🇳🇬
+    uganda: "\u{1F1FA}\u{1F1EC}",    // 🇺🇬
+    kenya: "\u{1F1F0}\u{1F1EA}",     // 🇰🇪
+    zimbabwe: "\u{1F1FF}\u{1F1FC}",  // 🇿🇼
+    namibia: "\u{1F1F3}\u{1F1E6}"    // 🇳🇦
   };
 
-  const emoji = flags[normalized];
-  if (!emoji) {
-    console.warn("⚠️ Unrecognized country for flag:", country, "(normalized:", normalized + ")");
-  }
-  return emoji || "🏳️";
+  return flags[normalized] || "\u{1F3F3}"; // 🏳️ fallback
 };
+
 
 
 const TopBottomPlayers = ({ data }) => {
