@@ -11,7 +11,7 @@ const getFlagEmoji = (country) => {
 
   const flags = {
     argentina: "\u{1F1E6}\u{1F1F7}",
-    brazil: "\u{1F1E7}\u{1F1F7}",
+    brasil: "\u{1F1E7}\u{1F1F7}",
     canada: "\u{1F1E8}\u{1F1E6}",
     usa: "\u{1F1FA}\u{1F1F8}",
     england: "\u{1F1EC}\u{1F1E7}",
