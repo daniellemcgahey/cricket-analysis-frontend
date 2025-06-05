@@ -56,17 +56,20 @@ const ScorecardTab = () => {
   };
 
 const handleBatterClick = (batter, index) => {
-  if (!batter?.player_id || !selectedMatch) return;
+  console.log("🔍 Batter clicked:", batter, "Selected Match:", selectedMatch);
+
+  if (!batter?.player_id || selectedMatch === "") {
+    console.warn("❌ Invalid click, missing batter.player_id or selectedMatch");
+    return;
+  }
 
   if (expandedBatterIndex === index) {
     setExpandedBatterIndex(null);
   } else {
     setExpandedBatterIndex(index);
+
     if (!batterDetails[batter.player_id]) {
-      console.log("Calling /scorecard-player-detail with", {
-        matchId: selectedMatch,
-        playerId: batter.player_id,
-      });
+      console.log("📡 Fetching batter detail from backend...");
       api.get("/scorecard-player-detail", {
         params: {
           matchId: selectedMatch,
@@ -77,10 +80,13 @@ const handleBatterClick = (batter, index) => {
           ...prev,
           [batter.player_id]: res.data
         }));
+      }).catch(err => {
+        console.error("❌ API error fetching batter detail:", err);
       });
     }
   }
 };
+
 
 
 
