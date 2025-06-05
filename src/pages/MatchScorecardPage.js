@@ -355,14 +355,14 @@ const handleBowlerClick = (bowler, index) => {
                                     <div className="row">
                                       <div className="col-md-5">
                                         <h6>Bowling Summary</h6>
-                                        <ul>
-                                          <li><strong>Runs Conceded:</strong> {detail.summary.runs_conceded}</li>
-                                          <li><strong>Real Runs Conceded:</strong> {detail.summary.real_runs_conceded}</li>
-                                          <li><strong>Chances Made:</strong> {detail.summary.chances_made}</li>
-                                          <li><strong>Wickets:</strong> {detail.summary.wickets}</li>
-                                          <li><strong>Real Wickets:</strong> {detail.summary.real_wickets}</li>
-                                          <li><strong>Real Econ:</strong> {detail.summary.real_economy}</li>
-                                          <li><strong>Real SR:</strong> {detail.summary.real_strike_rate}</li>
+                                        <ul className="list-unstyled">
+                                          <li className="mb-1"><strong>Runs Conceded:</strong> {detail.summary.runs_conceded}</li>
+                                          <li className="mb-1"><strong>Real Runs Conceded:</strong> {detail.summary.real_runs_conceded}</li>
+                                          <li className="mb-1"><strong>Chances Made:</strong> {detail.summary.chances_made}</li>
+                                          <li className="mb-1"><strong>Wickets:</strong> {detail.summary.wickets}</li>
+                                          <li className="mb-1"><strong>Real Wickets:</strong> {detail.summary.real_wickets}</li>
+                                          <li className="mb-1"><strong>Real Econ:</strong> {detail.summary.real_economy}</li>
+                                          <li className="mb-1"><strong>Real SR:</strong> {detail.summary.real_strike_rate}</li>
                                         </ul>
                                       </div>
                                       <div className="col-md-7">
