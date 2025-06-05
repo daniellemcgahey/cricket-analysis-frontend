@@ -57,7 +57,7 @@ const ScorecardTab = () => {
 
 const handleBatterClick = (batter, index) => {
   console.log("🔍 Batter clicked:", batter, "Selected Match:", selectedMatch);
-  
+
   if (!batter?.player_id || selectedMatch === "") {
     console.warn("❌ Invalid click, missing batter.player_id or selectedMatch");
     return;
@@ -76,14 +76,27 @@ const handleBatterClick = (batter, index) => {
           playerId: batter.player_id,
         },
       }).then(res => {
+        const transformedShots = res.data.shots.map(ball => ({
+          x: ball.shot_x,
+          y: ball.shot_y,
+          runs: ball.runs,
+          dismissal_type: ball.dismissal_type
+        }));
+
+        const updatedData = {
+          ...res.data,
+          shots: transformedShots
+        };
+
         setBatterDetails(prev => ({
           ...prev,
-          [batter.player_id]: res.data
+          [batter.player_id]: updatedData
         }));
       }).catch(err => {
         console.error("❌ API error fetching batter detail:", err);
       });
     }
+
   }
 };
 
