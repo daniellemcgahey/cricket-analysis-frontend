@@ -17,6 +17,9 @@ const ScorecardTab = () => {
   const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const [expandedBatterIndex, setExpandedBatterIndex] = useState(null);
+  const [batterDetails, setBatterDetails] = useState({});
+
   useEffect(() => {
     api.get("/tournaments").then(res => {
       setTournaments(res.data);
@@ -50,6 +53,22 @@ const ScorecardTab = () => {
       console.log("📝 Batting Card:", res.data.innings[0]?.batting_card);
     });
   };
+
+  const handleBatterClick = (batter, index) => {
+    if (expandedBatterIndex === index) {
+      setExpandedBatterIndex(null);
+    } else {
+      setExpandedBatterIndex(index);
+      if (!batterDetails[batter.player_id]) {
+        api.get("/scorecard-player-detail", {
+          params: { matchId: selectedMatch, playerId: batter.player_id }
+        }).then(res => {
+          setBatterDetails(prev => ({ ...prev, [batter.player_id]: res.data }));
+        });
+      }
+    }
+  };
+
 
 
   return (
@@ -182,28 +201,50 @@ const ScorecardTab = () => {
                         </tr>
                       </thead>
                         <tbody>
-                            {scorecard.innings[selectedInningsIndex].batting_card.map((b, i) => {
-                                // Determine if this player is still not out
-                                const isNotOut = b.fielder_text === "" && b.bowler_text === "";
+                          {scorecard.innings[selectedInningsIndex].batting_card.map((b, i) => {
+                            const isNotOut = b.fielder_text === "" && b.bowler_text === "";
+                            const isExpanded = expandedBatterIndex === i;
+                            const detail = batterDetails[b.player_id];
 
-                                return (
-                                <tr key={i} className={isNotOut ? "table-success fw-bold" : ""}>
-                                    <td>
-                                    {b.player}
-                                    {b.is_captain ? " ©" : ""}
-                                    {b.is_keeper ? " †" : ""}
-                                    </td>
-                                    <td className={isNotOut ? "fst-italic" : ""}>{b.fielder_text || (isNotOut ? "not out" : "")}</td>
-                                    <td className={isNotOut ? "fst-italic" : ""}>{b.bowler_text || ""}</td>
-                                    <td>{b.runs}</td>
-                                    <td>{b.balls}</td>
-                                    <td>{b.fours}</td>
-                                    <td>{b.sixes}</td>
-                                    <td>{b.strike_rate}</td>
+                            return (
+                              <React.Fragment key={i}>
+                                <tr
+                                  className={`${isNotOut ? "table-success fw-bold" : ""} ${isExpanded ? "table-active" : ""}`}
+                                  onClick={() => handleBatterClick(b, i)}
+                                  style={{ cursor: "pointer" }}
+                                >
+                                  <td>{b.player}{b.is_captain ? " ©" : ""}{b.is_keeper ? " †" : ""}</td>
+                                  <td className={isNotOut ? "fst-italic" : ""}>{b.fielder_text || (isNotOut ? "not out" : "")}</td>
+                                  <td className={isNotOut ? "fst-italic" : ""}>{b.bowler_text || ""}</td>
+                                  <td>{b.runs}</td><td>{b.balls}</td><td>{b.fours}</td><td>{b.sixes}</td><td>{b.strike_rate}</td>
                                 </tr>
-                                );
-                            })}
+                                {isExpanded && detail && (
+                                  <tr>
+                                    <td colSpan="8">
+                                      <div className="row">
+                                        <div className="col-md-5">
+                                          <h6>Run Breakdown</h6>
+                                          <ul>
+                                            {Object.entries(detail.run_breakdown).map(([runs, count]) => (
+                                              <li key={runs}><strong>{runs}:</strong> {count}</li>
+                                            ))}
+                                            <li><strong>Scoring Shot %:</strong> {detail.scoring_pct}%</li>
+                                            <li><strong>Avg Intent:</strong> {detail.avg_intent}</li>
+                                          </ul>
+                                        </div>
+                                        <div className="col-md-7">
+                                          <h6>Wagon Wheel</h6>
+                                          <WagonWheelChart data={detail.shots} perspective="Lines" />
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
                         </tbody>
+
 
                     </table>
 
