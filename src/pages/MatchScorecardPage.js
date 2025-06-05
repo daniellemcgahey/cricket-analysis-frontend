@@ -254,7 +254,7 @@ const handleBatterClick = (batter, index) => {
                                 {isExpanded && detail && (
                                   <tr>
                                     <td colSpan="8">
-                                      <div className="row">
+                                      <div className={`row p-3 rounded ${isDarkMode ? "bg-secondary text-white" : "bg-light"}`}>
                                         <div className="col-md-5">
                                           <h6>Run Breakdown</h6>
                                           <ul>
