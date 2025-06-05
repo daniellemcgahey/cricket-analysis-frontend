@@ -3,6 +3,7 @@ import api from "../api";
 import { Form, Accordion, Spinner, Alert, ButtonGroup, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
+import WagonWheelChart from "./WagonWheelChart";
 
 const ScorecardTab = () => {
   const { isDarkMode } = useContext(DarkModeContext);
