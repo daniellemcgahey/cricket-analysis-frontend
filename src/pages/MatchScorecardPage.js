@@ -340,7 +340,7 @@ const handleBowlerClick = (bowler, index) => {
                                 onClick={() => handleBowlerClick(b, i)}
                                 style={{ cursor: "pointer" }}
                               >
-                                <td>{b.player}</td>
+                                <td>{b.bowler}</td>
                                 <td>{b.overs}</td>
                                 <td>{b.dots}</td>
                                 <td>{b.runs}</td>
