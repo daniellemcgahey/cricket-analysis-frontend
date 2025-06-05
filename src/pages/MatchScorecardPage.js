@@ -55,20 +55,33 @@ const ScorecardTab = () => {
     });
   };
 
-  const handleBatterClick = (batter, index) => {
-    if (expandedBatterIndex === index) {
-      setExpandedBatterIndex(null);
-    } else {
-      setExpandedBatterIndex(index);
-      if (!batterDetails[batter.player_id]) {
-        api.get("/scorecard-player-detail", {
-          params: { matchId: selectedMatch, playerId: batter.player_id }
-        }).then(res => {
-          setBatterDetails(prev => ({ ...prev, [batter.player_id]: res.data }));
-        });
-      }
+const handleBatterClick = (batter, index) => {
+  if (!batter?.player_id || !selectedMatch) return;
+
+  if (expandedBatterIndex === index) {
+    setExpandedBatterIndex(null);
+  } else {
+    setExpandedBatterIndex(index);
+    if (!batterDetails[batter.player_id]) {
+      console.log("Calling /scorecard-player-detail with", {
+        matchId: selectedMatch,
+        playerId: batter.player_id,
+      });
+      api.get("/scorecard-player-detail", {
+        params: {
+          matchId: selectedMatch,
+          playerId: batter.player_id,
+        },
+      }).then(res => {
+        setBatterDetails(prev => ({
+          ...prev,
+          [batter.player_id]: res.data
+        }));
+      });
     }
-  };
+  }
+};
+
 
 
 
@@ -106,9 +119,9 @@ const ScorecardTab = () => {
                 <Accordion.Body>
                   <Form.Group className="mb-3">
                     <Form.Select
-                      value={selectedTournament}
-                      onChange={e => setSelectedTournament(e.target.value)}
-                      disabled={tournaments.length === 0}
+                      value={selectedMatch}
+                      onChange={e => setSelectedMatch(Number(e.target.value))}  // <-- Convert to number
+                      disabled={matches.length === 0}
                     >
                       <option value="">Select Tournament</option>
                       {tournaments.map((t, idx) => (
