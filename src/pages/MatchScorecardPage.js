@@ -4,6 +4,7 @@ import { Form, Accordion, Spinner, Alert, ButtonGroup, Button } from "react-boot
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
 import WagonWheelChart from "./WagonWheelChart";
+import PitchMapChart from "./PitchMapChart";
 
 const ScorecardTab = () => {
   const { isDarkMode } = useContext(DarkModeContext);
