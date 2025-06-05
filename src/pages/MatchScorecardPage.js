@@ -73,7 +73,8 @@ const handleBatterClick = (batter, index) => {
   } else {
     setExpandedBatterIndex(index);
 
-    if (!batterDetails[batter.player_id]) {
+    const key = `${batter.player_id}_${selectedMatch}`;
+    if (!batterDetails[key]) {
       console.log("📡 Fetching batter detail from backend...");
       api.get("/scorecard-player-detail", {
         params: {
@@ -94,9 +95,10 @@ const handleBatterClick = (batter, index) => {
         };
 
         setBatterDetails(prev => ({
-          ...prev,
-          [batter.player_id]: updatedData
-        }));
+        ...prev,
+        [key]: updatedData
+      }));
+
       }).catch(err => {
         console.error("❌ API error fetching batter detail:", err);
       });
@@ -114,7 +116,8 @@ const handleBowlerClick = (bowler, index) => {
   const isCurrentlyExpanded = expandedBowlerIndex === index;
   setExpandedBowlerIndex(isCurrentlyExpanded ? null : index);
 
-  if (!bowlerDetails[bowler.player_id]) {
+  const key = `${bowler.player_id}_${selectedMatch}`;
+  if (!bowlerDetails[key]) {
     console.log("📡 Fetching bowler detail from backend...");
     api.get("/scorecard-bowler-detail", {
       params: {
@@ -124,7 +127,7 @@ const handleBowlerClick = (bowler, index) => {
     }).then(res => {
       setBowlerDetails(prev => ({
         ...prev,
-        [bowler.player_id]: res.data
+        [key]: res.data
       }));
     }).catch(err => {
       console.error("❌ API error fetching bowler detail:", err);
@@ -270,7 +273,8 @@ const handleBowlerClick = (bowler, index) => {
                           {scorecard.innings[selectedInningsIndex].batting_card.map((b, i) => {
                             const isNotOut = b.fielder_text === "" && b.bowler_text === "";
                             const isExpanded = expandedBatterIndex === i;
-                            const detail = batterDetails[b.player_id];
+                            const detail = batterDetails[`${b.player_id}_${selectedMatch}`];
+
 
                             return (
                               <React.Fragment key={i}>
@@ -331,7 +335,7 @@ const handleBowlerClick = (bowler, index) => {
                       <tbody>
                         {scorecard.innings[selectedInningsIndex].bowling_card.map((b, i) => {
                           const isExpanded = expandedBowlerIndex === i;
-                          const detail = bowlerDetails[b.player_id];
+                          const detail = bowlerDetails[`${b.player_id}_${selectedMatch}`];
 
                           return (
                             <React.Fragment key={i}>
