@@ -13,7 +13,7 @@ const ScorecardTab = () => {
   const [tournaments, setTournaments] = useState([]);
   const [selectedTournament, setSelectedTournament] = useState("");
   const [matches, setMatches] = useState([]);
-  const [selectedMatch, setSelectedMatch] = useState("");
+  const [selectedMatch, setSelectedMatch] = useState(null);
   const [scorecard, setScorecard] = useState(null);
   const [selectedInningsIndex, setSelectedInningsIndex] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -57,7 +57,7 @@ const ScorecardTab = () => {
 
 const handleBatterClick = (batter, index) => {
   console.log("🔍 Batter clicked:", batter, "Selected Match:", selectedMatch);
-
+  
   if (!batter?.player_id || selectedMatch === "") {
     console.warn("❌ Invalid click, missing batter.player_id or selectedMatch");
     return;
