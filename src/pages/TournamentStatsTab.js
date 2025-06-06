@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
-import { Accordion, Form, Button, Table, Spinner } from "react-bootstrap";
+import { Accordion, Card, Form, Button, Table, Spinner } from "react-bootstrap";
+import DarkModeContext from "../DarkModeContext";
 
 const TournamentStatsTab = () => {
+  const { isDarkMode } = useContext(DarkModeContext);
+  const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
+
   const [teamCategory, setTeamCategory] = useState("Women");
   const [tournaments, setTournaments] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -13,60 +17,60 @@ const TournamentStatsTab = () => {
   const [selectedCountries, setSelectedCountries] = useState([]);
   const [selectedGrounds, setSelectedGrounds] = useState([]);
   const [selectedTimes, setSelectedTimes] = useState([]);
+
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectAllCountries, setSelectAllCountries] = useState(true);
 
-  // Fetch tournaments
+  const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
+
   useEffect(() => {
-    const fetchTournaments = async () => {
-      const res = await api.get("/tournaments", {
-        params: { team_category: teamCategory },
-      });
-      setTournaments(res.data);
-    };
-    fetchTournaments();
+    api.get("/tournaments", { params: { team_category: teamCategory } })
+      .then(res => setTournaments(res.data));
   }, [teamCategory]);
 
-  // Fetch countries only when tournament and category selected
   useEffect(() => {
-    const fetchCountries = async () => {
-      if (!selectedTournament || !teamCategory) return;
-      const res = await api.get("/countries", {
+    if (selectedTournament && teamCategory) {
+      api.get("/countries", {
         params: { team_category: teamCategory, tournament: selectedTournament },
+      }).then(res => {
+        setCountries(res.data);
+        setSelectedCountries(res.data);
+        setSelectAllCountries(true);
       });
-      setCountries(res.data);
-    };
-    fetchCountries();
-  }, [teamCategory, selectedTournament]);
 
-  // Fetch venue options
-  useEffect(() => {
-    const fetchVenues = async () => {
-      if (!selectedTournament) return;
-      const res = await api.get("/venue-options", {
-        params: {
-          team_category: teamCategory,
-          tournament: selectedTournament,
-        },
+      api.get("/venue-options", {
+        params: { team_category: teamCategory, tournament: selectedTournament },
+      }).then(res => {
+        setGroundOptions(res.data.grounds || []);
+        setTimeOptions(res.data.times || []);
       });
-      setGroundOptions(res.data.grounds || []);
-      setTimeOptions(res.data.times || []);
-    };
-    fetchVenues();
+    }
   }, [teamCategory, selectedTournament]);
 
   const toggleSelection = (value, list, setList) => {
-    setList((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+    setList(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   };
 
-  const toggleSelectAll = (allOptions, selected, setSelected) => {
-    if (selected.length === allOptions.length) {
+  const toggleSelectAll = (options, selected, setSelected, setToggleFlag) => {
+    if (selected.length === options.length) {
       setSelected([]);
+      if (setToggleFlag) setToggleFlag(false);
     } else {
-      setSelected([...allOptions]);
+      setSelected([...options]);
+      if (setToggleFlag) setToggleFlag(true);
     }
+  };
+
+  const handleCountryToggle = (country) => {
+    const updated = selectedCountries.includes(country)
+      ? selectedCountries.filter(c => c !== country)
+      : [...selectedCountries, country];
+
+    setSelectedCountries(updated);
+    setSelectAllCountries(updated.length === countries.length);
   };
 
   const fetchStats = async () => {
@@ -83,144 +87,169 @@ const TournamentStatsTab = () => {
   };
 
   return (
-    <div className="container mt-3">
-      <div className="row">
-        {/* Filters */}
-        <div className="col-md-4">
-          <Accordion defaultActiveKey="0">
-            <Accordion.Item eventKey="0">
-              <Accordion.Header>Filters</Accordion.Header>
-              <Accordion.Body>
+    <div className={containerClass} style={{ minHeight: "100vh" }}>
+      <div className="container-fluid py-4">
+        <div className="row">
+          {/* Sidebar Filters */}
+          <div className="col-md-3">
+            <Card className={isDarkMode ? "bg-dark text-white" : ""}>
+              <Card.Body>
                 {/* Team Category */}
                 <Form.Group className="mb-3">
-                  <Form.Label>Team Category</Form.Label>
-                  <Form.Select value={teamCategory} onChange={(e) => setTeamCategory(e.target.value)}>
-                    <option value="Women">Women</option>
-                    <option value="Men">Men</option>
-                    <option value="U19 Men">U19 Men</option>
-                    <option value="U19 Women">U19 Women</option>
-                    <option value="Training">Training</option>
+                  <Form.Label><strong>Team Category</strong></Form.Label>
+                  <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
+                    {teamCategories.map((cat, i) => (
+                      <option key={i} value={cat}>{cat}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
 
                 {/* Tournament */}
                 <Form.Group className="mb-3">
-                  <Form.Label>Tournament</Form.Label>
-                  <Form.Select value={selectedTournament} onChange={(e) => setSelectedTournament(e.target.value)}>
-                    <option value="">Select Tournament</option>
-                    {tournaments.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                  <Form.Label><strong>Tournament</strong></Form.Label>
+                  <Form.Select value={selectedTournament} onChange={e => setSelectedTournament(e.target.value)}>
+                    <option value="">-- Select Tournament --</option>
+                    {tournaments.map((t, i) => (
+                      <option key={i} value={t}>{t}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
 
-                {/* Country */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Country</Form.Label>
-                  <Form.Check
-                    type="checkbox"
-                    label="Select All"
-                    checked={selectedCountries.length === countries.length}
-                    onChange={() => toggleSelectAll(countries, selectedCountries, setSelectedCountries)}
-                  />
-                  {countries.map((c) => (
-                    <Form.Check
-                      key={c}
-                      type="checkbox"
-                      label={c}
-                      checked={selectedCountries.includes(c)}
-                      onChange={() => toggleSelection(c, selectedCountries, setSelectedCountries)}
-                    />
-                  ))}
-                </Form.Group>
+                {/* Countries */}
+                {selectedTournament && countries.length > 0 && (
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Countries</strong></Form.Label>
+                    <Button
+                      size="sm"
+                      variant={selectAllCountries ? "secondary" : "outline-secondary"}
+                      onClick={() =>
+                        toggleSelectAll(countries, selectedCountries, setSelectedCountries, setSelectAllCountries)
+                      }
+                      className="mb-2"
+                    >
+                      {selectAllCountries ? "Deselect All" : "Select All"}
+                    </Button>
+                    <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                      {countries.map((c, i) => (
+                        <div key={i}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id={`country-${i}`}
+                            checked={selectedCountries.includes(c)}
+                            onChange={() => handleCountryToggle(c)}
+                          />
+                          <label className="form-check-label" htmlFor={`country-${i}`}>{c}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </Form.Group>
+                )}
 
                 {/* Ground */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Ground</Form.Label>
-                  <Form.Check
-                    type="checkbox"
-                    label="Select All"
-                    checked={selectedGrounds.length === groundOptions.length}
-                    onChange={() => toggleSelectAll(groundOptions, selectedGrounds, setSelectedGrounds)}
-                  />
-                  {groundOptions.map((g) => (
-                    <Form.Check
-                      key={g}
-                      type="checkbox"
-                      label={g}
-                      checked={selectedGrounds.includes(g)}
-                      onChange={() => toggleSelection(g, selectedGrounds, setSelectedGrounds)}
-                    />
-                  ))}
-                </Form.Group>
+                {groundOptions.length > 0 && (
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Ground</strong></Form.Label>
+                    <Button
+                      size="sm"
+                      variant={selectedGrounds.length === groundOptions.length ? "secondary" : "outline-secondary"}
+                      onClick={() => toggleSelectAll(groundOptions, selectedGrounds, setSelectedGrounds)}
+                      className="mb-2"
+                    >
+                      {selectedGrounds.length === groundOptions.length ? "Deselect All" : "Select All"}
+                    </Button>
+                    <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                      {groundOptions.map((g, i) => (
+                        <div key={i}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id={`ground-${i}`}
+                            checked={selectedGrounds.includes(g)}
+                            onChange={() => toggleSelection(g, selectedGrounds, setSelectedGrounds)}
+                          />
+                          <label className="form-check-label" htmlFor={`ground-${i}`}>{g}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </Form.Group>
+                )}
 
                 {/* Time of Day */}
-                <Form.Group className="mb-3">
-                  <Form.Label>Time of Day</Form.Label>
-                  <Form.Check
-                    type="checkbox"
-                    label="Select All"
-                    checked={selectedTimes.length === timeOptions.length}
-                    onChange={() => toggleSelectAll(timeOptions, selectedTimes, setSelectedTimes)}
-                  />
-                  {timeOptions.map((t) => (
-                    <Form.Check
-                      key={t}
-                      type="checkbox"
-                      label={t}
-                      checked={selectedTimes.includes(t)}
-                      onChange={() => toggleSelection(t, selectedTimes, setSelectedTimes)}
-                    />
-                  ))}
-                </Form.Group>
-              </Accordion.Body>
-            </Accordion.Item>
-          </Accordion>
-
-          {/* Generate Button */}
-          <div className="mt-3 d-grid">
-            <Button variant="success" onClick={fetchStats}>
-              Generate
-            </Button>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="col-md-8">
-          {loading ? (
-            <div className="text-center mt-5">
-              <Spinner animation="border" />
-            </div>
-          ) : (
-            <Table striped bordered hover className="mt-3">
-              <thead>
-                <tr>
-                  <th>Venue</th>
-                  <th>Average Bat 1st Score</th>
-                  <th>Bat 1st Wins</th>
-                  <th>Bat 2nd Wins</th>
-                  <th>Total Matches</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.length > 0 ? (
-                  tableData.map((row, idx) => (
-                    <tr key={idx}>
-                      <td>{row.venue}</td>
-                      <td>{row.avg_score}</td>
-                      <td>{row.bat1_wins}</td>
-                      <td>{row.bat2_wins}</td>
-                      <td>{row.total_matches}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="text-center">No data available</td>
-                  </tr>
+                {timeOptions.length > 0 && (
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Time of Day</strong></Form.Label>
+                    <Button
+                      size="sm"
+                      variant={selectedTimes.length === timeOptions.length ? "secondary" : "outline-secondary"}
+                      onClick={() => toggleSelectAll(timeOptions, selectedTimes, setSelectedTimes)}
+                      className="mb-2"
+                    >
+                      {selectedTimes.length === timeOptions.length ? "Deselect All" : "Select All"}
+                    </Button>
+                    <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                      {timeOptions.map((t, i) => (
+                        <div key={i}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id={`time-${i}`}
+                            checked={selectedTimes.includes(t)}
+                            onChange={() => toggleSelection(t, selectedTimes, setSelectedTimes)}
+                          />
+                          <label className="form-check-label" htmlFor={`time-${i}`}>{t}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </Form.Group>
                 )}
-              </tbody>
-            </Table>
-          )}
+
+                <Button
+                  className="w-100 mt-2"
+                  onClick={fetchStats}
+                  disabled={!teamCategory || !selectedTournament || selectedCountries.length === 0}
+                >
+                  Generate Stats
+                </Button>
+              </Card.Body>
+            </Card>
+          </div>
+
+          {/* Table Results */}
+          <div className="col-md-9">
+            {loading ? (
+              <div className="text-center py-5"><Spinner animation="border" /></div>
+            ) : (
+              <Table striped bordered hover className={isDarkMode ? "table-dark mt-3" : "table-light mt-3"}>
+                <thead>
+                  <tr>
+                    <th>Venue</th>
+                    <th>Average Bat 1st Score</th>
+                    <th>Bat 1st Wins</th>
+                    <th>Bat 2nd Wins</th>
+                    <th>Total Matches</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.length > 0 ? (
+                    tableData.map((row, idx) => (
+                      <tr key={idx}>
+                        <td>{row.venue}</td>
+                        <td>{row.avg_score}</td>
+                        <td>{row.bat1_wins}</td>
+                        <td>{row.bat2_wins}</td>
+                        <td>{row.total_matches}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center">No data available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            )}
+          </div>
         </div>
       </div>
     </div>
