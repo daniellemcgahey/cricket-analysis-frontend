@@ -30,12 +30,17 @@ const TournamentStatsTab = () => {
   }, [teamCategory]);
 
   useEffect(() => {
-    if (selectedTournament && teamCategory) {
-      api.get("/countries", {
-        params: { team_category: teamCategory, tournament: selectedTournament },
-      }).then(res => {
-        setCountries(res.data);
-        setSelectedCountries(res.data);
+    if (teamCategory && selectedTournament) {
+      api.get("/matches", { params: { teamCategory } }).then(res => {
+        const filtered = res.data.filter(m => m.tournament === selectedTournament);
+        const teams = new Set();
+        filtered.forEach(m => {
+          teams.add(m.team_a);
+          teams.add(m.team_b);
+        });
+        const countryList = Array.from(teams).sort();
+        setCountries(countryList);
+        setSelectedCountries(countryList);
         setSelectAllCountries(true);
       });
 
