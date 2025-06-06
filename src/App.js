@@ -11,6 +11,7 @@ import IndividualTabs from './pages/IndividualTabs';
 import MatchAnalysisTabs from './pages/MatchAnalysisTabs';
 import FutureMatchTabs from './pages/FutureMatchTabs';
 import MatchSimTab from './pages/MatchSimTab';
+import TournamentsTab from './pages/TournamentsTab';
 
 // Optional: global dark mode context
 import DarkModeContext from './DarkModeContext';
@@ -35,6 +36,9 @@ function AnalysisHub() {
           </Link>
           <Link to="/individual">
             <Button variant="info">Individual</Button>
+          </Link>
+          <Link to="/tournament">
+            <Button variant="info">Tournament</Button>
           </Link>
           <Link to="/match-analysis">
             <Button variant="info">Match Analysis</Button>
@@ -62,6 +66,7 @@ function App() {
           <Route path="/" element={<AnalysisHub />} />
           <Route path="/compare" element={<ComparisonTabs />} />
           <Route path="/individual" element={<IndividualTabs />} />
+          <Route path="/tournament" element={<TournamentsTabs />} />
           <Route path="/match-analysis" element={<MatchAnalysisTabs />} />
           <Route path="/future-matches" element={<FutureMatchTabs />} />
           <Route path="/match-sims" element={<MatchSimTab />} />
