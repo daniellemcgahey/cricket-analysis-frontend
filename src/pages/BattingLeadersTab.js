@@ -95,28 +95,6 @@ const BattingLeadersTab = () => {
     }
   };
 
-  const renderLeaderboardTable = (players, columns) => (
-    <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Player</th>
-          {columns.map((col, i) => <th key={i}>{col}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {players.map((p, idx) => (
-          <tr key={idx}>
-            <td>{idx + 1}</td>
-            <td>{p.name}</td>
-            {columns.map((col, i) => (
-              <td key={i}>{p[col.toLowerCase().replace(/ /g, "_")]}</td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  );
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -189,23 +167,308 @@ const BattingLeadersTab = () => {
             {loading ? (
               <div className="text-center py-5"><Spinner animation="border" /></div>
             ) : Object.keys(leaderboards).length > 0 ? (
-              <Accordion defaultActiveKey="0" alwaysOpen>
-                {statCategories.map((category, idx) => (
-                  <Accordion.Item eventKey={idx.toString()} key={category}>
-                    <Accordion.Header><strong>{category}</strong></Accordion.Header>
+                <Accordion defaultActiveKey="0" alwaysOpen>
+
+                {/* Most Runs */}
+                <Accordion.Item eventKey="0">
+                    <Accordion.Header><strong>Most Runs</strong></Accordion.Header>
                     <Accordion.Body>
-                      {leaderboards[category] && leaderboards[category].length > 0 ? (
-                        renderLeaderboardTable(
-                          leaderboards[category],
-                          Object.keys(leaderboards[category][0]).filter(k => k !== "name")
-                        )
-                      ) : (
+                    {leaderboards["Most Runs"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Matches</th>
+                            <th>Innings</th>
+                            <th>Runs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Most Runs"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.matches}</td>
+                                <td>{p.innings}</td>
+                                <td>{p.runs}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
                         <Alert variant="info">No data available.</Alert>
-                      )}
+                    )}
                     </Accordion.Body>
-                  </Accordion.Item>
-                ))}
-              </Accordion>
+                </Accordion.Item>
+
+                {/* High Scores */}
+                <Accordion.Item eventKey="1">
+                    <Accordion.Header><strong>High Scores</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["High Scores"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>High Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["High Scores"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.high_score}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Highest Averages */}
+                <Accordion.Item eventKey="2">
+                    <Accordion.Header><strong>Highest Averages (min 3 innings)</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Highest Averages"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Innings</th>
+                            <th>Average</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Highest Averages"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.innings}</td>
+                                <td>{p.average}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Highest Strike Rates */}
+                <Accordion.Item eventKey="3">
+                    <Accordion.Header><strong>Highest Strike Rates (min 30 balls)</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Highest Strike Rates"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Balls Faced</th>
+                            <th>Strike Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Highest Strike Rates"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.balls_faced}</td>
+                                <td>{p.strike_rate}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Most Fifties and Over */}
+                <Accordion.Item eventKey="4">
+                    <Accordion.Header><strong>Most Fifties and Over</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Most Fifties and Over"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>50+</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Most Fifties and Over"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.fifties}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Most Ducks */}
+                <Accordion.Item eventKey="5">
+                    <Accordion.Header><strong>Most Ducks</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Most Ducks"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Ducks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Most Ducks"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.ducks}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Most Fours */}
+                <Accordion.Item eventKey="6">
+                    <Accordion.Header><strong>Most Fours</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Most Fours"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Fours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Most Fours"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.fours}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Most Sixes */}
+                <Accordion.Item eventKey="7">
+                    <Accordion.Header><strong>Most Sixes</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Most Sixes"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Sixes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Most Sixes"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.sixes}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Highest Average Intent */}
+                <Accordion.Item eventKey="8">
+                    <Accordion.Header><strong>Highest Average Intent</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Highest Average Intent"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Intent Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Highest Average Intent"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.average_intent}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                {/* Highest Scoring Shot % */}
+                <Accordion.Item eventKey="9">
+                    <Accordion.Header><strong>Highest Scoring Shot %</strong></Accordion.Header>
+                    <Accordion.Body>
+                    {leaderboards["Highest Scoring Shot %"]?.length > 0 ? (
+                        <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                            <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>Scoring Shot %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {leaderboards["Highest Scoring Shot %"].map((p, idx) => (
+                            <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{p.name}</td>
+                                <td>{p.scoring_shot_percentage}%</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    ) : (
+                        <Alert variant="info">No data available.</Alert>
+                    )}
+                    </Accordion.Body>
+                </Accordion.Item>
+
+                </Accordion>
+
             ) : (
               <Alert variant="info">Select filters to view batting leaderboards.</Alert>
             )}
