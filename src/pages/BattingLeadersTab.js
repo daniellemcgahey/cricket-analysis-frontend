@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
 import { Accordion, Card, Form, Spinner, Alert, Table, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
-import LeaderboardFilters from "../components/LeaderboardFilters";
 
 const statCategories = [
   "Most Runs",
@@ -21,36 +20,78 @@ const BattingLeadersTab = () => {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
 
-  const [filters, setFilters] = useState({
-    teamCategory: "Women",
-    tournaments: [],
-    country1: []
-  });
-
+  const [teamCategory, setTeamCategory] = useState("Women");
+  const [tournaments, setTournaments] = useState([]);
+  const [selectedTournament, setSelectedTournament] = useState("");
+  const [countries, setCountries] = useState([]);
+  const [selectedCountries, setSelectedCountries] = useState([]);
+  const [selectAllCountries, setSelectAllCountries] = useState(true);
   const [leaderboards, setLeaderboards] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
+
+  useEffect(() => {
+    api.get("/tournaments").then(res => setTournaments(res.data));
+  }, []);
+
+  useEffect(() => {
+    if (teamCategory && selectedTournament) {
+      api.get("/matches", { params: { teamCategory } })
+        .then(res => {
+          const filtered = res.data.filter(m => m.tournament === selectedTournament);
+          const teams = new Set();
+          filtered.forEach(m => {
+            teams.add(m.team_a);
+            teams.add(m.team_b);
+          });
+          const countryList = Array.from(teams).sort();
+          setCountries(countryList);
+          setSelectedCountries(countryList);
+          setSelectAllCountries(true);
+        });
+    }
+  }, [teamCategory, selectedTournament]);
+
   const handleGenerate = () => {
-    if (
-      filters.teamCategory &&
-      filters.tournaments.length > 0 &&
-      filters.country1.length > 0
-    ) {
+    if (teamCategory && selectedTournament && selectedCountries.length > 0) {
       setLoading(true);
       api.post("/tournament-leaders/batting", {
-        team_category: filters.teamCategory,
-        tournament: filters.tournaments[0],
-        countries: filters.country1
+        team_category: teamCategory,
+        tournament: selectedTournament,
+        countries: selectedCountries
       })
-        .then((res) => {
+        .then(res => {
           setLeaderboards(res.data);
           setLoading(false);
         })
-        .catch((err) => {
+        .catch(err => {
           console.error(err);
           setLeaderboards({});
           setLoading(false);
         });
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectAllCountries) {
+      setSelectedCountries([]);
+      setSelectAllCountries(false);
+    } else {
+      setSelectedCountries(countries);
+      setSelectAllCountries(true);
+    }
+  };
+
+  const handleCountryToggle = (country) => {
+    if (selectedCountries.includes(country)) {
+      const updated = selectedCountries.filter(c => c !== country);
+      setSelectedCountries(updated);
+      setSelectAllCountries(false);
+    } else {
+      const updated = [...selectedCountries, country];
+      setSelectedCountries(updated);
+      if (updated.length === countries.length) setSelectAllCountries(true);
     }
   };
 
@@ -83,11 +124,64 @@ const BattingLeadersTab = () => {
         <div className="row">
           {/* Sidebar Filters */}
           <div className="col-md-3">
-            <LeaderboardFilters
-              filters={filters}
-              setFilters={setFilters}
-              onGenerate={handleGenerate}
-            />
+            <Card className={isDarkMode ? "bg-dark text-white" : ""}>
+              <Card.Body>
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>Team Category</strong></Form.Label>
+                  <Form.Select value={teamCategory} onChange={e => setTeamCategory(e.target.value)}>
+                    {teamCategories.map((cat, i) => (
+                      <option key={i} value={cat}>{cat}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label><strong>Tournament</strong></Form.Label>
+                  <Form.Select value={selectedTournament} onChange={e => setSelectedTournament(e.target.value)}>
+                    <option value="">-- Select Tournament --</option>
+                    {tournaments.map((t, i) => (
+                      <option key={i} value={t}>{t}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                {selectedTournament && countries.length > 0 && (
+                  <Form.Group className="mb-3">
+                    <Form.Label><strong>Countries</strong></Form.Label>
+                    <Button
+                      size="sm"
+                      variant={selectAllCountries ? "secondary" : "outline-secondary"}
+                      onClick={toggleSelectAll}
+                      className="mb-2"
+                    >
+                      {selectAllCountries ? "Deselect All" : "Select All"}
+                    </Button>
+                    <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                      {countries.map((c, i) => (
+                        <div key={i}>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id={`country-${i}`}
+                            checked={selectedCountries.includes(c)}
+                            onChange={() => handleCountryToggle(c)}
+                          />
+                          <label className="form-check-label" htmlFor={`country-${i}`}>{c}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </Form.Group>
+                )}
+
+                <Button
+                  className="w-100 mt-2"
+                  onClick={handleGenerate}
+                  disabled={!teamCategory || !selectedTournament || selectedCountries.length === 0}
+                >
+                  Generate Leaderboards
+                </Button>
+              </Card.Body>
+            </Card>
           </div>
 
           {/* Right Side Leaderboards */}
