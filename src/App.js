@@ -66,7 +66,7 @@ function App() {
           <Route path="/" element={<AnalysisHub />} />
           <Route path="/compare" element={<ComparisonTabs />} />
           <Route path="/individual" element={<IndividualTabs />} />
-          <Route path="/tournament" element={<TournamentsTabs />} />
+          <Route path="/tournament" element={<TournamentsTab />} />
           <Route path="/match-analysis" element={<MatchAnalysisTabs />} />
           <Route path="/future-matches" element={<FutureMatchTabs />} />
           <Route path="/match-sims" element={<MatchSimTab />} />
