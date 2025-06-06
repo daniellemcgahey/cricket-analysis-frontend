@@ -233,7 +233,7 @@ const BattingLeadersTab = () => {
 
                 {/* Highest Averages */}
                 <Accordion.Item eventKey="2">
-                    <Accordion.Header><strong>Highest Averages (min 3 innings)</strong></Accordion.Header>
+                    <Accordion.Header><strong>Highest Averages</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Highest Averages"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
@@ -411,7 +411,7 @@ const BattingLeadersTab = () => {
 
                 {/* Highest Average Intent */}
                 <Accordion.Item eventKey="8">
-                    <Accordion.Header><strong>Highest Average Intent</strong></Accordion.Header>
+                    <Accordion.Header><strong>Highest Average Intent (min 30 balls)</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Highest Average Intent"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
@@ -440,7 +440,7 @@ const BattingLeadersTab = () => {
 
                 {/* Highest Scoring Shot % */}
                 <Accordion.Item eventKey="9">
-                    <Accordion.Header><strong>Highest Scoring Shot %</strong></Accordion.Header>
+                    <Accordion.Header><strong>Highest Scoring Shot % (min 30 balls)</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Highest Scoring Shot %"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
