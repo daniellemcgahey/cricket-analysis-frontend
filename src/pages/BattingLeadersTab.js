@@ -241,7 +241,6 @@ const BattingLeadersTab = () => {
                             <tr>
                             <th>#</th>
                             <th>Player</th>
-                            <th>Innings</th>
                             <th>Average</th>
                             </tr>
                         </thead>
@@ -250,7 +249,6 @@ const BattingLeadersTab = () => {
                             <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>
-                                <td>{p.innings}</td>
                                 <td>{p.average}</td>
                             </tr>
                             ))}
