@@ -2,12 +2,12 @@ import React, { useContext } from "react";
 import { Tabs, Tab } from "react-bootstrap";
 import DarkModeContext from '../DarkModeContext';
 import BackButton from "../components/BackButton";
+import BattingLeadersTab from "./BattingLeadersTab";
 
 import "./TabStyles.css";
 
 // Placeholder Components – Replace with actual leaderboard components
 const TournamentStatsTab = () => <div className="p-4">Tournament Summary Coming Soon</div>;
-const BattingLeadersTab = () => <div className="p-4">Batting Leaderboards Coming Soon</div>;
 const BowlingLeadersTab = () => <div className="p-4">Bowling Leaderboards Coming Soon</div>;
 const FieldingLeadersTab = () => <div className="p-4">Fielding Leaderboards Coming Soon</div>;
 
