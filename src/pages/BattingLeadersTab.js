@@ -134,7 +134,7 @@ const BattingLeadersTab = () => {
                     >
                       {selectAllCountries ? "Deselect All" : "Select All"}
                     </Button>
-                    <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                    <div className="form-check" style={{ maxHeight: "250px", overflowY: "auto" }}>
                       {countries.map((c, i) => (
                         <div key={i}>
                           <input

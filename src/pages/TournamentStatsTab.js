@@ -196,7 +196,7 @@ const TournamentStatsTab = () => {
                   >
                     {selectedGrounds.length === groundOptions.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                  <div className="form-check" style={{ maxHeight: "250px", overflowY: "auto" }}>
                     {groundOptions.map((g, i) => (
                       <div key={i}>
                         <input
