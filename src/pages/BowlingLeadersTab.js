@@ -438,16 +438,17 @@ const BowlingLeadersTab = () => {
                 </Accordion.Item>
 
                 {/* False Shot Percentage */}
-                <Accordion.Item eventKey="9">
-                <Accordion.Header><strong>False Shot % (Min 30 balls)</strong></Accordion.Header>
+                <Accordion.Item eventKey="X"> {/* replace X with the next available key */}
+                <Accordion.Header><strong>False Shot %</strong></Accordion.Header>
                 <Accordion.Body>
-                    {leaderboards["Highest False Shot %"]?.length > 0 ? (
+                    {leaderboards["False Shot %"]?.length > 0 ? (
                     <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
                         <thead>
                         <tr>
                             <th>#</th>
                             <th>Player</th>
                             <th>False Shot %</th>
+                            <th>(X/Y)</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -455,9 +456,8 @@ const BowlingLeadersTab = () => {
                             <tr key={idx}>
                             <td>{idx + 1}</td>
                             <td>{p.name}</td>
-                            <td>
-                                {p.false_shot_percent}% ({p.false_shots} out of {p.deliveries})
-                            </td>
+                            <td>{p.false_shot_percent}%</td>
+                            <td>({p.false_shots}/{p.deliveries})</td>
                             </tr>
                         ))}
                         </tbody>
@@ -467,6 +467,7 @@ const BowlingLeadersTab = () => {
                     )}
                 </Accordion.Body>
                 </Accordion.Item>
+
 
 
 
