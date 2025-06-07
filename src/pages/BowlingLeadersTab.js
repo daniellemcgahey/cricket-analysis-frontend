@@ -223,7 +223,7 @@ const BowlingLeadersTab = () => {
 
                 {/* Best Averages */}
                 <Accordion.Item eventKey="2">
-                    <Accordion.Header><strong>Best Bowling Averages (min 4 wickets)</strong></Accordion.Header>
+                    <Accordion.Header><strong>Best Bowling Averages (Min 4 wickets)</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Best Averages"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
@@ -256,7 +256,7 @@ const BowlingLeadersTab = () => {
 
                 {/* Best Economy Rates */}
                 <Accordion.Item eventKey="3">
-                    <Accordion.Header><strong>Best Economy Rates (min 5 overs)</strong></Accordion.Header>
+                    <Accordion.Header><strong>Best Economy Rates (Min 5 overs)</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Best Economy Rates"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
@@ -289,7 +289,7 @@ const BowlingLeadersTab = () => {
 
                 {/* Best Strike Rates */}
                 <Accordion.Item eventKey="4">
-                    <Accordion.Header><strong>Best Strike Rates (min 4 wickets)</strong></Accordion.Header>
+                    <Accordion.Header><strong>Best Strike Rates (Min 4 wickets)</strong></Accordion.Header>
                     <Accordion.Body>
                     {leaderboards["Best Strike Rates"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
@@ -436,6 +436,40 @@ const BowlingLeadersTab = () => {
                     )}
                     </Accordion.Body>
                 </Accordion.Item>
+
+                {/* False Shot Percentage */}
+                <Accordion.Item eventKey="9">
+                <Accordion.Header><strong>False Shot % (Min 30 balls)</strong></Accordion.Header>
+                <Accordion.Body>
+                    {leaderboards["Highest False Shot %"]?.length > 0 ? (
+                    <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Player</th>
+                            <th>False Shot %</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {leaderboards["False Shot %"].map((p, idx) => (
+                            <tr key={idx}>
+                            <td>{idx + 1}</td>
+                            <td>{p.name}</td>
+                            <td>
+                                {p.false_shot_percent}% ({p.false_shots} out of {p.deliveries})
+                            </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </Table>
+                    ) : (
+                    <Alert variant="info">No data available.</Alert>
+                    )}
+                </Accordion.Body>
+                </Accordion.Item>
+
+
+
                 </Accordion>
             ) : (
               <Alert variant="info">Select filters to view bowling leaderboards.</Alert>
