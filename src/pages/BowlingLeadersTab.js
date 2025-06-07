@@ -448,7 +448,7 @@ const BowlingLeadersTab = () => {
                             <th>#</th>
                             <th>Player</th>
                             <th>False Shot %</th>
-                            <th>(X/Y)</th>
+                            <th>(False Shot/Balls Bowled)</th>
                         </tr>
                         </thead>
                         <tbody>
