@@ -31,33 +31,43 @@ const TournamentStatsTab = () => {
   }, [teamCategory]);
 
   // Load countries and venues when both teamCategory and tournament are selected
-  useEffect(() => {
+    useEffect(() => {
     if (teamCategory && selectedTournament) {
-      // 🟢 Countries from /matches (like BattingLeadersTab)
-      api.get("/matches", { params: { teamCategory } }).then(res => {
+        console.log("📤 Fetching matches for:", teamCategory, selectedTournament);
+
+        // 🔎 COUNTRY EXTRACTION FROM MATCHES
+        api.get("/matches", { params: { teamCategory } }).then(res => {
+        console.log("✅ /matches response:", res.data);
+
         const filtered = res.data.filter(m => m.tournament === selectedTournament);
         const teams = new Set();
         filtered.forEach(m => {
-          teams.add(m.team_a);  // These should be country names
-          teams.add(m.team_b);
+            teams.add(m.team_a); // Ensure these are country names, not IDs
+            teams.add(m.team_b);
         });
+
         const countryList = Array.from(teams).sort();
+        console.log("🟢 Filtered countries:", countryList);
+
         setCountries(countryList);
         setSelectedCountries(countryList);
         setSelectAllCountries(true);
-      });
+        });
 
-      // 🟢 Venue filters
-      api.get("/venue-options", {
+        // 🔎 VENUE OPTIONS
+        api.get("/venue-options", {
         params: { team_category: teamCategory, tournament: selectedTournament }
-      }).then(res => {
+        }).then(res => {
+        console.log("✅ /venue-options response:", res.data);
+
         setGroundOptions(res.data.grounds || []);
         setTimeOptions(res.data.times || []);
         setSelectedGrounds(res.data.grounds || []);
         setSelectedTimes(res.data.times || []);
-      });
+        });
     }
-  }, [teamCategory, selectedTournament]);
+    }, [teamCategory, selectedTournament]);
+
 
   const toggleSelection = (value, list, setList) => {
     setList(prev =>
@@ -84,18 +94,36 @@ const TournamentStatsTab = () => {
     setSelectAllCountries(updated.length === countries.length);
   };
 
-  const fetchStats = async () => {
+    const fetchStats = async () => {
     setLoading(true);
-    const res = await api.post("/tournament-stats", {
-      team_category: teamCategory,
-      tournament: selectedTournament,
-      country: selectedCountries,
-      venue: selectedGrounds,
-      time_of_day: selectedTimes,
+    console.log("📤 Sending to /tournament-stats:", {
+        team_category: teamCategory,
+        tournament: selectedTournament,
+        country: selectedCountries,
+        venue: selectedGrounds,
+        time_of_day: selectedTimes,
     });
-    setTableData(res.data);
-    setLoading(false);
-  };
+
+    try {
+        const res = await api.post("/tournament-stats", {
+        team_category: teamCategory,
+        tournament: selectedTournament,
+        country: selectedCountries,
+        venue: selectedGrounds,
+        time_of_day: selectedTimes,
+        });
+
+        console.log("✅ /tournament-stats response:", res.data);
+
+        setTableData(res.data);
+    } catch (err) {
+        console.error("❌ Error fetching tournament stats:", err);
+        setTableData([]);
+    } finally {
+        setLoading(false);
+    }
+    };
+
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
