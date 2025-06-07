@@ -231,9 +231,9 @@ const BowlingLeadersTab = () => {
                             <tr>
                             <th>#</th>
                             <th>Player</th>
+                            <th>Average</th>
                             <th>Wickets</th>
                             <th>Runs Conceded</th>
-                            <th>Average</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -241,9 +241,9 @@ const BowlingLeadersTab = () => {
                             <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>
-                                <td>{p.wickets}</td>
-                                <td>{p.runs}</td>
                                 <td>{p.average}</td>
+                                <td>{p.wickets}</td>
+                                <td>{p.runs}</td>  
                             </tr>
                             ))}
                         </tbody>
@@ -264,9 +264,9 @@ const BowlingLeadersTab = () => {
                             <tr>
                             <th>#</th>
                             <th>Player</th>
-                            <th>Overs</th>
-                            <th>Runs Conceded</th>
                             <th>Economy</th>
+                            <th>Balls Bowled</th>
+                            <th>Runs Conceded</th>                            
                             </tr>
                         </thead>
                         <tbody>
@@ -274,9 +274,9 @@ const BowlingLeadersTab = () => {
                             <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>
-                                <td>{p.overs}</td>
-                                <td>{p.runs}</td>
                                 <td>{p.economy}</td>
+                                <td>{p.balls}</td>
+                                <td>{p.runs}</td>                                
                             </tr>
                             ))}
                         </tbody>
@@ -297,9 +297,9 @@ const BowlingLeadersTab = () => {
                             <tr>
                             <th>#</th>
                             <th>Player</th>
-                            <th>Wickets</th>
-                            <th>Balls Bowled</th>
                             <th>Strike Rate</th>
+                            <th>Wickets</th>
+                            <th>Balls Bowled</th>                            
                             </tr>
                         </thead>
                         <tbody>
@@ -307,9 +307,9 @@ const BowlingLeadersTab = () => {
                             <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>
-                                <td>{p.wickets}</td>
-                                <td>{p.balls}</td>
                                 <td>{p.strike_rate}</td>
+                                <td>{p.wickets}</td>
+                                <td>{p.balls}</td>                                
                             </tr>
                             ))}
                         </tbody>
@@ -320,11 +320,11 @@ const BowlingLeadersTab = () => {
                     </Accordion.Body>
                 </Accordion.Item>
 
-                {/* Most 4+ Wicket Hauls */}
+                {/* Most 3+ Wicket Hauls */}
                 <Accordion.Item eventKey="5">
                     <Accordion.Header><strong>Most 3+ Wicket Hauls</strong></Accordion.Header>
                     <Accordion.Body>
-                    {leaderboards["Most Three Wicket Hauls"]?.length > 0 ? (
+                    {leaderboards["3+ Wicket Hauls"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
                         <thead>
                             <tr>
