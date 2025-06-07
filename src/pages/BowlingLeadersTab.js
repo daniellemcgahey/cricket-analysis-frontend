@@ -9,7 +9,7 @@ const statCategories = [
   "Best Averages",
   "Best Economy Rates",
   "Best Strike Rates",
-  "Most 4+ Wickets",
+  "Most 3+ Wickets",
   "Most Dot Balls",
   "Most Wides",
   "Most No Balls"
@@ -326,19 +326,19 @@ const BowlingLeadersTab = () => {
 
                 {/* Most 4+ Wicket Hauls */}
                 <Accordion.Item eventKey="5">
-                    <Accordion.Header><strong>Most 4+ Wicket Hauls</strong></Accordion.Header>
+                    <Accordion.Header><strong>Most 3+ Wicket Hauls</strong></Accordion.Header>
                     <Accordion.Body>
-                    {leaderboards["Most Four Wicket Hauls"]?.length > 0 ? (
+                    {leaderboards["Most Three Wicket Hauls"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
                         <thead>
                             <tr>
                             <th>#</th>
                             <th>Player</th>
-                            <th>4+ Wicket Hauls</th>
+                            <th>3+ Wicket Hauls</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {leaderboards["Most Four Wicket Hauls"].map((p, idx) => (
+                            {leaderboards["Most Three Wicket Hauls"].map((p, idx) => (
                             <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>

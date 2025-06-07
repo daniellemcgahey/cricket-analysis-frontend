@@ -4,11 +4,11 @@ import DarkModeContext from '../DarkModeContext';
 import BackButton from "../components/BackButton";
 import BattingLeadersTab from "./BattingLeadersTab";
 import TournamentStatsTab from "./TournamentStatsTab";
+import BowlingLeadersTab from "./BowlingLeadersTab";
 
 import "./TabStyles.css";
 
 // Placeholder Components – Replace with actual leaderboard components
-const BowlingLeadersTab = () => <div className="p-4">Bowling Leaderboards Coming Soon</div>;
 const FieldingLeadersTab = () => <div className="p-4">Fielding Leaderboards Coming Soon</div>;
 
 const TournamentsTab = () => {
