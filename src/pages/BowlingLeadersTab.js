@@ -324,30 +324,31 @@ const BowlingLeadersTab = () => {
                 <Accordion.Item eventKey="5">
                     <Accordion.Header><strong>Most 3+ Wicket Hauls</strong></Accordion.Header>
                     <Accordion.Body>
-                    {leaderboards["3+ Wicket Hauls"]?.length > 0 ? (
+                        {leaderboards["3+ Wicket Hauls"]?.length > 0 ? (
                         <Table striped bordered hover size="sm" className={isDarkMode ? "table-dark" : "table-light"}>
-                        <thead>
+                            <thead>
                             <tr>
-                            <th>#</th>
-                            <th>Player</th>
-                            <th>3+ Wicket Hauls</th>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th>3+ Wicket Hauls</th>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {leaderboards["Most Three Wicket Hauls"].map((p, idx) => (
-                            <tr key={idx}>
+                            </thead>
+                            <tbody>
+                            {leaderboards["3+ Wicket Hauls"].map((p, idx) => (
+                                <tr key={idx}>
                                 <td>{idx + 1}</td>
                                 <td>{p.name}</td>
                                 <td>{p.hauls}</td>
-                            </tr>
+                                </tr>
                             ))}
-                        </tbody>
+                            </tbody>
                         </Table>
-                    ) : (
+                        ) : (
                         <Alert variant="info">No data available.</Alert>
-                    )}
+                        )}
                     </Accordion.Body>
                 </Accordion.Item>
+
 
                 {/* Most Dot Balls */}
                 <Accordion.Item eventKey="6">
