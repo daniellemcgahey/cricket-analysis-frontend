@@ -138,9 +138,33 @@ const handleBowlerClick = (bowler, index) => {
         ...prev,
         [key]: {
           ...res.data,
-          pitch_map: transformedPitchMap
+          pitch_map: res.data.pitch_map.map(ball => ({
+            ...ball,
+            type: ball.dismissal_type
+              ? "Wicket"
+              : ball.runs === 0
+              ? "0s"
+              : ball.runs === 1
+              ? "1s"
+              : ball.runs === 2
+              ? "2s"
+              : ball.runs === 3
+              ? "3s"
+              : ball.runs === 4
+              ? "4s"
+              : ball.runs === 5
+              ? "5s"
+              : ball.runs === 6
+              ? "6s"
+              : ball.runs === "WD"
+              ? "Wides"
+              : ball.runs === "NB"
+              ? "No Balls"
+              : "Other"
+          }))
         }
       }));
+
     });
 
   }
