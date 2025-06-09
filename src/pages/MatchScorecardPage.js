@@ -138,33 +138,9 @@ const handleBowlerClick = (bowler, index) => {
         ...prev,
         [key]: {
           ...res.data,
-          pitch_map: res.data.pitch_map.map(ball => ({
-            ...ball,
-            type: ball.dismissal_type
-              ? "Wicket"
-              : ball.runs === 0
-              ? "0s"
-              : ball.runs === 1
-              ? "1s"
-              : ball.runs === 2
-              ? "2s"
-              : ball.runs === 3
-              ? "3s"
-              : ball.runs === 4
-              ? "4s"
-              : ball.runs === 5
-              ? "5s"
-              : ball.runs === 6
-              ? "6s"
-              : ball.runs === "WD"
-              ? "Wides"
-              : ball.runs === "NB"
-              ? "No Balls"
-              : "Other"
-          }))
+          pitch_map: transformedPitchMap
         }
       }));
-
     });
 
   }
@@ -209,9 +185,9 @@ const handleBowlerClick = (bowler, index) => {
                 <Accordion.Body>
                   <Form.Group className="mb-3">
                     <Form.Select
-                      value={selectedMatch}
-                      onChange={e => setSelectedMatch(Number(e.target.value))}  // <-- Convert to number
-                      disabled={matches.length === 0}
+                      value={selectedTournament}
+                      onChange={e => setSelectedTournament(e.target.value)}
+                      disabled={tournaments.length === 0}
                     >
                       <option value="">Select Tournament</option>
                       {tournaments.map((t, idx) => (
@@ -240,7 +216,7 @@ const handleBowlerClick = (bowler, index) => {
                       <option value="">Select Match</option>
                       {matches.map((m, idx) => (
                         <option key={idx} value={m.match_id}>
-                          {`${new Date(m.match_date).toLocaleDateString()} — ${m.team_a} vs ${m.team_b} (${m.tournament})`}
+                          {`${m.match_date} — ${m.team_a} vs ${m.team_b} (${m.tournament})`}
                         </option>
                       ))}
                     </Form.Select>
