@@ -12,6 +12,7 @@ const createZones = () => [
 ];
 
 const PITCH_Y_MULTIPLIER = 1.0;
+const BOWLER_DISMISSALS = ["Bowled", "Caught", "LBW", "Stumped", "Hit Wicket"];
 
 
 const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null, setProjectedBalls = () => {} }) => {
@@ -28,8 +29,8 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
   
     return data.filter((ball) => {
       const run = ball.runs;
-      const isWide = ball.extra_type === "Wide";
-      const isNoBall = ball.extra_type === "No Ball";
+      const isWide = ball.wides > 0;
+      const isNoBall = ball.no_balls > 0;
       const isWicket = !!ball.dismissal_type;
   
       const runKey = `${run}s`;
@@ -323,25 +324,42 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
     const newProjectedBalls = [];
 
     balls.forEach((ball, index) => {
-      const { pitch_x, pitch_y, runs, dismissal_type } = ball;
+      const { pitch_y, runs, wides, no_balls, dismissal_type } = ball;
       const adjustedY = pitch_y * PITCH_Y_MULTIPLIER;
+      const extraRuns = (wides || 0) + (no_balls || 0);
 
       zones.forEach(zone => {
         if (adjustedY * visibleLength >= zone.start && adjustedY * visibleLength < zone.end) {
           zone.balls += 1;
-          zone.runs += runs;
-          if (dismissal_type) zone.wickets += 1;
+          zone.runs += runs + extraRuns;
+
+          if (BOWLER_DISMISSALS.includes(dismissal_type)) {
+            zone.wickets += 1;
+          }
         }
       });
 
+      const isWide = ball.wides > 0;
+      const isNoBall = ball.no_balls > 0;
+
+      
+
       let color = "black";
-      if (dismissal_type) color = "#ffffff";
-      else if (runs === 0) color = "#ff3333";
-      else if (runs >= 4) color = "#3498db";
-      else color = "#2ecc71";
 
       if (ball.ball_id === selectedBallId) {
         color = "purple";
+      } else if (BOWLER_DISMISSALS.includes(dismissal_type)) {
+        color = "#ffffff"; // Wicket (credited to bowler only)
+      } else if (isWide) {
+        color = "#f1c40f"; // Wide = yellow
+      } else if (isNoBall) {
+        color = "#f39c12"; // No ball = orange
+      } else if (runs === 0) {
+        color = "#ff3333"; // Dot ball
+      } else if (runs >= 4) {
+        color = "#3498db"; // 4s/6s
+      } else {
+        color = "#2ecc71"; // 1s, 2s, 3s
       }
 
       const metersToCanvasY = metersToY(adjustedY * visibleLength);
@@ -369,13 +387,18 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
     const visibleLength = 11.0;
   
     balls.forEach(ball => {
-      const { pitch_y, runs, dismissal_type } = ball;
+      const { pitch_y, runs, wides, no_balls, dismissal_type } = ball;
       const adjustedY = pitch_y * PITCH_Y_MULTIPLIER;
+      const extraRuns = (wides || 0) + (no_balls || 0);
+
       zones.forEach(zone => {
         if (adjustedY * visibleLength >= zone.start && adjustedY * visibleLength < zone.end) {
           zone.balls += 1;
-          zone.runs += runs;
-          if (dismissal_type) zone.wickets += 1;
+          zone.runs += runs + extraRuns;
+
+          if (BOWLER_DISMISSALS.includes(dismissal_type)) {
+            zone.wickets += 1;
+          }
         }
       });
     });
