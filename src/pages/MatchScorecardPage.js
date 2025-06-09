@@ -125,13 +125,24 @@ const handleBowlerClick = (bowler, index) => {
         playerId: bowler.player_id,
       },
     }).then(res => {
+      const transformedPitchMap = res.data.pitch_map.map(ball => ({
+        pitch_x: ball.pitch_x,
+        pitch_y: ball.pitch_y,
+        runs: ball.runs,
+        wides: ball.wides,
+        no_balls: ball.no_balls,
+        dismissal_type: ball.dismissal_type
+      }));
+
       setBowlerDetails(prev => ({
         ...prev,
-        [key]: res.data
+        [key]: {
+          ...res.data,
+          pitch_map: transformedPitchMap
+        }
       }));
-    }).catch(err => {
-      console.error("❌ API error fetching bowler detail:", err);
     });
+
   }
 };
 
