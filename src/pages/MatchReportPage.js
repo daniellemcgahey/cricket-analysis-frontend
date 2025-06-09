@@ -135,6 +135,8 @@ const MatchReportPage = () => {
           pitch_x: ball.pitch_x,
           pitch_y: ball.pitch_y,
           runs: ball.runs || 0,
+          wides: ball.wides || 0,
+          no_balls: ball.no_balls || 0,
           dismissal_type: ball.dismissal_type || null
         }));
         setPitchMapData(remappedData);
