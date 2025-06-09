@@ -324,7 +324,8 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
     const newProjectedBalls = [];
 
     balls.forEach((ball, index) => {
-      const { pitch_y, runs, wides, no_balls, dismissal_type } = ball;
+      const { pitch_x, pitch_y, runs, wides, no_balls, dismissal_type } = ball;
+
       const adjustedY = pitch_y * PITCH_Y_MULTIPLIER;
       const extraRuns = (wides || 0) + (no_balls || 0);
 
