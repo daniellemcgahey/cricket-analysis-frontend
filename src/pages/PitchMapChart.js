@@ -24,25 +24,25 @@ const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null,
     "0s", "1s", "2s", "3s", "4s", "5s", "6s", "Wides", "No Balls", "Wicket"
   ]);
 
-  const filteredData = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-  
-    return data.filter((ball) => {
-      const run = ball.runs;
-      const isWide = ball.wides > 0;
-      const isNoBall = ball.no_balls > 0;
-      const isWicket = !!ball.dismissal_type;
-  
-      const runKey = `${run}s`;
-  
-      const matchRun = run !== undefined && activeTypes.includes(runKey);
-      const matchWide = isWide && activeTypes.includes("Wides");
-      const matchNoBall = isNoBall && activeTypes.includes("No Balls");
-      const matchWicket = isWicket && activeTypes.includes("Wicket");
-  
-      return matchRun || matchWide || matchNoBall || matchWicket;
-    });
-  }, [data, activeTypes]);
+const filteredData = useMemo(() => {
+  if (!Array.isArray(data)) return [];
+
+  return data.filter((ball) => {
+    const isWide = ball.wides > 0;
+    const isNoBall = ball.no_balls > 0;
+    const isWicket = !!ball.dismissal_type;
+
+    // Handle extras first
+    if (isWide && activeTypes.includes("Wides")) return true;
+    if (isNoBall && activeTypes.includes("No Balls")) return true;
+    if (isWicket && activeTypes.includes("Wicket")) return true;
+
+    // Fallback to runs (only if not wide or no ball)
+    const runKey = `${ball.runs}s`;
+    return activeTypes.includes(runKey);
+  });
+}, [data, activeTypes]);
+
   
 
   const projectPoint = (x, y, canvasWidth, canvasHeight, topW, bottomW, paddingTop) => {
