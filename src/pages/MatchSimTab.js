@@ -73,7 +73,7 @@ const MatchSimTab = () => {
 
   const handleSimulate = () => {
     setSimLoading(true);
-    api.post("/simulate-match", {
+    api.post("/simulate-match-v2", {
       team_a_name: teamA,
       team_b_name: teamB,
       team_a_players: teamASelected,
