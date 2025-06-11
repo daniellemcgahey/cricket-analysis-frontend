@@ -6,6 +6,7 @@ import BattingLeadersTab from "./BattingLeadersTab";
 import TournamentStatsTab from "./TournamentStatsTab";
 import BowlingLeadersTab from "./BowlingLeadersTab";
 import FieldingLeadersTab from "./FieldingLeadersTab";
+import PlayerSummariesTab from "./PlayerSummariesTab";
 
 import "./TabStyles.css";
 
@@ -38,6 +39,9 @@ const TournamentsTab = () => {
           </Tab>
           <Tab eventKey="fielding" title="Fielding Leaderboards">
             <FieldingLeadersTab />
+          </Tab>
+          <Tab eventKey="player_summaries" title="Player Summaries">
+            <PlayerSummariesTab />
           </Tab>
         </Tabs>
       </div>
