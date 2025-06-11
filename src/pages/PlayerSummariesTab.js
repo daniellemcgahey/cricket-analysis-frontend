@@ -21,24 +21,25 @@ const PlayerSummaryTab = () => {
     api.get("/tournaments", { params: { teamCategory } }).then((res) => setTournaments(res.data));
   }, [teamCategory]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (teamCategory && selectedTournament) {
-      api.get("/countries", { params: { teamCategory, tournament: selectedTournament } })
+        api.get("/countries", { params: { team_category: teamCategory, tournament: selectedTournament } })
         .then((res) => setCountries(res.data));
     }
-  }, [teamCategory, selectedTournament]);
+    }, [teamCategory, selectedTournament]);
 
-  useEffect(() => {
+    useEffect(() => {
     if (selectedCountry && selectedTournament) {
-      api.get("/team-players", {
+        api.get("/team-players", {
         params: {
-            team_category,
+            team_category: teamCategory,
             tournament: selectedTournament,
             country_name: selectedCountry
         }
         }).then((res) => setPlayers(res.data));
     }
-  }, [selectedCountry, selectedTournament]);
+    }, [selectedCountry, selectedTournament, teamCategory]);
+
 
   return (
     <div className={`container-fluid py-3 ${containerClass}`}>
