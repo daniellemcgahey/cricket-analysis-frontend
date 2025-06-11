@@ -30,13 +30,13 @@ const PlayerSummaryTab = () => {
 
   useEffect(() => {
     if (selectedCountry && selectedTournament) {
-      api.get("/players", {
+      api.get("/team-players", {
         params: {
-          teamCategory,
-          tournament: selectedTournament,
-          country: selectedCountry
+            teamCategory,
+            tournament: selectedTournament,
+            country: selectedCountry
         }
-      }).then((res) => setPlayers(res.data));
+        }).then((res) => setPlayers(res.data));
     }
   }, [selectedCountry, selectedTournament]);
 
