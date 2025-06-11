@@ -32,9 +32,9 @@ const PlayerSummaryTab = () => {
     if (selectedCountry && selectedTournament) {
       api.get("/team-players", {
         params: {
-            teamCategory,
+            team_category,
             tournament: selectedTournament,
-            country: selectedCountry
+            country_name: selectedCountry
         }
         }).then((res) => setPlayers(res.data));
     }
