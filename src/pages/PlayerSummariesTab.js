@@ -45,7 +45,7 @@ const PlayerSummaryTab = () => {
     <div className={`container-fluid py-3 ${containerClass}`}>
       <div className="row">
         <div className="col-md-3">
-          <Card className="mb-3">
+          <Card className={isDarkMode ? "bg-dark text-white" : ""}>
             <Card.Body>
               <Form.Group className="mb-3">
                 <Form.Label>Team Category</Form.Label>
@@ -83,6 +83,13 @@ const PlayerSummaryTab = () => {
                   ))}
                 </Form.Select>
               </Form.Group>
+                <Button
+                  className="w-100 mt-2"
+                  onClick={fetchStats}
+                  disabled={!teamCategory || !selectedTournament || selectedCountries.length === 0}
+                >
+                  Generate Stats
+                </Button>
             </Card.Body>
           </Card>
         </div>
