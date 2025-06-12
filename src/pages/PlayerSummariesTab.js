@@ -132,19 +132,19 @@ const generateStats = async () => {
             <Accordion defaultActiveKey="0">
               <Accordion.Item eventKey="0">
                 <Accordion.Header>Batting</Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                   <p>Batting summary placeholder...</p>
                 </Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="1">
                 <Accordion.Header>Bowling</Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                   <p>Bowling summary placeholder...</p>
                 </Accordion.Body>
               </Accordion.Item>
               <Accordion.Item eventKey="2">
                 <Accordion.Header>Fielding</Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                   <p>Fielding summary placeholder...</p>
                 </Accordion.Body>
               </Accordion.Item>

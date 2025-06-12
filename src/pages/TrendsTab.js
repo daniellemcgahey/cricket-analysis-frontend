@@ -848,24 +848,32 @@ const TrendsTab = () => {
 
                 {trendMode === "Bowling" && (
                 <Accordion className="mt-4" defaultActiveKey="0" alwaysOpen>
-                <Accordion.Item eventKey="0">
+                <Accordion.Item eventKey="0" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>Bowling History (Runs, Econ, Intent Conceded)</Accordion.Header>
-                  <Accordion.Body>{renderBowlingHistoryChart()}</Accordion.Body>
+                  <Accordion.Body>
+                    {renderBowlingHistoryChart()}
+                  </Accordion.Body>
                 </Accordion.Item>
               
-                <Accordion.Item eventKey="1">
+                <Accordion.Item eventKey="1" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>Consistency Trends</Accordion.Header>
-                  <Accordion.Body>{renderBowlingConsistencyTrends()}</Accordion.Body>
+                  <Accordion.Body>
+                    {renderBowlingConsistencyTrends()}
+                  </Accordion.Body>
                 </Accordion.Item>
               
-                <Accordion.Item eventKey="2">
+                <Accordion.Item eventKey="2" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>Dismissal Breakdown</Accordion.Header>
-                  <Accordion.Body>{renderBowlingDismissals()}</Accordion.Body>
+                  <Accordion.Body>
+                    {renderBowlingDismissals()}
+                    </Accordion.Body>
                 </Accordion.Item>
 
-                <Accordion.Item eventKey="3">
+                <Accordion.Item eventKey="3" className={isDarkMode ? "bg-dark text-white" : ""}> 
                   <Accordion.Header>Zone Effectiveness</Accordion.Header>
-                  <Accordion.Body>{renderZoneEffectivenessTable()}</Accordion.Body>
+                  <Accordion.Body>
+                    {renderZoneEffectivenessTable()}
+                    </Accordion.Body>
                 </Accordion.Item>
               </Accordion>
               
