@@ -22,6 +22,8 @@ const TournamentStatsTab = () => {
   const [loading, setLoading] = useState(false);
   const [selectAllCountries, setSelectAllCountries] = useState(true);
 
+  const [tournamentTable, setTournamentTable] = useState([]);
+
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
   // Load tournaments when team category changes
@@ -65,6 +67,17 @@ const TournamentStatsTab = () => {
         setSelectedGrounds(res.data.grounds || []);
         setSelectedTimes(res.data.times || []);
         });
+        // Fetch standings
+        api.post("/tournament-standings", {
+          team_category: teamCategory,
+          tournament: selectedTournament,
+        }).then(res => {
+          setTournamentTable(res.data);
+        }).catch(err => {
+          console.error("❌ Error fetching tournament standings:", err);
+          setTournamentTable([]);
+        });
+
     }
     }, [teamCategory, selectedTournament]);
 
@@ -250,41 +263,95 @@ const TournamentStatsTab = () => {
             </Card>
           </div>
 
-          {/* Table */}
           <div className="col-md-9">
-            {loading ? (
-              <div className="text-center py-5"><Spinner animation="border" /></div>
-            ) : (
-              <Table striped bordered hover className={isDarkMode ? "table-dark mt-3" : "table-light mt-3"}>
-                <thead>
-                  <tr>
-                    <th>Venue</th>
-                    <th>Average Bat 1st Score</th>
-                    <th>Bat 1st Wins</th>
-                    <th>Bat 2nd Wins</th>
-                    <th>Total Matches</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.length > 0 ? (
-                    tableData.map((row, idx) => (
-                      <tr key={idx}>
-                        <td>{row.venue}</td>
-                        <td>{row.avg_score}</td>
-                        <td>{row.bat1_wins}</td>
-                        <td>{row.bat2_wins}</td>
-                        <td>{row.total_matches}</td>
-                      </tr>
-                    ))
-                  ) : (
+            {/* 🏆 Tournament Table */}
+            {selectedTournament && tournamentTable.length > 0 && (
+              <div className="mb-4">
+                <h5 className="mb-3">Tournament Table</h5>
+                <Table striped bordered hover className={isDarkMode ? "table-dark" : "table-light"}>
+                  <thead>
                     <tr>
-                      <td colSpan={5} className="text-center">No data available</td>
+                      <th>Team</th>
+                      <th>Games Played</th>
+                      <th>Wins</th>
+                      <th>Losses</th>
+                      <th>No Results</th>
+                      <th>Points</th>
+                      <th>NRR</th>
                     </tr>
-                  )}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {tournamentTable.map((row, idx) => (
+                      <tr key={idx}>
+                        <td>{row.team}</td>
+                        <td>{row.played}</td>
+                        <td>{row.wins}</td>
+                        <td>{row.losses}</td>
+                        <td>{row.no_results}</td>
+                        <td>{row.points}</td>
+                        <td>{row.nrr?.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
             )}
+
+            {/* 📊 Ground/Time Accordion */}
+            <div className="accordion" id="accordionGroundTime">
+              <div className="accordion-item">
+                <h2 className="accordion-header" id="headingOne">
+                  <button
+                    className={`accordion-button ${!isDarkMode ? "" : "bg-dark text-white"}`}
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapseGroundTime"
+                    aria-expanded="true"
+                    aria-controls="collapseGroundTime"
+                  >
+                    Ground & Time Analysis
+                  </button>
+                </h2>
+                <div id="collapseGroundTime" className="accordion-collapse collapse show" aria-labelledby="headingOne">
+                  <div className="accordion-body">
+                    {loading ? (
+                      <div className="text-center py-5"><Spinner animation="border" /></div>
+                    ) : (
+                      <Table striped bordered hover className={isDarkMode ? "table-dark mt-3" : "table-light mt-3"}>
+                        <thead>
+                          <tr>
+                            <th>Venue</th>
+                            <th>Average Bat 1st Score</th>
+                            <th>Bat 1st Wins</th>
+                            <th>Bat 2nd Wins</th>
+                            <th>Total Matches</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tableData.length > 0 ? (
+                            tableData.map((row, idx) => (
+                              <tr key={idx}>
+                                <td>{row.venue}</td>
+                                <td>{row.avg_score}</td>
+                                <td>{row.bat1_wins}</td>
+                                <td>{row.bat2_wins}</td>
+                                <td>{row.total_matches}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="text-center">No data available</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </Table>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>
