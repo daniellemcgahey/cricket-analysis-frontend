@@ -40,6 +40,29 @@ const PlayerSummaryTab = () => {
     }
     }, [selectedCountry, selectedTournament, teamCategory]);
 
+const generateStats = async () => {
+    if (!selectedPlayer) return;
+    setLoading(true);
+
+    try {
+        // Replace this with your actual endpoint
+        const res = await api.post("/player-summary", {
+        team_category: teamCategory,
+        tournament: selectedTournament,
+        country: selectedCountry,
+        player_id: selectedPlayer
+        });
+
+        console.log("✅ Summary Data:", res.data);
+
+        // TODO: Update state with returned data to populate accordion sections
+    } catch (err) {
+        console.error("❌ Error fetching player summary:", err);
+    } finally {
+        setLoading(false);
+    }
+    };
+
 
   return (
     <div className={`container-fluid py-3 ${containerClass}`}>
@@ -83,12 +106,14 @@ const PlayerSummaryTab = () => {
                   ))}
                 </Form.Select>
               </Form.Group>
+
                 <Button
-                  className="w-100 mt-2"
-                  onClick={fetchStats}
-                  disabled={!teamCategory || !selectedTournament || selectedCountries.length === 0}
-                >
-                  Generate Stats
+                    className="mt-3 w-100"
+                    variant="primary"
+                    disabled={!selectedPlayer || !selectedTournament || !selectedCountry}
+                    onClick={generateStats}
+                    >
+                    Generate Stats
                 </Button>
             </Card.Body>
           </Card>
