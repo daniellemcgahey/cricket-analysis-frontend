@@ -343,7 +343,7 @@ const FieldingLeadersTab = () => {
 
                 </Accordion>
             ) : (
-              <Alert variant="info">Select filters to view bowling leaderboards.</Alert>
+              <Alert variant="info">Select filters to view fielding leaderboards.</Alert>
             )}
 
           </div>
