@@ -148,6 +148,7 @@ const TrendsTab = () => {
             color: isDarkMode ? "#ffffff" : "#000000",
           },
           ticks: {
+            precision: 0, 
             color: isDarkMode ? "#ffffff" : "#000000",
           },
         },
@@ -422,6 +423,7 @@ const TrendsTab = () => {
         y: {
           beginAtZero: true,
           ticks: {
+            precision: 0, 
             color: isDarkMode ? "#ffffff" : "#000000",
           },
         },
@@ -480,11 +482,32 @@ const TrendsTab = () => {
       responsive: true,
       plugins: { legend: { position: "top" } },
       scales: {
-        y: { beginAtZero: true, title: { display: true, text: "Wickets" }},
-        y1: { position: "right", beginAtZero: true, title: { display: true, text: "Runs" }, grid: { drawOnChartArea: false }},
-        y2: { position: "right", beginAtZero: true, max: 10, title: { display: true, text: "Intent" }, grid: { drawOnChartArea: false }}
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: "Wickets" },
+          ticks: {
+            precision: 0  // 👈 Force Wickets to whole numbers
+          }
+        },
+        y1: {
+          position: "right",
+          beginAtZero: true,
+          title: { display: true, text: "Runs" },
+          grid: { drawOnChartArea: false },
+          ticks: {
+            precision: 0  // 👈 Force Runs to whole numbers
+          }
+        },
+        y2: {
+          position: "right",
+          beginAtZero: true,
+          max: 10,
+          title: { display: true, text: "Intent" },
+          grid: { drawOnChartArea: false }
+        }
       }
     };
+
   
     return <Bar ref={bowlingHistoryRef} data={data} options={options} />;
   };
@@ -557,6 +580,7 @@ const TrendsTab = () => {
             color: "#e53935"
           },
           ticks: {
+            precision: 0, 
             color: "#e53935"
           },
           grid: { drawOnChartArea: false }
@@ -591,7 +615,12 @@ const TrendsTab = () => {
         legend: { display: false }
       },
       scales: {
-        y: { beginAtZero: true }
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0  // 👈 Only this chart will round to whole numbers
+          }
+        }
       }
     };
   
