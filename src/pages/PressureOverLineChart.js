@@ -65,8 +65,7 @@ const PressureOverLineChart = ({ data }) => {
           font: {
             size: 14,
             family: "Segoe UI, sans-serif",
-          },
-          color: "#333"
+          }
         }
       },
       tooltip: {
@@ -82,11 +81,9 @@ const PressureOverLineChart = ({ data }) => {
         title: {
           display: true,
           text: "Average Pressure",
-          font: { size: 14 },
-          color: "#333"
+          font: { size: 14 }
         },
         ticks: {
-          color: "#333",
           stepSize: 1,
         },
         beginAtZero: true
@@ -95,12 +92,8 @@ const PressureOverLineChart = ({ data }) => {
         title: {
           display: true,
           text: "Overs",
-          font: { size: 14 },
-          color: "#333"
+          font: { size: 14 }
         },
-        ticks: {
-          color: "#333"
-        }
       }
     }
   };
