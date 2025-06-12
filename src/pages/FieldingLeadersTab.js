@@ -154,7 +154,7 @@ const FieldingLeadersTab = () => {
                 {/* Most Catches */}
                 <Accordion.Item eventKey="0">
                 <Accordion.Header><strong>Most Catches</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Most Catches"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -173,7 +173,7 @@ const FieldingLeadersTab = () => {
                 {/* Most Run Outs */}
                 <Accordion.Item eventKey="1">
                 <Accordion.Header><strong>Most Run Outs</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Most Run Outs"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -192,7 +192,7 @@ const FieldingLeadersTab = () => {
                 {/* Most Dismissals */}
                 <Accordion.Item eventKey="2">
                 <Accordion.Header><strong>Most Dismissals</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Most Dismissals"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -211,7 +211,7 @@ const FieldingLeadersTab = () => {
                 {/* Best Conversion Rate */}
                 <Accordion.Item eventKey="3">
                 <Accordion.Header><strong>Best Conversion Rate</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Best Conversion Rate"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -230,7 +230,7 @@ const FieldingLeadersTab = () => {
                 {/* Cleanest Hands */}
                 <Accordion.Item eventKey="4">
                 <Accordion.Header><strong>Cleanest Hands</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Cleanest Hands"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -249,7 +249,7 @@ const FieldingLeadersTab = () => {
                 {/* WK Catches */}
                 <Accordion.Item eventKey="5">
                 <Accordion.Header><strong>WK Catches</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["WK Catches"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -268,7 +268,7 @@ const FieldingLeadersTab = () => {
                 {/* WK Stumpings */}
                 <Accordion.Item eventKey="6">
                 <Accordion.Header><strong>WK Stumpings</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["WK Stumpings"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -287,7 +287,7 @@ const FieldingLeadersTab = () => {
                 {/* WK Dismissals */}
                 <Accordion.Item eventKey="7">
                 <Accordion.Header><strong>WK Dismissals</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["WK Dismissals"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -306,7 +306,7 @@ const FieldingLeadersTab = () => {
                 {/* Best WK Conversion Rate */}
                 <Accordion.Item eventKey="8">
                 <Accordion.Header><strong>Best WK Conversion Rate</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["Best WK Conversion Rate"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
@@ -325,7 +325,7 @@ const FieldingLeadersTab = () => {
                 {/* WK Cleanest Hands */}
                 <Accordion.Item eventKey="9">
                 <Accordion.Header><strong>WK Cleanest Hands</strong></Accordion.Header>
-                <Accordion.Body>
+                <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {leaderboards["WK Cleanest Hands"]?.length > 0 ? (
                     <Table striped bordered hover variant={isDarkMode ? "dark" : "light"} size="sm">
                         <thead>
