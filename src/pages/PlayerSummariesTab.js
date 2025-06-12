@@ -36,7 +36,16 @@ const PlayerSummaryTab = () => {
             tournament: selectedTournament,
             country_name: selectedCountry
         }
-        }).then((res) => setPlayers(res.data));
+        }).then((res) => {
+            const mapped = res.data.map(p => ({
+                player_id: p.id,
+                player_name: p.name,
+                bowling_arm: p.bowling_arm,
+                bowling_style: p.bowling_style
+            }));
+        setPlayers(mapped);
+        });
+
     }
     }, [selectedCountry, selectedTournament, teamCategory]);
 
