@@ -256,7 +256,7 @@ const CountryComparisonPage = () => {
           </div>
   
           {/* Right Column */}
-          <div className="col-md-8">
+          <div className={`col-md-8 ${isDarkMode ? "bg-dark text-white" : "bg-light text-dark"}`}>
             {loading && <p>Loading...</p>}
             {comparisonData ? (
               <ComparisonTable data={comparisonData} isDarkMode={isDarkMode} tournament1={selectedTournaments[0] || ""} />

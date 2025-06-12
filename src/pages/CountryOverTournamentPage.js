@@ -242,7 +242,7 @@ const CountryOverTournamentPage = () => {
           </div>
   
           {/* Comparison Output */}
-          <div className="col-md-8">
+          <div className={`col-md-8 ${isDarkMode ? "bg-dark text-white" : "bg-light text-dark"}`}>
             {loading && <p>Loading...</p>}
             {!statsByTournament ? (
               <div className="alert alert-info">Comparison data will appear here.</div>

@@ -271,7 +271,7 @@ const PressureTab = () => {
           <div className="col-md-8">
             {graphData ? (
               <Accordion defaultActiveKey="0" alwaysOpen>
-                <Accordion.Item eventKey="0">
+                <Accordion.Item eventKey="0" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>
                     <h6 className="fw-bold m-0">Average Pressure per Over</h6>
                   </Accordion.Header>
@@ -280,7 +280,7 @@ const PressureTab = () => {
                   </Accordion.Body>
                 </Accordion.Item>
 
-                <Accordion.Item eventKey="1">
+                <Accordion.Item eventKey="1" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>
                     <h6 className="fw-bold m-0">Net Pressure per Phase</h6>
                   </Accordion.Header>
@@ -289,7 +289,7 @@ const PressureTab = () => {
                   </Accordion.Body>
                 </Accordion.Item>
 
-                <Accordion.Item eventKey="2">
+                <Accordion.Item eventKey="2" className={isDarkMode ? "bg-dark text-white" : ""}>
                   <Accordion.Header>
                     <h6 className="fw-bold m-0">Top/Bottom Player Pressure Impact</h6>
                   </Accordion.Header>
