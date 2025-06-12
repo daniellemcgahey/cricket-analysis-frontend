@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import api from "../api";
-import { Card, Form, Button, Table, Spinner } from "react-bootstrap";
+import { Accordion, Card, Form, Button, Table, Spinner } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 
 const TournamentStatsTab = () => {
@@ -23,6 +23,7 @@ const TournamentStatsTab = () => {
   const [selectAllCountries, setSelectAllCountries] = useState(true);
 
   const [tournamentTable, setTournamentTable] = useState([]);
+  const [showStats, setShowStats] = useState(false);
 
   const teamCategories = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
@@ -107,35 +108,37 @@ const TournamentStatsTab = () => {
     setSelectAllCountries(updated.length === countries.length);
   };
 
-    const fetchStats = async () => {
+  const fetchStats = async () => {
     setLoading(true);
+    setShowStats(true);  // ✅ This shows the accordion after stats are requested
+
     console.log("📤 Sending to /tournament-stats:", {
-        team_category: teamCategory,
-        tournament: selectedTournament,
-        country: selectedCountries,
-        venue: selectedGrounds,
-        time_of_day: selectedTimes,
+      team_category: teamCategory,
+      tournament: selectedTournament,
+      country: selectedCountries,
+      venue: selectedGrounds,
+      time_of_day: selectedTimes,
     });
 
     try {
-        const res = await api.post("/tournament-stats", {
+      const res = await api.post("/tournament-stats", {
         team_category: teamCategory,
         tournament: selectedTournament,
         country: selectedCountries,
         venue: selectedGrounds,
         time_of_day: selectedTimes,
-        });
+      });
 
-        console.log("✅ /tournament-stats response:", res.data);
-
-        setTableData(res.data);
+      console.log("✅ /tournament-stats response:", res.data);
+      setTableData(res.data);
     } catch (err) {
-        console.error("❌ Error fetching tournament stats:", err);
-        setTableData([]);
+      console.error("❌ Error fetching tournament stats:", err);
+      setTableData([]);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
+
 
 
   return (
@@ -297,22 +300,11 @@ const TournamentStatsTab = () => {
             )}
 
             {/* 📊 Ground/Time Accordion */}
-            <div className="accordion" id="accordionGroundTime">
-              <div className="accordion-item">
-                <h2 className="accordion-header" id="headingOne">
-                  <button
-                    className={`accordion-button ${!isDarkMode ? "" : "bg-dark text-white"}`}
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapseGroundTime"
-                    aria-expanded="true"
-                    aria-controls="collapseGroundTime"
-                  >
-                    Ground & Time Analysis
-                  </button>
-                </h2>
-                <div id="collapseGroundTime" className="accordion-collapse collapse show" aria-labelledby="headingOne">
-                  <div className="accordion-body">
+            {showStats && (
+              <Accordion defaultActiveKey="0" className="mt-3">
+                <Accordion.Item eventKey="0">
+                  <Accordion.Header>Ground & Time Analysis</Accordion.Header>
+                  <Accordion.Body className={isDarkMode ? "bg-dark text-white" : ""}>
                     {loading ? (
                       <div className="text-center py-5"><Spinner animation="border" /></div>
                     ) : (
@@ -345,10 +337,11 @@ const TournamentStatsTab = () => {
                         </tbody>
                       </Table>
                     )}
-                  </div>
-                </div>
-              </div>
-            </div>
+                  </Accordion.Body>
+                </Accordion.Item>
+              </Accordion>
+            )}
+
           </div>
 
         </div>
