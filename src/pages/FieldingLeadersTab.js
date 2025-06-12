@@ -148,8 +148,8 @@ const FieldingLeadersTab = () => {
 
           <div className="col-md-9">
             {loading ? (
-              <Spinner animation="border" />
-            ) : (
+              <div className="text-center py-5"><Spinner animation="border" /></div>
+            ) : Object.keys(leaderboards).length > 0 ? (
               <Accordion defaultActiveKey="0">
                 {/* Most Catches */}
                 <Accordion.Item eventKey="0">
@@ -341,8 +341,11 @@ const FieldingLeadersTab = () => {
                 </Accordion.Body>
                 </Accordion.Item>
 
-              </Accordion>
+                </Accordion>
+            ) : (
+              <Alert variant="info">Select filters to view bowling leaderboards.</Alert>
             )}
+
           </div>
         </div>
       </div>
