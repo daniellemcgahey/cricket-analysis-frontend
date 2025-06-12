@@ -236,7 +236,7 @@ const TournamentStatsTab = () => {
                   >
                     {selectedTimes.length === timeOptions.length ? "Deselect All" : "Select All"}
                   </Button>
-                  <div className="form-check" style={{ maxHeight: "200px", overflowY: "auto" }}>
+                  <div className="form-check" style={{ maxHeight: "250px", overflowY: "auto" }}>
                     {timeOptions.map((t, i) => (
                       <div key={i}>
                         <input
@@ -267,7 +267,6 @@ const TournamentStatsTab = () => {
             {/* 🏆 Tournament Table */}
             {selectedTournament && tournamentTable.length > 0 && (
               <div className="mb-4">
-                <h5 className="mb-3">Tournament Table</h5>
                 <Table striped bordered hover className={isDarkMode ? "table-dark" : "table-light"}>
                   <thead>
                     <tr>
@@ -289,7 +288,7 @@ const TournamentStatsTab = () => {
                         <td>{row.losses}</td>
                         <td>{row.no_results}</td>
                         <td>{row.points}</td>
-                        <td>{row.nrr?.toFixed(2)}</td>
+                        <td>{row.nrr?.toFixed(3)}</td>
                       </tr>
                     ))}
                   </tbody>
