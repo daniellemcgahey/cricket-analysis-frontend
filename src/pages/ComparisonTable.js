@@ -23,7 +23,7 @@ const isStatUnavailable = (value) => {
 
 // Define stat sets
 const battingStats = new Set([
-  "Innings", "Runs off Bat", "Batting Extras", "Total Runs", "Balls Faced", "Dot Balls Faced", "1s", "2s", "3s",
+  "Innings", "Runs Off Bat", "Batting Extras", "Total Runs", "Balls Faced", "Dot Balls Faced", "1s", "2s", "3s",
   "4s", "6s", "Dismissals", "Strike Rate", "Scoring Shot %", "Batters Average",
   "Attacking Shot %", "Defensive Shot %", "Rotation Shot %", "Avg Intent Score"
 ]);

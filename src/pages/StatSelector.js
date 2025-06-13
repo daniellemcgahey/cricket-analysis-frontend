@@ -4,7 +4,7 @@ import { Accordion, Form, Button } from "react-bootstrap";
 
 const StatSelector = ({ onSelectionChange }) => {
   const battingStats = [
-    "Innings", "Runs off Bat", "Batting Extras", "Total Runs", "Balls Faced", "Strike Rate", "Batters Average",
+    "Innings", "Runs Off Bat", "Batting Extras", "Total Runs", "Balls Faced", "Strike Rate", "Batters Average",
     "Dot Balls Faced", "Scoring Shot %", "1s", "2s", "3s", "4s", "6s",
     "25+ Partnerships", "Dismissals", "Attacking Shot %", "Defensive Shot %", "Rotation Shot %", "Avg Intent Score"
   ];
