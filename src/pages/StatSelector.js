@@ -18,7 +18,7 @@ const StatSelector = ({ onSelectionChange }) => {
     "Catch", "Run Out", "Drop Catch", "Boundary Save", "Clean Stop/Pick Up",
     "Direct Hit", "Missed Catch", "Missed Run Out", "Missed Fielding", "Fumble",
     "Overthrow", "Taken Half Chance", "Missed Half Chance", "Total Balls Fielded",
-    "Runs Saved/Allowed", "Conversion Rate", "Pressure Score", "Fielding Impact Rating"
+    "Runs Saved/Allowed", "Clean Hands %", "Conversion Rate", "Pressure Score", "Fielding Impact Rating"
   ];
 
   const allStats = [...battingStats, ...bowlingStats, ...fieldingStats];

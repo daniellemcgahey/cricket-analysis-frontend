@@ -37,7 +37,7 @@ const fieldingStats = new Set([
   "Catch", "Run Out", "Drop Catch", "Boundary Save", "Clean Stop/Pick Up",
   "Direct Hit", "Missed Catch", "Missed Run Out", "Fumble", "Missed Fielding",
   "Overthrow", "Taken Half Chance", "Missed Half Chance", "Total Balls Fielded",
-  "Expected Runs", "Actual Runs", "Runs Saved/Allowed", "Conversion Rate",
+  "Expected Runs", "Actual Runs", "Runs Saved/Allowed", "Clean Hands %", "Conversion Rate",
   "Pressure Score", "Fielding Impact Rating"
 ]);
 
