@@ -111,7 +111,7 @@ const PlayerOverTournamentPage = () => {
 
     try {
       setLoading(true);
-      const res = await api.post("/player_compare_over_tournament", payload);
+      const res = await api.post("/compare_player_over_tournament", payload);
       setStatsByTournament(res.data.stats_by_tournament);
     } catch (err) {
       console.error("Error fetching player stats:", err.response?.data || err.message);
