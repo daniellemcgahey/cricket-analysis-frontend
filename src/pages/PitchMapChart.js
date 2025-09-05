@@ -12,7 +12,7 @@ const createZones = () => [
 ];
 
 const PITCH_Y_MULTIPLIER = 1.0;
-const BOWLER_DISMISSALS = ["Bowled", "Caught", "LBW", "Stumped", "Hit Wicket"];
+const BOWLER_DISMISSALS = ["Bowled", "Caught", "LBW", "Stumped", "Hit Wicket", "bowled", "caught", "lbw", "stumped", "hit wicket"];
 
 
 const PitchMapChart = ({ data, viewMode, selectedBallId = null, innerRef = null, setProjectedBalls = () => {} }) => {
