@@ -228,18 +228,6 @@ const PartnershipStatPage = () => {
                                     <td>{val}</td>
                                   </tr>
                                 ))}
-                                <tr>
-                                  <td>Scoring Shot %</td>
-                                  <td>
-                                    {(() => {
-                                      const s = partnershipDetails[p.partnership_id].summary;
-                                      const scoringShots = s.ones + s.twos + s.threes + s.fours + s.sixes;
-                                      return s.total_balls > 0
-                                        ? ((scoringShots / s.total_balls) * 100).toFixed(1) + "%"
-                                        : "0%";
-                                    })()}
-                                  </td>
-                                </tr>
                               </tbody>
                             </Table>
                           </Col>
