@@ -9,7 +9,7 @@ import './index.css';
 import ComparisonTabs from './pages/ComparisonTabs';
 import IndividualTabs from './pages/IndividualTabs';
 import MatchAnalysisTabs from './pages/MatchAnalysisTabs';
-import FutureMatchTabs from './pages/FutureMatchTabs';
+import CoachesHubTabs from './pages/CoachesHubTabs';
 import MatchSimTab from './pages/MatchSimTab';
 import TournamentsTab from './pages/TournamentsTab';
 
@@ -43,8 +43,8 @@ function AnalysisHub() {
           <Link to="/match-analysis">
             <Button variant="info">Match Analysis</Button>
           </Link>
-          <Link to="/future-matches">
-            <Button variant="info">Future Matches</Button>
+          <Link to="/coaches">
+            <Button variant="info">Coaches Hub</Button>
           </Link>
           <Link to="/match-sims">
             <Button variant="info">Match Sim</Button>
@@ -68,7 +68,7 @@ function App() {
           <Route path="/individual" element={<IndividualTabs />} />
           <Route path="/tournament" element={<TournamentsTab />} />
           <Route path="/match-analysis" element={<MatchAnalysisTabs />} />
-          <Route path="/future-matches" element={<FutureMatchTabs />} />
+          <Route path="/coaches" element={<CoachesHubTabs />} />
           <Route path="/match-sims" element={<MatchSimTab />} />
         </Routes>
       </Router>
