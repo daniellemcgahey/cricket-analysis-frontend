@@ -50,6 +50,12 @@ export default function PreGame() {
   const [keyOppError, setKeyOppError] = useState("");
   const [keyOppData, setKeyOppData] = useState({ batters: [], bowlers: [] });
 
+
+  const [showOppSW, setShowOppSW] = useState(false);
+  const [swLoading, setSwLoading] = useState(false);
+  const [swData, setSwData] = useState(null);
+  const [swErr, setSwErr] = useState("");
+
   // -------- Helpers --------
   const pickBrazil = (list) => list.find(n => /bra[sz]il/i.test(n)) || null;
   const disabledCore = !ourTeam || !opponent || ourTeam === opponent;
@@ -222,6 +228,22 @@ export default function PreGame() {
     }
     };
 
+    const loadOppSW = async () => {
+        setSwErr(""); setSwLoading(true);
+        try {
+            const res = await api.post("/opposition-strengths", {
+            team_category: category,
+            opponent_country: opponent,
+            // min_balls_style: 60, min_balls_phase: 60, min_balls_bowling: 120
+            });
+            setSwData(res.data);
+        } catch (e) {
+            setSwErr("Failed to load strengths & weaknesses.");
+        } finally {
+            setSwLoading(false);
+        }
+    };
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -342,17 +364,15 @@ export default function PreGame() {
           </Col>
 
           {/* Opposition Strengths / Weaknesses */}
-          <Col md={4}>
+            <Col md={4}>
             <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Opposition S/W</Card.Title>
-                <Card.Text className="mb-3">
-                  Strengths & weaknesses summary.
-                </Card.Text>
-                <Button disabled={disabledCore}>Open</Button>
-              </Card.Body>
+                <Card.Body>
+                <Card.Title className="fw-bold">Opposition Strengths & Weaknesses</Card.Title>
+                <Card.Text className="mb-3">By phase and bowler type.</Card.Text>
+                <Button disabled={disabledCore} onClick={() => setShowOppSW(true)}>Open</Button>
+                </Card.Body>
             </Card>
-          </Col>
+            </Col>
 
           {/* Do & Do Nots */}
           <Col md={4}>
@@ -649,10 +669,85 @@ export default function PreGame() {
                 </>
                 )}
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={() => setShowKeyOppModal(false)}>Close</Button>
-            </Modal.Footer>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowKeyOppModal(false)}>Close</Button>
+                </Modal.Footer>
             </Modal>
+
+            <Modal show={showOppSW} onShow={loadOppSW} onHide={() => setShowOppSW(false)} size="lg" centered>
+                <Modal.Header closeButton><Modal.Title>Opposition Strengths & Weaknesses</Modal.Title></Modal.Header>
+                <Modal.Body>
+                    {swErr && <Alert variant="danger">{swErr}</Alert>}
+                    {swLoading || !swData ? (
+                    <div className="text-center"><Spinner animation="border" /></div>
+                    ) : (
+                    <>
+                        <h6 className="fw-bold">Batting – Key Strengths</h6>
+                        <ul>{swData.batting.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                        <h6 className="fw-bold mt-3">Batting – Key Weaknesses</h6>
+                        <ul>{swData.batting.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
+
+                        <h6 className="fw-bold mt-4">Bowling – Key Strengths</h6>
+                        <ul>{swData.bowling.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                        <h6 className="fw-bold mt-3">Bowling – Key Weaknesses</h6>
+                        <ul>{swData.bowling.weaknesses.map((s, i) => <li key={i}>{s}</li>)}</ul>
+
+                        <hr className="my-3" />
+                        <h6 className="fw-bold">Detail – Batting by Bowler Type</h6>
+                        <Table size="sm" bordered responsive>
+                        <thead><tr><th>Type</th><th>Balls</th><th>SR</th><th>Dot%</th><th>Boundary%</th><th>Outs/ball</th></tr></thead>
+                        <tbody>
+                            {swData.batting.by_style.map(r => (
+                            <tr key={r.style_norm}>
+                                <td>{r.style_norm}</td><td>{r.balls}</td><td>{r.strike_rate}</td>
+                                <td>{r.dot_pct}</td><td>{r.boundary_pct}</td><td>{r.outs_perc_ball}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+
+                        <h6 className="fw-bold mt-3">Detail – Batting by Phase</h6>
+                        <Table size="sm" bordered responsive>
+                        <thead><tr><th>Phase</th><th>Balls</th><th>SR</th><th>Dot%</th><th>Boundary%</th></tr></thead>
+                        <tbody>
+                            {swData.batting.by_phase.map(r => (
+                            <tr key={r.phase}>
+                                <td>{r.phase}</td><td>{r.balls}</td><td>{r.strike_rate}</td><td>{r.dot_pct}</td><td>{r.boundary_pct}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+
+                        <h6 className="fw-bold mt-3">Detail – Bowling by Phase</h6>
+                        <Table size="sm" bordered responsive>
+                        <thead><tr><th>Phase</th><th>Overs</th><th>Econ</th><th>Dot%</th><th>Wkts/ball</th><th>Boundary%</th></tr></thead>
+                        <tbody>
+                            {swData.bowling.by_phase.map(r => (
+                            <tr key={r.phase}>
+                                <td>{r.phase}</td><td>{r.overs}</td><td>{r.economy ?? "—"}</td>
+                                <td>{r.dot_pct}</td><td>{r.wickets_perc_ball}</td><td>{r.boundary_pct}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+
+                        <h6 className="fw-bold mt-3">Detail – Bowling by Type</h6>
+                        <Table size="sm" bordered responsive>
+                        <thead><tr><th>Type</th><th>Overs</th><th>Econ</th><th>Dot%</th><th>Wkts/ball</th><th>Boundary%</th></tr></thead>
+                        <tbody>
+                            {swData.bowling.by_style.map(r => (
+                            <tr key={r.style_norm}>
+                                <td>{r.style_norm}</td><td>{r.overs}</td><td>{r.economy ?? "—"}</td>
+                                <td>{r.dot_pct}</td><td>{r.wickets_perc_ball}</td><td>{r.boundary_pct}</td>
+                            </tr>
+                            ))}
+                        </tbody>
+                        </Table>
+                    </>
+                    )}
+                </Modal.Body>
+                    <Modal.Footer><Button variant="secondary" onClick={() => setShowOppSW(false)}>Close</Button></Modal.Footer>
+                </Modal>
       </div>
 
       {/* Floating action for Venue modal hook (wired to card button) */}
