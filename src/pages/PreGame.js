@@ -203,17 +203,6 @@ export default function PreGame() {
       <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
 
-        <div
-          className="comparison-heading-wrapper mb-4 text-center"
-          style={{ backgroundColor: "#ffcc29", padding: 5, borderRadius: 10 }}
-        >
-          <h2 className="fw-bold display-4" style={{ color: "#1b5e20" }}>
-            Pre-game
-          </h2>
-        </div>
-
-        {error && <Alert variant="danger">{error}</Alert>}
-
         {/* Filters card (matches your style) */}
         <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="mb-4 shadow-sm">
           <Card.Body>
