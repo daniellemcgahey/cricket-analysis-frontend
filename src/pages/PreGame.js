@@ -1,206 +1,268 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
-import { Accordion, Form, Spinner, Alert, ButtonGroup, Button, Row, Col } from "react-bootstrap";
-import api from "../api";
+// src/pages/PreGame.js
+import React, { useEffect, useState, useContext } from "react";
+import { Row, Col, Card, Form, Button, Spinner, ButtonGroup } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
-import CoachPackHeaderRB from "../components/coaches/CoachPackHeaderRB";
-import DoDontPanelRB from "../components/coaches/DoDontPanelRB";
-import MatchupTableRB from "../components/coaches/MatchupTableRB";
-import KpiMedalGridRB from "../components/coaches/KpiMedalGridRB";
-import IntentBandChartRB from "../components/coaches/IntentBandChartRB";
+import api from "../api";
+
+const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
 export default function PreGame() {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
+  const cardVariant = isDarkMode ? "dark" : "light";
 
-  const [teamCategory, setTeamCategory] = useState("Women");
-  const [tournaments, setTournaments] = useState([]);
-  const [selectedTournament, setSelectedTournament] = useState("");
-  const [matches, setMatches] = useState([]);
-  const [selectedMatch, setSelectedMatch] = useState("");
-  const [ourTeamId, setOurTeamId] = useState(null);
-  const [opponentTeamId, setOpponentTeamId] = useState(null);
+  const [category, setCategory] = useState("Women"); // match your other pages’ default
+  const [countries, setCountries] = useState([]);    // [{country_id, country_name}]
+  const [ourTeam, setOurTeam] = useState("");
+  const [opponent, setOpponent] = useState("");
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [pack, setPack] = useState(null);
-  const [error, setError] = useState(null);
-
-  // ⚙️ bootstrap: same loaders you already use
+  // --- Load countries (simple; no schema change needed) ---
   useEffect(() => {
-    api.get("/tournaments").then(res => {
-      setTournaments(res.data || []);
-      setSelectedTournament("");
-      setSelectedMatch("");
-    });
-  }, [teamCategory]);
+    let mounted = true;
+    setLoadingCountries(true);
+    api.get("/countries", { params: { teamCategory: category } }) // backend can ignore filter if N/A
+      .then(res => {
+        if (!mounted) return;
+        const list = res.data || [];
+        setCountries(list);
 
-  useEffect(() => {
-    api.get("/matches", { params: { teamCategory } }).then(res => {
-      const filtered = selectedTournament
-        ? (res.data || []).filter(m => m.tournament === selectedTournament)
-        : (res.data || []);
-      setMatches(filtered);
-      setSelectedMatch("");
-    });
-  }, [teamCategory, selectedTournament]);
+        // pick "Brasil"/"Brazil" by default if present, else first
+        const defaultOur = list.find(c => /bra[sz]il/i.test(c.country_name)) || list[0];
+        setOurTeam(defaultOur ? defaultOur.country_id : "");
+        // default opponent: first not-ourTeam
+        const defaultOpp = list.find(c => defaultOur && c.country_id !== defaultOur.country_id) || list[1] || null;
+        setOpponent(defaultOpp ? defaultOpp.country_id : "");
+      })
+      .finally(() => setLoadingCountries(false));
+    return () => { mounted = false; };
+  }, [category]);
 
-  // when a match is chosen, capture team ids (assuming your /matches returns ids)
-  useEffect(() => {
-    const m = matches.find(x => String(x.match_id) === String(selectedMatch));
-    if (m) {
-      setOurTeamId(m.team_a_id);       // adjust if your payload uses different keys
-      setOpponentTeamId(m.team_b_id);
-    } else {
-      setOurTeamId(null);
-      setOpponentTeamId(null);
-    }
-  }, [selectedMatch, matches]);
+  const ourTeamObj = countries.find(c => c.country_id === (ourTeam || null));
+  const oppObj     = countries.find(c => c.country_id === (opponent || null));
 
-  const handleBuild = () => {
-    if (!selectedMatch || !ourTeamId || !opponentTeamId) {
-      alert("Please select match");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    fetch("/coach-pack", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        match_id: Number(selectedMatch),
-        our_team_id: ourTeamId,
-        opponent_team_id: opponentTeamId,
-        context: "pre",
-        top_n_matchups: 5,
-        min_balls_matchup: 12,
-      }),
-    })
-      .then(r => r.json())
-      .then(d => setPack(d))
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false));
+  // --- Helpers ---
+  const disabled = !ourTeam || !opponent || ourTeam === opponent || loadingCountries;
+
+  const openBlobInNewTab = (blob, filename = "report.pdf") => {
+    const url = window.URL.createObjectURL(blob);
+    // open a new tab for preview
+    window.open(url, "_blank", "noopener,noreferrer");
+    // also trigger a download (optional)
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => window.URL.revokeObjectURL(url), 5000);
   };
 
-  const intentByPhase = useMemo(() => {
-    if (!pack?.intent_bands) return { PP: [], MO: [], DO: [] };
-    const by = { PP: [], MO: [], DO: [] };
-    for (const r of pack.intent_bands) if (by[r.phase]) by[r.phase].push(r);
-    return by;
-  }, [pack]);
+  // --- ACTIONS (wire real endpoints here) ---
+
+  // Uses your existing /generate-game-plan-pdf
+  const handleGamePlanPDF = async () => {
+    if (disabled) return;
+    try {
+      setGenerating(true);
+      const payload = {
+        // Your backend expects GamePlanPayload:
+        // opponent_country, player_ids (optional), bowler_ids (optional)
+        opponent_country: oppObj?.country_name || "Unknown",
+        player_ids: [],   // let backend pick or keep empty
+        bowler_ids: []    // let backend pick or keep empty
+      };
+      const res = await api.post("/generate-game-plan-pdf", payload, { responseType: "blob" });
+      openBlobInNewTab(new Blob([res.data], { type: "application/pdf" }), "game_plan_sheet.pdf");
+    } catch (err) {
+      console.error("Game Plan PDF error", err);
+      alert("Could not generate Game Plan PDF yet.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleBowlingPlans = async () => {
+    // Example: call a JSON endpoint you’ll add, e.g. /pregame/bowling-plans
+    // const res = await api.get("/pregame/bowling-plans", { params: { category, our_team_id: ourTeam, opponent_id: opponent } });
+    alert("Bowling Plans: hook up your endpoint here.");
+  };
+
+  const handleBattingTargets = async () => {
+    // Example: /pregame/batting-targets
+    alert("Batting Targets: hook up your endpoint here.");
+  };
+
+  const handleVenueToss = async () => {
+    // Example: /pregame/venue-toss-insights?our_team_id&opponent_id
+    alert("Venue & Toss Insights: hook up your endpoint here.");
+  };
+
+  const handleStrengthsWeaknesses = async () => {
+    // Example: /pregame/opposition-sw
+    alert("Opposition Strengths/Weaknesses: hook up your endpoint here.");
+  };
+
+  const handleDoDonts = async () => {
+    // Example: /pregame/do-donts
+    alert("Do & Do Nots: hook up your endpoint here.");
+  };
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
+
         <div
           className="comparison-heading-wrapper mb-4 text-center"
           style={{ backgroundColor: "#ffcc29", padding: 5, borderRadius: 10 }}
         >
-          <h2 className="fw-bold display-4" style={{ color: "#1b5e20" }}>Pre-game</h2>
+          <h2 className="fw-bold display-4" style={{ color: "#1b5e20" }}>
+            Pre-game
+          </h2>
         </div>
 
-        <div className="row">
-          {/* LEFT: same Accordion filter column */}
-          <div className="col-md-3">
-            <Accordion alwaysOpen>
-              <Accordion.Item eventKey="0">
-                <Accordion.Header><h5 className="fw-bold m-0">Team Category</h5></Accordion.Header>
-                <Accordion.Body>
-                  <Form.Select value={teamCategory} onChange={(e)=>setTeamCategory(e.target.value)}>
-                    {["Men","Women","U19 Men","U19 Women","Training"].map(cat=>(
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </Form.Select>
-                </Accordion.Body>
-              </Accordion.Item>
+        {/* Filters row */}
+        <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="mb-4 shadow-sm">
+          <Card.Body>
+            <Row className="g-3 align-items-end">
+              <Col md={3}>
+                <Form.Label className="fw-bold">Category</Form.Label>
+                <Form.Select
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  disabled={loadingCountries}
+                >
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </Form.Select>
+              </Col>
 
-              <Accordion.Item eventKey="1">
-                <Accordion.Header><h5 className="fw-bold m-0">Tournament</h5></Accordion.Header>
-                <Accordion.Body>
-                  <Form.Select value={selectedTournament} onChange={(e)=>setSelectedTournament(e.target.value)} disabled={tournaments.length===0}>
-                    <option value="">Select Tournament</option>
-                    {tournaments.map((t,idx)=><option key={idx} value={t}>{t}</option>)}
-                  </Form.Select>
-                  {tournaments.length===0 && <small className="text-muted">No tournaments available</small>}
-                </Accordion.Body>
-              </Accordion.Item>
+              <Col md={4}>
+                <Form.Label className="fw-bold">Our Team</Form.Label>
+                <Form.Select
+                  value={ourTeam}
+                  onChange={e => setOurTeam(Number(e.target.value))}
+                  disabled={loadingCountries || !countries.length}
+                >
+                  <option value="">Select team</option>
+                  {countries.map(cty => (
+                    <option key={cty.country_id} value={cty.country_id}>
+                      {cty.country_name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
 
-              <Accordion.Item eventKey="2">
-                <Accordion.Header><h5 className="fw-bold m-0">Match</h5></Accordion.Header>
-                <Accordion.Body>
-                  <Form.Select value={selectedMatch} onChange={(e)=>setSelectedMatch(e.target.value)} disabled={matches.length===0}>
-                    <option value="">Select Match</option>
-                    {matches.map((m,idx)=>(
-                      <option key={idx} value={m.match_id}>
-                        {`${m.match_date} — ${m.team_a} vs ${m.team_b} (${m.tournament})`}
+              <Col md={4}>
+                <Form.Label className="fw-bold">Opposition</Form.Label>
+                <Form.Select
+                  value={opponent}
+                  onChange={e => setOpponent(Number(e.target.value))}
+                  disabled={loadingCountries || !countries.length}
+                >
+                  <option value="">Select opposition</option>
+                  {countries
+                    .filter(cty => !ourTeam || cty.country_id !== ourTeam)
+                    .map(cty => (
+                      <option key={cty.country_id} value={cty.country_id}>
+                        {cty.country_name}
                       </option>
                     ))}
-                  </Form.Select>
-                  {matches.length===0 && <small className="text-muted">No matches available</small>}
-                </Accordion.Body>
-              </Accordion.Item>
-            </Accordion>
+                </Form.Select>
+              </Col>
 
-            <div className="mt-3">
-              <button className="btn btn-primary w-100" onClick={handleBuild} disabled={loading}>
-                {loading ? <Spinner size="sm" animation="border" /> : "Build Pre-game Pack"}
-              </button>
-            </div>
-          </div>
+              <Col md={1} className="text-end">
+                {loadingCountries && <Spinner animation="border" size="sm" />}
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
-          {/* RIGHT: pack output */}
-          <div className="col-md-8">
-            {loading && <div className="text-center py-4"><Spinner animation="border" /></div>}
-            {error && <Alert variant="danger">{error}</Alert>}
-            {!loading && !pack && !error && <Alert variant="info">No pre-game data yet</Alert>}
+        {/* Main actions grid */}
+        <Row className="g-4">
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Game Plan (PDF)</Card.Title>
+                <Card.Text className="mb-3">
+                  Auto-compiled game plan sheet combining matchups & recommended zones.
+                </Card.Text>
+                <Button
+                  disabled={disabled || generating}
+                  onClick={handleGamePlanPDF}
+                >
+                  {generating ? <Spinner animation="border" size="sm" /> : "Generate PDF"}
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
 
-            {pack && (
-              <div className="d-flex flex-column gap-3">
-                <CoachPackHeaderRB ms={pack.match_summary} isDarkMode={isDarkMode} />
-                <DoDontPanelRB dos={pack.three_do} donts={pack.three_dont} isDarkMode={isDarkMode} />
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Bowling Plans</Card.Title>
+                <Card.Text className="mb-3">Best bowler types & zones vs their batters.</Card.Text>
+                <Button disabled={disabled} onClick={handleBowlingPlans}>Open</Button>
+              </Card.Body>
+            </Card>
+          </Col>
 
-                <Row className="g-3">
-                  <Col md={6}><MatchupTableRB title="Our batting (favorable)" rows={pack.favorable_batting} isDarkMode={isDarkMode} /></Col>
-                  <Col md={6}><MatchupTableRB title="Our bowling (favorable)" rows={pack.favorable_bowling} isDarkMode={isDarkMode} /></Col>
-                </Row>
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Batting Targets</Card.Title>
+                <Card.Text className="mb-3">Phase targets & risk/intent brief.</Card.Text>
+                <Button disabled={disabled} onClick={handleBattingTargets}>Open</Button>
+              </Card.Body>
+            </Card>
+          </Col>
 
-                <Row className="g-3">
-                  <Col md={4}><IntentBandChartRB title="PP Intent vs Outcome" rows={intentByPhase.PP} isDarkMode={isDarkMode} /></Col>
-                  <Col md={4}><IntentBandChartRB title="MO Intent vs Outcome" rows={intentByPhase.MO} isDarkMode={isDarkMode} /></Col>
-                  <Col md={4}><IntentBandChartRB title="DO Intent vs Outcome" rows={intentByPhase.DO} isDarkMode={isDarkMode} /></Col>
-                </Row>
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Venue & Toss Insights</Card.Title>
+                <Card.Text className="mb-3">Ground trends, chasing bias, toss choices.</Card.Text>
+                <Button disabled={disabled} onClick={handleVenueToss}>Open</Button>
+              </Card.Body>
+            </Card>
+          </Col>
 
-                <KpiMedalGridRB kpis={pack.kpis} isDarkMode={isDarkMode} />
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Opposition S/W</Card.Title>
+                <Card.Text className="mb-3">Strengths & weaknesses summary.</Card.Text>
+                <Button disabled={disabled} onClick={handleStrengthsWeaknesses}>Open</Button>
+              </Card.Body>
+            </Card>
+          </Col>
 
-                <div className="text-end">
-                  <ButtonGroup>
-                    <Button
-                      variant="success"
-                      onClick={()=>{
-                        fetch("/generate-coach-pack-pdf", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            match_id: Number(selectedMatch),
-                            our_team_id: ourTeamId,
-                            opponent_team_id: opponentTeamId,
-                            context: "pre"
-                          }),
-                        }).then(async (r)=>{
-                          const blob = await r.blob();
-                          const url = URL.createObjectURL(blob);
-                          window.open(url, "_blank");
-                        });
-                      }}
-                    >
-                      Print Coach Pack PDF
-                    </Button>
-                  </ButtonGroup>
-                </div>
-              </div>
-            )}
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Do & Do Nots</Card.Title>
+                <Card.Text className="mb-3">One-page actionable rules.</Card.Text>
+                <Button disabled={disabled} onClick={handleDoDonts}>Open</Button>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
 
-          </div>
+        {/* (Optionally) show current selections */}
+        <div className="text-center mt-4 small">
+          <ButtonGroup>
+            <Button variant="outline-secondary" size="sm" disabled>
+              Category: {category}
+            </Button>
+            <Button variant="outline-secondary" size="sm" disabled>
+              Us: {ourTeamObj?.country_name || "—"}
+            </Button>
+            <Button variant="outline-secondary" size="sm" disabled>
+              Opp: {oppObj?.country_name || "—"}
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
     </div>
