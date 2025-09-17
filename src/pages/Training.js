@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
-import DarkModeContext from "../../DarkModeContext";
-import BackButton from "../../components/BackButton";
+import DarkModeContext from "../DarkModeContext";
+import BackButton from "../components/BackButton";
 
 export default function Training() {
   const { isDarkMode } = useContext(DarkModeContext);

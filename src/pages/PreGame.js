@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
 import { Accordion, Form, Spinner, Alert, ButtonGroup, Button, Row, Col } from "react-bootstrap";
-import api from "../../api";
-import DarkModeContext from "../../DarkModeContext";
-import BackButton from "../../components/BackButton";
-import CoachPackHeaderRB from "../../components/coaches/CoachPackHeaderRB";
-import DoDontPanelRB from "../../components/coaches/DoDontPanelRB";
-import MatchupTableRB from "../../components/coaches/MatchupTableRB";
-import KpiMedalGridRB from "../../components/coaches/KpiMedalGridRB";
-import IntentBandChartRB from "../../components/coaches/IntentBandChartRB";
+import api from "../api";
+import DarkModeContext from "../DarkModeContext";
+import BackButton from "../components/BackButton";
+import CoachPackHeaderRB from "../components/coaches/CoachPackHeaderRB";
+import DoDontPanelRB from "../components/coaches/DoDontPanelRB";
+import MatchupTableRB from "../components/coaches/MatchupTableRB";
+import KpiMedalGridRB from "../components/coaches/KpiMedalGridRB";
+import IntentBandChartRB from "../components/coaches/IntentBandChartRB";
 
 export default function PreGame() {
   const { isDarkMode } = useContext(DarkModeContext);

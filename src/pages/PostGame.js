@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Accordion, Form, Spinner, Alert } from "react-bootstrap";
-import api from "../../api";
-import DarkModeContext from "../../DarkModeContext";
-import BackButton from "../../components/BackButton";
-import CoachPackHeaderRB from "../../components/coaches/CoachPackHeaderRB";
-import KpiMedalGridRB from "../../components/coaches/KpiMedalGridRB";
-import DoDontPanelRB from "../../components/coaches/DoDontPanelRB";
-import MatchupTableRB from "../../components/coaches/MatchupTableRB";
+import api from "../api";
+import DarkModeContext from "../DarkModeContext";
+import BackButton from "../components/BackButton";
+import CoachPackHeaderRB from "../components/coaches/CoachPackHeaderRB";
+import KpiMedalGridRB from "../components/coaches/KpiMedalGridRB";
+import DoDontPanelRB from "../components/coaches/DoDontPanelRB";
+import MatchupTableRB from "../components/coaches/MatchupTableRB";
 
 export default function PostGame() {
   const { isDarkMode } = useContext(DarkModeContext);
