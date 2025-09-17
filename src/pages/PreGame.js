@@ -45,6 +45,11 @@ export default function PreGame() {
   const [venueError, setVenueError] = useState("");
   const [venueInsights, setVenueInsights] = useState(null);
 
+  const [showKeyOppModal, setShowKeyOppModal] = useState(false);
+  const [keyOppLoading, setKeyOppLoading] = useState(false);
+  const [keyOppError, setKeyOppError] = useState("");
+  const [keyOppData, setKeyOppData] = useState({ batters: [], bowlers: [] });
+
   // -------- Helpers --------
   const pickBrazil = (list) => list.find(n => /bra[sz]il/i.test(n)) || null;
   const disabledCore = !ourTeam || !opponent || ourTeam === opponent;
@@ -198,6 +203,25 @@ export default function PreGame() {
     }
   };
 
+  const fetchKeyOppositionPlayers = async () => {
+    setKeyOppError("");
+    setKeyOppLoading(true);
+    try {
+        const res = await api.post("/opposition-key-players", {
+        team_category: category,
+        opponent_country: opponent,
+        // min_balls: 60,
+        // min_overs: 10
+        });
+        setKeyOppData(res.data || { batters: [], bowlers: [] });
+    } catch (e) {
+        console.error(e);
+        setKeyOppError("Failed to load key opposition players.");
+    } finally {
+        setKeyOppLoading(false);
+    }
+    };
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -276,18 +300,20 @@ export default function PreGame() {
             </Card>
           </Col>
 
-          {/* Bowling Plans */}
-          <Col md={4}>
+            {/* Key Opposition Players */}
+            <Col md={4}>
             <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Bowling Plans</Card.Title>
+                <Card.Body>
+                <Card.Title className="fw-bold">Key Opposition Players</Card.Title>
                 <Card.Text className="mb-3">
-                  Best bowler types & zones vs their batters.
+                    Top 3 with the bat (SR/Avg) & ball (Wkts/Econ).
                 </Card.Text>
-                <Button disabled={disabledCore}>Open</Button>
-              </Card.Body>
+                <Button disabled={disabledCore || loadingSquads} onClick={() => setShowKeyOppModal(true)}>
+                    Show Players
+                </Button>
+                </Card.Body>
             </Card>
-          </Col>
+            </Col>
 
           {/* Batting Targets */}
           <Col md={4}>
@@ -549,6 +575,84 @@ export default function PreGame() {
             <Button variant="secondary" onClick={closeVenueModal}>Close</Button>
           </Modal.Footer>
         </Modal>
+
+        <Modal
+            show={showKeyOppModal}
+            onShow={fetchKeyOppositionPlayers}
+            onHide={() => setShowKeyOppModal(false)}
+            size="lg"
+            centered
+            >
+            <Modal.Header closeButton>
+                <Modal.Title>Key Opposition Players</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                {keyOppError && <Alert variant="danger" className="mb-2">{keyOppError}</Alert>}
+
+                {keyOppLoading ? (
+                <div className="d-flex justify-content-center"><Spinner animation="border" /></div>
+                ) : (
+                <>
+                    <h6 className="fw-bold mb-2">Top Batters (Strike Rate • Average)</h6>
+                    <Table size="sm" bordered responsive className="mb-4">
+                    <thead>
+                        <tr>
+                        <th>Player</th>
+                        <th>Runs</th>
+                        <th>Balls</th>
+                        <th>SR</th>
+                        <th>Avg</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {keyOppData.batters.map(b => (
+                        <tr key={b.player_id}>
+                            <td>{b.player_name}</td>
+                            <td>{b.runs}</td>
+                            <td>{b.balls_faced}</td>
+                            <td>{b.strike_rate ?? "—"}</td>
+                            <td>{b.average ?? "—"}</td>
+                        </tr>
+                        ))}
+                        {keyOppData.batters.length === 0 && (
+                        <tr><td colSpan="5" className="text-muted text-center">No qualified batters</td></tr>
+                        )}
+                    </tbody>
+                    </Table>
+
+                    <h6 className="fw-bold mb-2">Top Bowlers (Wickets • Economy)</h6>
+                    <Table size="sm" bordered responsive>
+                    <thead>
+                        <tr>
+                        <th>Player</th>
+                        <th>Overs</th>
+                        <th>Runs</th>
+                        <th>Wkts</th>
+                        <th>Eco</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {keyOppData.bowlers.map(bw => (
+                        <tr key={bw.player_id}>
+                            <td>{bw.player_name}</td>
+                            <td>{bw.overs}</td>
+                            <td>{bw.runs_conceded}</td>
+                            <td>{bw.wickets}</td>
+                            <td>{bw.economy ?? "—"}</td>
+                        </tr>
+                        ))}
+                        {keyOppData.bowlers.length === 0 && (
+                        <tr><td colSpan="5" className="text-muted text-center">No qualified bowlers</td></tr>
+                        )}
+                    </tbody>
+                    </Table>
+                </>
+                )}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => setShowKeyOppModal(false)}>Close</Button>
+            </Modal.Footer>
+            </Modal>
       </div>
 
       {/* Floating action for Venue modal hook (wired to card button) */}
