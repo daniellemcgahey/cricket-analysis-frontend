@@ -4,9 +4,9 @@ import { Tabs, Tab } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
 
-import PreGame from "./coaches/PreGame";
-import PostGame from "./coaches/PostGame";
-import Training from "./coaches/Training";
+import PreGame from "./PreGame";
+import PostGame from "./PostGame";
+import Training from "./Training";
 
 import "./TabStyles.css"; // keep your custom tab styling
 
