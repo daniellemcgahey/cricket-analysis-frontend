@@ -82,12 +82,7 @@ export default function PostGame() {
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
-        <div
-          className="comparison-heading-wrapper mb-4 text-center"
-          style={{ backgroundColor: "#ffcc29", padding: 5, borderRadius: 10 }}
-        >
-          <h2 className="fw-bold display-4" style={{ color: "#1b5e20" }}>Post-game</h2>
-        </div>
+
 
         <div className="row">
           <div className="col-md-3">
