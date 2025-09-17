@@ -28,20 +28,6 @@ export default function CoachesHub() {
             Coaches Hub
           </h2>
         </div>
-
-        <Row className="g-4">
-          {items.map((item) => (
-            <Col key={item.title} md={4}>
-              <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-                <Card.Body>
-                  <Card.Title className="fw-bold">{item.title}</Card.Title>
-                  <Card.Text className="mb-3">{item.desc}</Card.Text>
-                  <Link className="btn btn-primary" to={item.href}>Open</Link>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))}
-        </Row>
       </div>
     </div>
   );
