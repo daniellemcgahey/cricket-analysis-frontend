@@ -1,6 +1,5 @@
-// src/pages/PreGame.js
 import React, { useEffect, useState, useContext } from "react";
-import { Row, Col, Card, Form, Button, Spinner, ButtonGroup } from "react-bootstrap";
+import { Row, Col, Card, Form, Button, Spinner, Accordion, Alert } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
 import api from "../api";
@@ -12,24 +11,39 @@ export default function PreGame() {
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
   const cardVariant = isDarkMode ? "dark" : "light";
 
+  // filters
   const [category, setCategory] = useState("Women");
-  const [countries, setCountries] = useState([]);       // string[]
-  const [ourTeam, setOurTeam] = useState("");           // string country name
-  const [opponent, setOpponent] = useState("");         // string country name
+  const [countries, setCountries] = useState([]); // string[]
+  const [ourTeam, setOurTeam] = useState("");
+  const [opponent, setOpponent] = useState("");
+
+  // datasets
+  const [opponentPlayers, setOpponentPlayers] = useState([]); // [{id, name, ...}]
+  const [brasilBowlers, setBrasilBowlers] = useState([]);     // [{id, name, bowling_arm, bowling_style}]
+
+  // selections
+  const [selectedBatters, setSelectedBatters] = useState([]);
+  const [selectedBrasilBowlers, setSelectedBrasilBowlers] = useState([]);
+
+  // ui
   const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
 
-  // find a “Brazil/ Brasil” match (case-insensitive)
-  const pickBrazil = (list) =>
-    list.find(n => /bra[sz]il/i.test(n)) || null;
+  // convenience
+  const disabledCore = !ourTeam || !opponent || ourTeam === opponent;
+  const pickBrazil = (list) => list.find(n => /bra[sz]il/i.test(n)) || null;
 
+  // --- load countries by category (names only) ---
   useEffect(() => {
     let mounted = true;
     setLoadingCountries(true);
+    setError("");
     api.get("/countries", { params: { teamCategory: category } })
       .then(res => {
         if (!mounted) return;
-        const list = Array.isArray(res.data) ? res.data : [];
+        const list = Array.isArray(res.data) ? Array.from(new Set(res.data)) : [];
         setCountries(list);
 
         const defaultOur = pickBrazil(list) || list[0] || "";
@@ -38,63 +52,77 @@ export default function PreGame() {
         const defaultOpp = list.find(n => n !== defaultOur) || list[1] || "";
         setOpponent(defaultOpp);
       })
+      .catch(() => setError("Could not load countries"))
       .finally(() => setLoadingCountries(false));
     return () => { mounted = false; };
   }, [category]);
 
-  const disabled = !ourTeam || !opponent || ourTeam === opponent || loadingCountries;
+  // --- load opponent players when opponent changes ---
+  useEffect(() => {
+    setOpponentPlayers([]);
+    setSelectedBatters([]);
+    if (!opponent) return;
+    setLoadingPlayers(true);
+    setError("");
+    api.get("/team-players", { params: { country_name: opponent, team_category: category } })
+      .then(res => setOpponentPlayers(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setError("Could not load opponent players"))
+      .finally(() => setLoadingPlayers(false));
+  }, [opponent, category]);
 
-  const openBlobInNewTab = (blob, filename = "report.pdf") => {
+  // --- load Brasil bowlers list using the same /team-players endpoint ---
+  useEffect(() => {
+    setBrasilBowlers([]);
+    setSelectedBrasilBowlers([]);
+    if (!ourTeam) return;
+    setLoadingPlayers(true);
+    setError("");
+    api.get("/team-players", { params: { country_name: ourTeam, team_category: category } })
+      .then(res => {
+        const all = Array.isArray(res.data) ? res.data : [];
+        const bowlers = all.filter(p => p.bowling_style); // same as your old page
+        setBrasilBowlers(bowlers);
+      })
+      .catch(() => setError("Could not load our bowlers"))
+      .finally(() => setLoadingPlayers(false));
+  }, [ourTeam, category]);
+
+  const openBlobInNewTab = (blob, filename = "game_plan_sheet.pdf") => {
     const url = window.URL.createObjectURL(blob);
     window.open(url, "_blank", "noopener,noreferrer");
-    const a = document.createElement("a");
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => window.URL.revokeObjectURL(url), 4000);
+    setTimeout(() => window.URL.revokeObjectURL(url), 5000);
   };
 
-  // Actions
-
-  const handleGamePlanPDF = async () => {
-    if (disabled) return;
+  // --- generate pdf with your existing backend endpoint ---
+  const handleGenerateGamePlanPDF = async () => {
+    if (disabledCore) {
+      alert("Please pick category, our team and a different opponent.");
+      return;
+    }
+    if (selectedBatters.length === 0) {
+      alert("Select at least one opposition batter.");
+      return;
+    }
+    if (selectedBrasilBowlers.length === 0) {
+      alert("Select at least one of our bowlers.");
+      return;
+    }
     try {
       setGenerating(true);
       const payload = {
-        // your backend expects a name here:
-        opponent_country: opponent,
-        // optional fields; keep empty for now:
-        player_ids: [],
-        bowler_ids: []
+        opponent_country: opponent,      // string (your endpoint already expects this)
+        player_ids: selectedBatters,     // array of ids
+        bowler_ids: selectedBrasilBowlers, // array of ids
+        team_category: category          // included because your older page sent it
       };
       const res = await api.post("/generate-game-plan-pdf", payload, { responseType: "blob" });
-      openBlobInNewTab(new Blob([res.data], { type: "application/pdf" }), "game_plan_sheet.pdf");
+      openBlobInNewTab(new Blob([res.data], { type: "application/pdf" }));
     } catch (e) {
       console.error(e);
       alert("Could not generate Game Plan PDF.");
     } finally {
       setGenerating(false);
     }
-  };
-
-  const handleBowlingPlans = async () => {
-    // Example (adjust your backend to accept names if/when you add this endpoint):
-    // await api.get("/pregame/bowling-plans", { params: { category, our_team: ourTeam, opponent } });
-    alert(`Bowling Plans for ${ourTeam} vs ${opponent} — wire endpoint here`);
-  };
-
-  const handleBattingTargets = async () => {
-    alert(`Batting Targets for ${ourTeam} vs ${opponent} — wire endpoint here`);
-  };
-
-  const handleVenueToss = async () => {
-    alert(`Venue & Toss Insights for ${ourTeam} vs ${opponent} — wire endpoint here`);
-  };
-
-  const handleStrengthsWeaknesses = async () => {
-    alert(`Opposition S/W for ${opponent} — wire endpoint here`);
-  };
-
-  const handleDoDonts = async () => {
-    alert(`Do & Do Nots for ${ourTeam} vs ${opponent} — wire endpoint here`);
   };
 
   return (
@@ -111,6 +139,9 @@ export default function PreGame() {
           </h2>
         </div>
 
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        {/* Filters */}
         <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="mb-4 shadow-sm">
           <Card.Body>
             <Row className="g-3 align-items-end">
@@ -124,7 +155,6 @@ export default function PreGame() {
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </Form.Select>
               </Col>
-
               <Col md={4}>
                 <Form.Label className="fw-bold">Our Team</Form.Label>
                 <Form.Select
@@ -138,7 +168,6 @@ export default function PreGame() {
                   ))}
                 </Form.Select>
               </Col>
-
               <Col md={4}>
                 <Form.Label className="fw-bold">Opposition</Form.Label>
                 <Form.Select
@@ -147,93 +176,113 @@ export default function PreGame() {
                   disabled={loadingCountries || !countries.length}
                 >
                   <option value="">Select opposition</option>
-                  {countries
-                    .filter(name => !ourTeam || name !== ourTeam)
-                    .map(name => (
-                      <option key={name} value={name}>{name}</option>
-                    ))}
+                  {countries.filter(n => !ourTeam || n !== ourTeam).map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
                 </Form.Select>
               </Col>
-
               <Col md={1} className="text-end">
-                {loadingCountries && <Spinner animation="border" size="sm" />}
+                {(loadingCountries || loadingPlayers) && <Spinner animation="border" size="sm" />}
               </Col>
             </Row>
           </Card.Body>
         </Card>
 
+        {/* Selectors */}
         <Row className="g-4">
-          <Col md={4}>
+          <Col md={6}>
             <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
               <Card.Body>
-                <Card.Title className="fw-bold">Game Plan (PDF)</Card.Title>
-                <Card.Text className="mb-3">
-                  Auto-compiled plan with matchups & recommended zones.
-                </Card.Text>
-                <Button disabled={disabled || generating} onClick={handleGamePlanPDF}>
-                  {generating ? <Spinner animation="border" size="sm" /> : "Generate PDF"}
-                </Button>
+                <Card.Title className="fw-bold">Select Opposition Batters</Card.Title>
+                <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                  {opponentPlayers.length === 0 ? (
+                    <div className="text-muted">{loadingPlayers ? "Loading..." : "No opponent players yet"}</div>
+                  ) : (
+                    opponentPlayers.map(p => (
+                      <Form.Check
+                        key={p.id}
+                        type="checkbox"
+                        label={p.name}
+                        checked={selectedBatters.includes(p.id)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedBatters(prev => [...prev, p.id]);
+                          } else {
+                            setSelectedBatters(prev => prev.filter(id => id !== p.id));
+                          }
+                        }}
+                      />
+                    ))
+                  )}
+                </div>
+                {opponentPlayers.length > 0 && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedBatters(prev => prev.length === opponentPlayers.length ? [] : opponentPlayers.map(p => p.id))
+                      }
+                    >
+                      {selectedBatters.length === opponentPlayers.length ? "Clear All" : "Select All"}
+                    </Button>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
 
-          <Col md={4}>
+          <Col md={6}>
             <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
               <Card.Body>
-                <Card.Title className="fw-bold">Bowling Plans</Card.Title>
-                <Card.Text className="mb-3">Best bowler types & zones vs their batters.</Card.Text>
-                <Button disabled={disabled} onClick={handleBowlingPlans}>Open</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Batting Targets</Card.Title>
-                <Card.Text className="mb-3">Phase targets & risk/intent brief.</Card.Text>
-                <Button disabled={disabled} onClick={handleBattingTargets}>Open</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Venue & Toss Insights</Card.Title>
-                <Card.Text className="mb-3">Ground trends, chasing bias, toss choices.</Card.Text>
-                <Button disabled={disabled} onClick={handleVenueToss}>Open</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Opposition S/W</Card.Title>
-                <Card.Text className="mb-3">Strengths & weaknesses summary.</Card.Text>
-                <Button disabled={disabled} onClick={handleStrengthsWeaknesses}>Open</Button>
-              </Card.Body>
-            </Card>
-          </Col>
-
-          <Col md={4}>
-            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Do & Do Nots</Card.Title>
-                <Card.Text className="mb-3">One-page actionable rules.</Card.Text>
-                <Button disabled={disabled} onClick={handleDoDonts}>Open</Button>
+                <Card.Title className="fw-bold">Select Our Bowlers (Brasil)</Card.Title>
+                <div style={{ maxHeight: 320, overflowY: "auto" }}>
+                  {brasilBowlers.length === 0 ? (
+                    <div className="text-muted">{loadingPlayers ? "Loading..." : "No bowlers found"}</div>
+                  ) : (
+                    brasilBowlers.map(b => (
+                      <Form.Check
+                        key={b.id}
+                        type="checkbox"
+                        label={`${b.name}${b.bowling_style ? ` — ${b.bowling_style} (${b.bowling_arm})` : ""}`}
+                        checked={selectedBrasilBowlers.includes(b.id)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedBrasilBowlers(prev => [...prev, b.id]);
+                          } else {
+                            setSelectedBrasilBowlers(prev => prev.filter(id => id !== b.id));
+                          }
+                        }}
+                      />
+                    ))
+                  )}
+                </div>
+                {brasilBowlers.length > 0 && (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedBrasilBowlers(prev => prev.length === brasilBowlers.length ? [] : brasilBowlers.map(p => p.id))
+                      }
+                    >
+                      {selectedBrasilBowlers.length === brasilBowlers.length ? "Clear All" : "Select All"}
+                    </Button>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           </Col>
         </Row>
 
-        <div className="text-center mt-4 small">
-          <ButtonGroup>
-            <Button variant="outline-secondary" size="sm" disabled>Category: {category}</Button>
-            <Button variant="outline-secondary" size="sm" disabled>Us: {ourTeam || "—"}</Button>
-            <Button variant="outline-secondary" size="sm" disabled>Opp: {opponent || "—"}</Button>
-          </ButtonGroup>
+        {/* Action */}
+        <div className="mt-4">
+          <Button
+            disabled={disabledCore || generating || selectedBatters.length === 0 || selectedBrasilBowlers.length === 0}
+            onClick={handleGenerateGamePlanPDF}
+          >
+            {generating ? <Spinner animation="border" size="sm" /> : "Generate Game Plan PDF"}
+          </Button>
         </div>
       </div>
     </div>
