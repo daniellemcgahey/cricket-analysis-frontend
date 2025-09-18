@@ -1,7 +1,7 @@
 // src/pages/PreGame.js
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import {
-  Row, Col, Card, Form, Button, Spinner, Alert, Modal, Accordion, Table,
+  Row, Col, Card, Badge, Form, Button, Spinner, Alert, Modal, Accordion, Table,
 } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
