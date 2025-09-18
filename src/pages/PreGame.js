@@ -56,6 +56,21 @@ export default function PreGame() {
   const [swData, setSwData] = useState(null);
   const [swErr, setSwErr] = useState("");
 
+  // -------- Batting Targets Modal --------
+const [showTargetsModal, setShowTargetsModal] = useState(false);
+const [targetsLoading, setTargetsLoading] = useState(false);
+const [targetsError, setTargetsError] = useState("");
+const [targetsData, setTargetsData] = useState(null);
+
+const [targetsVenueOptions, setTargetsVenueOptions] = useState({ grounds: [], times: [] });
+const [targetsGround, setTargetsGround] = useState("");
+const [targetsTime, setTargetsTime] = useState("");
+const [targetsVenueLoading, setTargetsVenueLoading] = useState(false);
+
+// optional knobs
+const [includeRain, setIncludeRain] = useState(false);
+const [recencyDays, setRecencyDays] = useState(720);
+
   // -------- Helpers --------
   const pickBrazil = (list) => list.find(n => /bra[sz]il/i.test(n)) || null;
   const disabledCore = !ourTeam || !opponent || ourTeam === opponent;
@@ -244,6 +259,59 @@ export default function PreGame() {
         }
     };
 
+    const openTargetsModal = async () => {
+  if (disabledCore) {
+    alert("Please choose category, our team, and a different opponent.");
+    return;
+  }
+  setShowTargetsModal(true);
+  setTargetsError("");
+  setTargetsData(null);
+  setTargetsVenueLoading(true);
+  try {
+    const res = await api.get("/venue-options"); // you can pass ?tournament= later
+    const opts = res.data || { grounds: [], times: [] };
+    setTargetsVenueOptions(opts);
+    setTargetsGround(opts.grounds[0] || "");
+    setTargetsTime(""); // default “Any”
+  } catch (e) {
+    setTargetsError("Failed to load venues.");
+  } finally {
+    setTargetsVenueLoading(false);
+  }
+};
+
+const closeTargetsModal = () => setShowTargetsModal(false);
+
+const fetchBattingTargets = async () => {
+  if (!targetsGround) {
+    alert("Please select a ground.");
+    return;
+  }
+  setTargetsLoading(true);
+  setTargetsError("");
+  setTargetsData(null);
+  try {
+    const res = await api.get("/batting-targets-advanced", {
+      params: {
+        team_category: category,
+        our_team: ourTeam,
+        opponent_country: opponent,
+        ground: targetsGround,
+        time_of_day: targetsTime || undefined,
+        recency_days: recencyDays,
+        include_rain: includeRain
+      }
+    });
+    setTargetsData(res.data);
+  } catch (e) {
+    console.error(e);
+    setTargetsError("Could not compute batting targets.");
+  } finally {
+    setTargetsLoading(false);
+  }
+};
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -345,7 +413,7 @@ export default function PreGame() {
                 <Card.Text className="mb-3">
                   Phase targets & risk/intent brief.
                 </Card.Text>
-                <Button disabled={disabledCore}>Open</Button>
+                <Button disabled={disabledCore} onClick={openTargetsModal}>Open</Button>
               </Card.Body>
             </Card>
           </Col>
@@ -748,6 +816,135 @@ export default function PreGame() {
                 </Modal.Body>
                     <Modal.Footer><Button variant="secondary" onClick={() => setShowOppSW(false)}>Close</Button></Modal.Footer>
                 </Modal>
+
+                <Modal show={showTargetsModal} onHide={closeTargetsModal} centered>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Batting Targets — Venue & Opponent Adjusted</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {targetsError && <Alert variant="danger" className="mb-2">{targetsError}</Alert>}
+
+                        {/* Venue pickers */}
+                        <Form.Group className="mb-3">
+                        <Form.Label className="fw-bold">Ground</Form.Label>
+                        {targetsVenueLoading ? (
+                            <div><Spinner animation="border" size="sm" /></div>
+                        ) : (
+                            <Form.Select
+                            value={targetsGround}
+                            onChange={e => setTargetsGround(e.target.value)}
+                            >
+                            {targetsVenueOptions.grounds.map(g => (
+                                <option key={g} value={g}>{g}</option>
+                            ))}
+                            </Form.Select>
+                        )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                        <Form.Label className="fw-bold">Time of Day (optional)</Form.Label>
+                        <Form.Select
+                            value={targetsTime}
+                            onChange={e => setTargetsTime(e.target.value)}
+                        >
+                            <option value="">Any</option>
+                            {targetsVenueOptions.times.map(t => (
+                            <option key={t} value={t}>{t}</option>
+                            ))}
+                        </Form.Select>
+                        </Form.Group>
+
+                        {/* Optional knobs */}
+                        <Row className="g-2">
+                        <Col md={6}>
+                            <Form.Group className="mb-3">
+                            <Form.Label className="fw-bold">Recency Window (days)</Form.Label>
+                            <Form.Control
+                                type="number"
+                                min={90}
+                                step={30}
+                                value={recencyDays}
+                                onChange={e => setRecencyDays(Number(e.target.value))}
+                            />
+                            </Form.Group>
+                        </Col>
+                        <Col md={6} className="d-flex align-items-end">
+                            <Form.Check
+                            type="switch"
+                            id="include-rain"
+                            label="Include rain/DLS"
+                            checked={includeRain}
+                            onChange={e => setIncludeRain(e.target.checked)}
+                            />
+                        </Col>
+                        </Row>
+
+                        <div className="d-flex justify-content-end">
+                        <Button onClick={fetchBattingTargets} disabled={targetsVenueLoading || targetsLoading || !targetsGround}>
+                            {targetsLoading ? <Spinner size="sm" animation="border" /> : "Compute Targets"}
+                        </Button>
+                        </div>
+
+                        {/* Results */}
+                        {targetsData && (
+                        <Card className="mt-3">
+                            <Card.Body>
+                            <h6 className="fw-bold mb-2">
+                                {targetsData.venue.ground}{targetsData.venue.time_of_day ? `, ${targetsData.venue.time_of_day}` : ""}
+                            </h6>
+
+                            <Table size="sm" bordered responsive className="mb-3">
+                                <tbody>
+                                <tr>
+                                    <td><strong>Venue par (eq. 20 overs)</strong></td>
+                                    <td>{targetsData.par.venue_par ?? "—"}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Adjusted par (opponent & us)</strong></td>
+                                    <td>{targetsData.par.adjusted_par}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Target total (+10% buffer)</strong></td>
+                                    <td className="fw-bold">{targetsData.par.target_total}</td>
+                                </tr>
+                                </tbody>
+                            </Table>
+
+                            <h6 className="fw-bold">Phase Targets</h6>
+                            <Table size="sm" bordered responsive>
+                                <thead>
+                                <tr>
+                                    <th>Phase</th>
+                                    <th>Overs</th>
+                                    <th>Runs</th>
+                                    <th>RPO</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {targetsData.phases.map(p => (
+                                    <tr key={p.phase}>
+                                    <td>{p.phase}</td>
+                                    <td>{p.overs}</td>
+                                    <td>{p.runs}</td>
+                                    <td>{p.rpo}</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </Table>
+
+                            {!!(targetsData.notes && targetsData.notes.length) && (
+                                <div className="small text-muted mt-2">
+                                {targetsData.notes.map((n,i) => <div key={i}>• {n}</div>)}
+                                </div>
+                            )}
+                            </Card.Body>
+                        </Card>
+                        )}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={closeTargetsModal}>Close</Button>
+                    </Modal.Footer>
+                    </Modal>
       </div>
 
       {/* Floating action for Venue modal hook (wired to card button) */}
