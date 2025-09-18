@@ -71,6 +71,22 @@ const [targetsVenueLoading, setTargetsVenueLoading] = useState(false);
 const [includeRain, setIncludeRain] = useState(false);
 const [recencyDays, setRecencyDays] = useState(720);
 
+// ✅ Do & Don’ts modal state
+const [showDoDont, setShowDoDont] = useState(false);
+const [ddLoading, setDdLoading] = useState(false);
+const [ddErr, setDdErr] = useState("");
+const [ddData, setDdData] = useState(null);
+
+// optional: venue scoping inside the modal
+const [ddGround, setDdGround] = useState("");
+const [ddTime, setDdTime] = useState("");
+const [ddVenueOptions, setDdVenueOptions] = useState({ grounds: [], times: [] });
+const [ddVenueLoading, setDdVenueLoading] = useState(false);
+
+// thresholds (tweak if you like)
+const [ddMinBallsStyle, setDdMinBallsStyle] = useState(120);
+const [ddMinBallsDeath, setDdMinBallsDeath] = useState(60);
+
   // -------- Helpers --------
   const pickBrazil = (list) => list.find(n => /bra[sz]il/i.test(n)) || null;
   const disabledCore = !ourTeam || !opponent || ourTeam === opponent;
@@ -144,6 +160,11 @@ const [recencyDays, setRecencyDays] = useState(720);
     setShowPlanModal(true);
   };
   const closePlanModal = () => setShowPlanModal(false);
+
+    // helper for pill labels
+    const PhasePill = ({ text }) => (
+    <Badge bg="secondary" className="ms-2">{text}</Badge>
+    );
 
   const generateGamePlanPDF = async () => {
     if (selectedBatters.length === 0) {
@@ -312,6 +333,58 @@ const fetchBattingTargets = async () => {
   }
 };
 
+const openDoDontModal = async () => {
+  if (!ourTeam || !opponent || ourTeam === opponent) {
+    alert("Select category, our team, and a different opponent first.");
+    return;
+  }
+  setShowDoDont(true);
+  setDdErr("");
+  setDdData(null);
+
+  // pull venue options for optional scoping
+  try {
+    setDdVenueLoading(true);
+    const res = await api.get("/venue-options"); // optional tournament param if you wire it
+    const opts = res.data || { grounds: [], times: [] };
+    setDdVenueOptions(opts);
+    if (!ddGround && opts.grounds?.length) setDdGround(opts.grounds[0]);
+    if (!ddTime && opts.times?.length) setDdTime(""); // default to Any
+  } catch {
+    // silent fail is ok; venue scoping is optional
+  } finally {
+    setDdVenueLoading(false);
+  }
+
+  // initial fetch
+  fetchDoDonts({ ground: ddGround, time_of_day: ddTime });
+};
+
+const fetchDoDonts = async ({ ground, time_of_day } = {}) => {
+  setDdLoading(true);
+  setDdErr("");
+  setDdData(null);
+  try {
+    const payload = {
+      team_category: category,
+      our_team: ourTeam,
+      opponent_country: opponent,
+      min_balls_by_style: ddMinBallsStyle,
+      min_balls_death_phase: ddMinBallsDeath,
+      // optional venue scope:
+      ground: ground || undefined,
+      time_of_day: time_of_day || undefined,
+    };
+    const res = await api.post("/do-donts", payload);
+    setDdData(res.data);
+  } catch (e) {
+    console.error(e);
+    setDdErr("Failed to load Do & Don’ts.");
+  } finally {
+    setDdLoading(false);
+  }
+};
+
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="container-fluid py-4">
@@ -443,17 +516,19 @@ const fetchBattingTargets = async () => {
             </Col>
 
           {/* Do & Do Nots */}
-          <Col md={4}>
+            <Col md={4}>
             <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
-              <Card.Body>
-                <Card.Title className="fw-bold">Do & Do Nots</Card.Title>
+                <Card.Body>
+                <Card.Title className="fw-bold">Do & Don’ts</Card.Title>
                 <Card.Text className="mb-3">
-                  One-page actionable rules.
+                    Data-driven coaching cues tailored to opponent & venue.
                 </Card.Text>
-                <Button disabled={disabledCore}>Open</Button>
-              </Card.Body>
+                <Button disabled={!ourTeam || !opponent || ourTeam === opponent} onClick={openDoDontModal}>
+                    Open
+                </Button>
+                </Card.Body>
             </Card>
-          </Col>
+            </Col>
         </Row>
 
         {/* ---------------- Game Plan Modal ---------------- */}
@@ -945,6 +1020,209 @@ const fetchBattingTargets = async () => {
                         <Button variant="secondary" onClick={closeTargetsModal}>Close</Button>
                     </Modal.Footer>
                     </Modal>
+
+                    <Modal show={showDoDont} onHide={() => setShowDoDont(false)} size="lg" centered>
+                        <Modal.Header closeButton>
+                            <Modal.Title>Do & Don’ts</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                            {/* Optional scoping controls */}
+                            <Card className="mb-3">
+                            <Card.Body>
+                                <Row className="g-3 align-items-end">
+                                <Col md={5}>
+                                    <Form.Label className="fw-bold">Ground (optional)</Form.Label>
+                                    {ddVenueLoading ? (
+                                    <div><Spinner size="sm" animation="border" /></div>
+                                    ) : (
+                                    <Form.Select value={ddGround} onChange={e => setDdGround(e.target.value)}>
+                                        <option value="">Any</option>
+                                        {ddVenueOptions.grounds?.map(g => <option key={g} value={g}>{g}</option>)}
+                                    </Form.Select>
+                                    )}
+                                </Col>
+                                <Col md={4}>
+                                    <Form.Label className="fw-bold">Time of Day (optional)</Form.Label>
+                                    <Form.Select value={ddTime} onChange={e => setDdTime(e.target.value)}>
+                                    <option value="">Any</option>
+                                    {ddVenueOptions.times?.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </Form.Select>
+                                </Col>
+                                <Col md={3} className="text-end">
+                                    <Button
+                                    variant="outline-primary"
+                                    onClick={() => fetchDoDonts({ ground: ddGround, time_of_day: ddTime })}
+                                    disabled={ddLoading}
+                                    >
+                                    {ddLoading ? <Spinner size="sm" animation="border" /> : "Refresh"}
+                                    </Button>
+                                </Col>
+                                </Row>
+
+                                <Row className="g-3 mt-2">
+                                <Col md={6}>
+                                    <Form.Label className="fw-bold">Min balls vs style (batting)</Form.Label>
+                                    <Form.Control
+                                    type="number"
+                                    min={0}
+                                    value={ddMinBallsStyle}
+                                    onChange={e => setDdMinBallsStyle(Number(e.target.value) || 0)}
+                                    />
+                                </Col>
+                                <Col md={6}>
+                                    <Form.Label className="fw-bold">Min balls at death (bowling)</Form.Label>
+                                    <Form.Control
+                                    type="number"
+                                    min={0}
+                                    value={ddMinBallsDeath}
+                                    onChange={e => setDdMinBallsDeath(Number(e.target.value) || 0)}
+                                    />
+                                </Col>
+                                </Row>
+                            </Card.Body>
+                            </Card>
+
+                            {ddErr && <Alert variant="danger" className="mb-3">{ddErr}</Alert>}
+
+                            {ddLoading || !ddData ? (
+                            <div className="text-center"><Spinner animation="border" /></div>
+                            ) : (
+                            <>
+                                {/* Quick context */}
+                                <div className="mb-3">
+                                <Badge bg="info" className="me-2">{category}</Badge>
+                                <Badge bg="success" className="me-2">{ourTeam}</Badge>
+                                <Badge bg="danger">{opponent}</Badge>
+                                {ddData.context?.ground && (
+                                    <Badge bg="secondary" className="ms-2">
+                                    {ddData.context.ground}{ddData.context.time_of_day ? `, ${ddData.context.time_of_day}` : ""}
+                                    </Badge>
+                                )}
+                                </div>
+
+                                {/* Batting Do & Don’ts */}
+                                <Row className="g-3">
+                                <Col md={6}>
+                                    <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"}>
+                                    <Card.Body>
+                                        <h6 className="fw-bold">Batting – Do</h6>
+                                        <ul className="mb-0">
+                                        {ddData.batting?.do?.length
+                                            ? ddData.batting.do.map((d, i) => (
+                                                <li key={i}>
+                                                {d.text}
+                                                {d.phase && <PhasePill text={d.phase} />}
+                                                {d.evidence && <div className="small text-muted">{d.evidence}</div>}
+                                                </li>
+                                            ))
+                                            : <li className="text-muted">No items</li>}
+                                        </ul>
+                                    </Card.Body>
+                                    </Card>
+                                </Col>
+                                <Col md={6}>
+                                    <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"}>
+                                    <Card.Body>
+                                        <h6 className="fw-bold">Batting – Don’t</h6>
+                                        <ul className="mb-0">
+                                        {ddData.batting?.dont?.length
+                                            ? ddData.batting.dont.map((d, i) => (
+                                                <li key={i}>
+                                                {d.text}
+                                                {d.phase && <PhasePill text={d.phase} />}
+                                                {d.evidence && <div className="small text-muted">{d.evidence}</div>}
+                                                </li>
+                                            ))
+                                            : <li className="text-muted">No items</li>}
+                                        </ul>
+                                    </Card.Body>
+                                    </Card>
+                                </Col>
+                                </Row>
+
+                                {/* Bowling Do & Don’ts */}
+                                <Row className="g-3 mt-3">
+                                <Col md={6}>
+                                    <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"}>
+                                    <Card.Body>
+                                        <h6 className="fw-bold">Bowling – Do</h6>
+                                        <ul className="mb-0">
+                                        {ddData.bowling?.do?.length
+                                            ? ddData.bowling.do.map((d, i) => (
+                                                <li key={i}>
+                                                {d.text}
+                                                {d.phase && <PhasePill text={d.phase} />}
+                                                {d.evidence && <div className="small text-muted">{d.evidence}</div>}
+                                                </li>
+                                            ))
+                                            : <li className="text-muted">No items</li>}
+                                        </ul>
+                                    </Card.Body>
+                                    </Card>
+                                </Col>
+                                <Col md={6}>
+                                    <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"}>
+                                    <Card.Body>
+                                        <h6 className="fw-bold">Bowling – Don’t</h6>
+                                        <ul className="mb-0">
+                                        {ddData.bowling?.dont?.length
+                                            ? ddData.bowling.dont.map((d, i) => (
+                                                <li key={i}>
+                                                {d.text}
+                                                {d.phase && <PhasePill text={d.phase} />}
+                                                {d.evidence && <div className="small text-muted">{d.evidence}</div>}
+                                                </li>
+                                            ))
+                                            : <li className="text-muted">No items</li>}
+                                        </ul>
+                                    </Card.Body>
+                                    </Card>
+                                </Col>
+                                </Row>
+
+                                {/* Optional: matchup highlights */}
+                                {ddData.matchups && (
+                                <Card className="mt-3" bg={cardVariant} text={isDarkMode ? "light" : "dark"}>
+                                    <Card.Body>
+                                    <h6 className="fw-bold">Highlighted Matchups</h6>
+                                    <Row className="g-3">
+                                        <Col md={6}>
+                                        <div className="fw-bold mb-2">Favourable</div>
+                                        <ul className="mb-0">
+                                            {ddData.matchups.favourable?.length
+                                            ? ddData.matchups.favourable.slice(0, 5).map((m, i) => (
+                                                <li key={i}>
+                                                    {m.text}
+                                                    {m.evidence && <div className="small text-muted">{m.evidence}</div>}
+                                                </li>
+                                                ))
+                                            : <li className="text-muted">—</li>}
+                                        </ul>
+                                        </Col>
+                                        <Col md={6}>
+                                        <div className="fw-bold mb-2">Unfavourable</div>
+                                        <ul className="mb-0">
+                                            {ddData.matchups.unfavourable?.length
+                                            ? ddData.matchups.unfavourable.slice(0, 5).map((m, i) => (
+                                                <li key={i}>
+                                                    {m.text}
+                                                    {m.evidence && <div className="small text-muted">{m.evidence}</div>}
+                                                </li>
+                                                ))
+                                            : <li className="text-muted">—</li>}
+                                        </ul>
+                                        </Col>
+                                    </Row>
+                                    </Card.Body>
+                                </Card>
+                                )}
+                            </>
+                            )}
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={() => setShowDoDont(false)}>Close</Button>
+                        </Modal.Footer>
+                        </Modal>
       </div>
 
       {/* Floating action for Venue modal hook (wired to card button) */}
