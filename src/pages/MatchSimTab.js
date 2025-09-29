@@ -91,7 +91,7 @@ const MatchSimTab = () => {
 
   };
 
-  const renderOversTable = (overs) => (
+  const renderOversTable = (overs = []) => (
     <Table striped bordered hover size="sm" className="mt-3">
       <thead>
         <tr>
@@ -106,12 +106,12 @@ const MatchSimTab = () => {
       <tbody>
         {overs.map((over, idx) => (
           <tr key={idx}>
-            <td>{over.over_number}</td>
+            <td>{over.over ?? over.over_number}</td>
             <td>{over.bowler}</td>
             <td>{over.runs}</td>
             <td>{over.wickets}</td>
-            <td>{over.cumulative_score}</td>
-            <td>{over.cumulative_wickets}</td>
+            <td>{over.total_score ?? over.cumulative_score}</td>
+            <td>{over.total_wickets ?? over.cumulative_wickets}</td>
           </tr>
         ))}
       </tbody>
