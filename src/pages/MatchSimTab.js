@@ -26,7 +26,7 @@ const MatchSimTab = () => {
   const [error, setError] = useState(false);
   const correctPassword = "coachaccess";
 
-  // NEW: Team category
+  // Category
   const [teamCategory, setTeamCategory] = useState("Women"); // "Men" | "Women" | "U19 Men" | "U19 Women"
 
   // Teams + players
@@ -40,13 +40,18 @@ const MatchSimTab = () => {
   const [loadingA, setLoadingA] = useState(false);
   const [loadingB, setLoadingB] = useState(false);
 
+  // Probable XI button state (per side)  // NEW
+  const [probALoading, setProbALoading] = useState(false);
+  const [probBLoading, setProbBLoading] = useState(false);
+  const [probAMessage, setProbAMessage] = useState("");
+  const [probBMessage, setProbBMessage] = useState("");
+
   // Sim results
   const [simResult, setSimResult] = useState(null);
   const [simLoading, setSimLoading] = useState(false);
   const [showOversA, setShowOversA] = useState(false);
   const [showOversB, setShowOversB] = useState(false);
 
-  // ---------------- Access ----------------
   const handleLogin = () => {
     if (enteredPassword === correctPassword) {
       setAccessGranted(true);
@@ -54,7 +59,7 @@ const MatchSimTab = () => {
     } else setError(true);
   };
 
-  // ---------------- Data fetchers ----------------
+  // Countries for category
   useEffect(() => {
     api
       .get("/countries", { params: { teamCategory } })
@@ -62,6 +67,7 @@ const MatchSimTab = () => {
       .catch(() => setAllCountries([]));
   }, [teamCategory]);
 
+  // Players for A
   useEffect(() => {
     if (teamA) {
       setLoadingA(true);
@@ -77,6 +83,7 @@ const MatchSimTab = () => {
     }
   }, [teamA, teamCategory]);
 
+  // Players for B
   useEffect(() => {
     if (teamB) {
       setLoadingB(true);
@@ -92,21 +99,21 @@ const MatchSimTab = () => {
     }
   }, [teamB, teamCategory]);
 
-  // ---------------- Probable XI ----------------
+  // Probable XI fetcher (shared)
   const fetchProbableXI = async (countryName) => {
-    if (!countryName) return [];
-    const lastGames = 4; // tweak if you want a control
-    const { data } = await api.get("/probable-xi", {
-      params: {
-        country_name: countryName,
-        team_category: teamCategory,
-        last_games: lastGames,
-      },
-    });
+    const lastGames = 4;
+    const params = {
+      country_name: countryName,
+      team_category: teamCategory,
+      last_games: lastGames,
+    };
+    console.log("[ProbableXI] GET /probable-xi", params); // NEW: debug log
+    const { data } = await api.get("/probable-xi", { params });
+    console.log("[ProbableXI] Response:", data); // NEW: debug log
     return data?.player_ids ?? [];
   };
 
-  // ---------------- Simulate ----------------
+  // Simulate
   const handleSimulate = () => {
     setSimLoading(true);
     api
@@ -116,11 +123,10 @@ const MatchSimTab = () => {
         team_a_players: teamASelected,
         team_b_players: teamBSelected,
         max_overs: 20,
-        team_category: teamCategory, // now dynamic
+        team_category: teamCategory,
         simulations: 100,
       })
       .then((res) => {
-        // Normalize overs for the table (supports both old/new backend keys)
         const data = res.data;
         const normalizeOvers = (arr = []) =>
           arr.map((o) => ({
@@ -143,7 +149,7 @@ const MatchSimTab = () => {
       .finally(() => setSimLoading(false));
   };
 
-  // ---------------- Small components ----------------
+  // Inline PlayerPicker (kept local for brevity)
   const PlayerPicker = ({
     title,
     countries,
@@ -154,6 +160,10 @@ const MatchSimTab = () => {
     selectedIds,
     setSelectedIds,
     onSelectProbableXI,
+    probLoading,       // NEW
+    setProbLoading,    // NEW
+    probMessage,       // NEW
+    setProbMessage,    // NEW
     max = 11,
   }) => {
     const [filter, setFilter] = useState("");
@@ -183,9 +193,27 @@ const MatchSimTab = () => {
     const selectNone = () => setSelectedIds([]);
     const selectVisible = () =>
       setSelectedIds(filteredPlayers.map((p) => p.id).slice(0, max));
-    const handleProbable = async () => {
-      const ids = await onSelectProbableXI?.();
-      if (Array.isArray(ids) && ids.length) setSelectedIds(ids.slice(0, max));
+
+    const handleProbable = async () => {                // NEW
+      if (!valueCountry) return;
+      try {
+        setProbLoading(true);
+        setProbMessage("");
+        const ids = await onSelectProbableXI?.();
+        if (Array.isArray(ids) && ids.length) {
+          setSelectedIds(ids.slice(0, max));
+          setProbMessage(`Selected ${Math.min(ids.length, max)} based on last games.`);
+        } else {
+          setProbMessage("No recent data found for this category/team.");
+        }
+      } catch (e) {
+        console.error("Probable XI error:", e);
+        setProbMessage("Failed to fetch probable XI.");
+      } finally {
+        setProbLoading(false);
+        // auto-clear message
+        setTimeout(() => setProbMessage(""), 4000);
+      }
     };
 
     return (
@@ -200,7 +228,7 @@ const MatchSimTab = () => {
           >
             <option value="">Select</option>
             {countries.map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c} value={c}>{c}</option>
             ))}
           </Form.Select>
         </Form.Group>
@@ -215,14 +243,25 @@ const MatchSimTab = () => {
           <Button variant="outline-secondary" size="sm" onClick={selectVisible}>
             Select visible
           </Button>
+
           <Button
             variant="primary"
             size="sm"
             onClick={handleProbable}
-            disabled={!valueCountry}
+            disabled={!valueCountry || probLoading}    // NEW
           >
-            Select Probable XI
+            {probLoading ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-1" />
+                Selecting…
+              </>
+            ) : (
+              "Select Probable XI"
+            )}
           </Button>
+          {probMessage && (                              // NEW
+            <span className="ms-2 text-muted">{probMessage}</span>
+          )}
         </div>
 
         <InputGroup className="mt-2">
@@ -279,7 +318,7 @@ const MatchSimTab = () => {
     );
   };
 
-  // ---------------- Tables ----------------
+  // Overs table
   const renderOversTable = (overs = []) => (
     <Table striped bordered hover size="sm" className="mt-3">
       <thead>
@@ -307,7 +346,6 @@ const MatchSimTab = () => {
     </Table>
   );
 
-  // ---------------- Render ----------------
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
       <div className="mb-3 custom-tabs nav-pills">
@@ -343,7 +381,6 @@ const MatchSimTab = () => {
           </div>
         ) : (
           <>
-            {/* NEW: Team Category */}
             <Form.Group className="mb-3" controlId="teamCategory">
               <Form.Label>
                 <strong>Team Category</strong>
@@ -388,6 +425,10 @@ const MatchSimTab = () => {
                     selectedIds={teamASelected}
                     setSelectedIds={setTeamASelected}
                     onSelectProbableXI={() => fetchProbableXI(teamA)}
+                    probLoading={probALoading}              // NEW
+                    setProbLoading={setProbALoading}        // NEW
+                    probMessage={probAMessage}              // NEW
+                    setProbMessage={setProbAMessage}        // NEW
                     max={11}
                   />
                 </Col>
@@ -403,6 +444,10 @@ const MatchSimTab = () => {
                     selectedIds={teamBSelected}
                     setSelectedIds={setTeamBSelected}
                     onSelectProbableXI={() => fetchProbableXI(teamB)}
+                    probLoading={probBLoading}              // NEW
+                    setProbLoading={setProbBLoading}        // NEW
+                    probMessage={probBMessage}              // NEW
+                    setProbMessage={setProbBMessage}        // NEW
                     max={11}
                   />
                 </Col>
