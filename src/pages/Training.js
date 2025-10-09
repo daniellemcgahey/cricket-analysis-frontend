@@ -83,8 +83,8 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
     return { x: x * s, y: y * s };
   };
   const isOutsideInner = (x, y) => Math.hypot(x, y) > INNER_RING_R + 0.0001;
-  const isOnOffSide = (x, hand_) => (hand_ === "RHB" ? x > 0 : x < 0);
-  const isLegSide = (x, hand_) => !isOnOffSide(x, hand_);
+  const isOnOffSide = (x, hand_) => (hand_ === "RHB" ? x < 0 : x > 0);
+  const isLegSide   = (x, hand_) => !isOnOffSide(x, hand_);
   const isBehindSquare = (y) => y < 0;
 
   // Drag
@@ -181,8 +181,8 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
   const unselectedVariant = isDarkMode ? "outline-light" : "outline-dark";
 
   // Watermark positions — flip for hand
-  const offSideX = hand === "RHB" ? CENTER + 120 : CENTER - 120;
-  const legSideX = hand === "RHB" ? CENTER - 120 : CENTER + 120;
+  const offX = hand === "RHB" ? CENTER - 120 : CENTER + 120; // OFF = left for RHB
+  const legX = hand === "RHB" ? CENTER + 120 : CENTER - 120; // LEG = right for RHB
 
   return (
     <Modal show={show} onHide={onHide} fullscreen centered contentClassName={isDarkMode ? "bg-dark text-white" : ""}>
@@ -270,7 +270,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
 
                   {/* Watermarks: OFF SIDE / LEG SIDE (auto-flip with hand) */}
                   <text
-                    x={offSideX}
+                    x={offX}
                     y={CENTER}
                     textAnchor="middle"
                     dominantBaseline="middle"
@@ -281,12 +281,13 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                       fill: isDarkMode ? "#ffffff" : "#000000",
                       pointerEvents: "none"
                     }}
-                    transform={`rotate(-90 ${offSideX} ${CENTER})`}
+                    transform={`rotate(-90 ${offX} ${CENTER})`}
                   >
                     OFF SIDE
                   </text>
+
                   <text
-                    x={legSideX}
+                    x={legX}
                     y={CENTER}
                     textAnchor="middle"
                     dominantBaseline="middle"
@@ -297,7 +298,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                       fill: isDarkMode ? "#ffffff" : "#000000",
                       pointerEvents: "none"
                     }}
-                    transform={`rotate(90 ${legSideX} ${CENTER})`}
+                    transform={`rotate(90 ${legX} ${CENTER})`}
                   >
                     LEG SIDE
                   </text>
