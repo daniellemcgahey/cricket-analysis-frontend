@@ -174,50 +174,15 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
     }
   };
 
-  // Export/Import JSON (optional presets)
-  const exportJSON = () => {
-    const payload = {
-      gender, phase, hand, bowlerName,
-      fielders: fielders.map(({ id, label, x, y, placed, role }) => ({ id, label, x, y, placed, role })),
-      ts: new Date().toISOString()
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `field_${bowlerName || "bowler"}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const importJSON = (file) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const data = JSON.parse(String(reader.result));
-        if (data.gender) setGender(data.gender);
-        if (data.phase) setPhase(data.phase);
-        if (data.hand) setHand(data.hand);
-        if (typeof data.bowlerName === "string") setBowlerName(data.bowlerName);
-        if (Array.isArray(data.fielders)) {
-          setFielders(prev =>
-            prev.map(f => {
-              const found = data.fielders.find(d => d.id === f.id);
-              return found
-                ? { ...f, x: found.x ?? f.x, y: found.y ?? f.y, placed: !!found.placed }
-                : f;
-            })
-          );
-        }
-      } catch (e) {
-        console.error("Invalid field JSON", e);
-      }
-    };
-    reader.readAsText(file);
-  };
-
   const cardClass = isDarkMode ? "bg-secondary text-white border-0" : "bg-white text-dark border";
-  const btnOutline = isDarkMode ? "btn-outline-light" : "btn-outline-dark";
-  const btnSolid = isDarkMode ? "btn-light text-dark" : "btn-dark";
+
+  // Button variants that are always visible (selected vs unselected)
+  const selectedVariant = isDarkMode ? "light" : "dark";
+  const unselectedVariant = isDarkMode ? "outline-light" : "outline-dark";
+
+  // Watermark positions — flip for hand
+  const offSideX = hand === "RHB" ? CENTER + 120 : CENTER - 120;
+  const legSideX = hand === "RHB" ? CENTER - 120 : CENTER + 120;
 
   return (
     <Modal show={show} onHide={onHide} fullscreen centered contentClassName={isDarkMode ? "bg-dark text-white" : ""}>
@@ -231,7 +196,11 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
             {/* Gender */}
             <div className="btn-group" role="group" aria-label="Gender">
               {["Women", "Men"].map(g => (
-                <Button key={g} variant={gender === g ? (isDarkMode ? "light" : "dark") : "outline-secondary"} onClick={() => setGender(g)}>
+                <Button
+                  key={g}
+                  variant={gender === g ? selectedVariant : unselectedVariant}
+                  onClick={() => setGender(g)}
+                >
                   {g}
                 </Button>
               ))}
@@ -240,7 +209,11 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
             {/* Phase */}
             <div className="btn-group ms-2" role="group" aria-label="Phase">
               {["Powerplay", "Middle", "Death"].map(p => (
-                <Button key={p} variant={phase === p ? (isDarkMode ? "light" : "dark") : "outline-secondary"} onClick={() => setPhase(p)}>
+                <Button
+                  key={p}
+                  variant={phase === p ? selectedVariant : unselectedVariant}
+                  onClick={() => setPhase(p)}
+                >
                   {p}
                 </Button>
               ))}
@@ -249,7 +222,12 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
             {/* Batter hand */}
             <div className="btn-group ms-2" role="group" aria-label="Hand">
               {["RHB", "LHB"].map(h => (
-                <Button key={h} variant={hand === h ? (isDarkMode ? "light" : "dark") : "outline-secondary"} onClick={() => setHand(h)} title="Affects off/leg side">
+                <Button
+                  key={h}
+                  variant={hand === h ? selectedVariant : unselectedVariant}
+                  onClick={() => setHand(h)}
+                  title="Affects off/leg side"
+                >
                   {h}
                 </Button>
               ))}
@@ -265,14 +243,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
             />
 
             {/* Actions */}
-            <Button variant={btnOutline.includes("light") ? "outline-light" : "outline-dark"} className="ms-2" onClick={exportJSON}>
-              Export JSON
-            </Button>
-            <label className={`btn ms-2 ${btnOutline.includes("light") ? "btn-outline-light" : "btn-outline-dark"} mb-0`}>
-              Import JSON
-              <input type="file" accept="application/json" className="d-none" onChange={(e) => e.target.files && importJSON(e.target.files[0])} />
-            </label>
-            <Button variant={isDarkMode ? "light" : "dark"} className="ms-2" onClick={savePDF} disabled={saving}>
+            <Button variant={selectedVariant} className="ms-2" onClick={savePDF} disabled={saving}>
               {saving ? <Spinner size="sm" animation="border" /> : "Save PDF"}
             </Button>
           </div>
@@ -296,6 +267,40 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                   <circle cx={CENTER} cy={CENTER} r={BOUNDARY_R} fill="none" stroke={isDarkMode ? "#f8f9fa" : "#212529"} strokeWidth="2" />
                   <circle cx={CENTER} cy={CENTER} r={INNER_RING_R} fill="none" stroke={isDarkMode ? "#ced4da" : "#495057"} strokeDasharray="6 6" />
                   <rect x={CENTER - 10} y={CENTER - 35} width="20" height="70" fill={isDarkMode ? "#e9ecef" : "#f8f9fa"} stroke="#6c757d" />
+
+                  {/* Watermarks: OFF SIDE / LEG SIDE (auto-flip with hand) */}
+                  <text
+                    x={offSideX}
+                    y={CENTER}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fontSize: 32,
+                      fontWeight: 700,
+                      opacity: 0.10,
+                      fill: isDarkMode ? "#ffffff" : "#000000",
+                      pointerEvents: "none"
+                    }}
+                    transform={`rotate(-90 ${offSideX} ${CENTER})`}
+                  >
+                    OFF SIDE
+                  </text>
+                  <text
+                    x={legSideX}
+                    y={CENTER}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{
+                      fontSize: 32,
+                      fontWeight: 700,
+                      opacity: 0.08,
+                      fill: isDarkMode ? "#ffffff" : "#000000",
+                      pointerEvents: "none"
+                    }}
+                    transform={`rotate(90 ${legSideX} ${CENTER})`}
+                  >
+                    LEG SIDE
+                  </text>
                 </svg>
 
                 {/* Chips */}
