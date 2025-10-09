@@ -62,7 +62,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
   const [bowlerName, setBowlerName] = useState("");
 
   // Fielders (WK/Bowler pre-placed + 9 fielder chips)
-  const START_WK = { id: "wk", label: "WK", x: 0, y: -20, placed: true, role: "WK" };
+  const START_WK = { id: "wk", label: "WK", x: 0, y: -60, placed: true, role: "WK" };
   // Slightly in front of the non-striker’s stumps, realistic run-up start
   const START_B = { id: "bowler", label: "Bowler", x: 0, y: 100, placed: true, role: "Bowler" };
 
@@ -132,44 +132,68 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
   ]), [outsideInnerCount, outsideMax, offSideCount, legBehindSquareCount]);
 
   // Save to PDF (lazy import to avoid crashes)
-  const savePDF = async () => {
-    if (!exportRef.current) return;
-    setSaving(true);
-    try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf")
-      ]);
+const savePDF = async () => {
+  if (!exportRef.current) return;
+  setSaving(true);
+  try {
+    const [h2cMod, jsPDFMod] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf")
+    ]);
+    const html2canvas = h2cMod.default || h2cMod;
+    const JsPDF = jsPDFMod.jsPDF || jsPDFMod.default;
 
-      const node = exportRef.current;
-      const prevBg = node.style.background;
-      node.style.background = isDarkMode ? "#111" : "#fff";
+    const node = exportRef.current;
+    const prevBg = node.style.background;
+    node.style.background = isDarkMode ? "#111" : "#fff";
 
-      const canvas = await html2canvas(node, { scale: 2, useCORS: true });
-      const img = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    const canvas = await html2canvas(node, { scale: 2, useCORS: true });
+    const img = canvas.toDataURL("image/png");
 
-      const pageW = pdf.internal.pageSize.getWidth();
-      const margin = 36;
-      const targetW = pageW - margin * 2;
-      const scale = targetW / canvas.width;
-      const imgH = canvas.height * scale;
+    // 🔁 LANDSCAPE here
+    const pdf = new JsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-      pdf.setFontSize(14);
-      pdf.text(`Interactive Field – ${gender} – ${phase}`, margin, 40);
-      pdf.text(`Bowler: ${bowlerName || "(unspecified)"}`, margin, 60);
-      pdf.setFontSize(11);
-      pdf.addImage(img, "PNG", margin, 96, targetW, imgH);
-      pdf.save(`Field_${bowlerName || "bowler"}_${gender}_${phase}.pdf`);
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
 
-      node.style.background = prevBg;
-    } catch (e) {
-      console.error(e);
-      alert("Could not generate PDF (html2canvas/jspdf missing or failed).");
-    } finally {
-      setSaving(false);
-    }
-  };
+    // Margins + header spacing
+    const margin = 36;
+    const headerY1 = 40;
+    const headerY2 = 60;
+    const headerY3 = 78;
+
+    // Fit image inside remaining area under the header
+    const availableW = pageW - margin * 2;
+    const availableH = pageH - margin - headerY3 - 12; // small gap below header
+
+    // scale to fit both width & height (preserve aspect)
+    const scaleW = availableW / canvas.width;
+    const scaleH = availableH / canvas.height;
+    const scale = Math.min(scaleW, scaleH);
+
+    const imgW = canvas.width * scale;
+    const imgH = canvas.height * scale;
+    const imgX = margin + (availableW - imgW) / 2;      // center horizontally
+    const imgY = headerY3 + 12;                         // just below header
+
+    // Header
+    pdf.setFontSize(14);
+    pdf.text(`Interactive Field – ${gender} – ${phase}`, margin, headerY1);
+    pdf.text(`Bowler: ${bowlerName || "(unspecified)"}`, margin, headerY2);
+    pdf.setFontSize(11);
+
+    // Image
+    pdf.addImage(img, "PNG", imgX, imgY, imgW, imgH);
+
+    pdf.save(`Field_${bowlerName || "bowler"}_${gender}_${phase}.pdf`);
+    node.style.background = prevBg;
+  } catch (e) {
+    console.error(e);
+    alert("Could not generate PDF (html2canvas/jspdf missing or failed).");
+  } finally {
+    setSaving(false);
+  }
+};
 
   const cardClass = isDarkMode ? "bg-secondary text-white border-0" : "bg-white text-dark border";
 
