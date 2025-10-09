@@ -9,10 +9,9 @@ import api from "../api";
 
 /** ===================== Config ===================== */
 
-// Your backend endpoint for matches
 const EP_MATCHES_BY_CATEGORY = "/matches"; // GET ?teamCategory=Men|Women|U19 Men|U19 Women|Training
 
-// Category → KPI endpoint (each category can have different KPI set/targets)
+// Category → KPI endpoint (each category can have different KPI sets/targets)
 const KPI_ENDPOINT_BY_CATEGORY = {
   "Men":        "/postgame/men/match-kpis",
   "Women":      "/postgame/women/match-kpis",
@@ -22,6 +21,8 @@ const KPI_ENDPOINT_BY_CATEGORY = {
 };
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
+const TAB_KEYS = ["Batting", "Bowling", "Fielding"];
+const PHASE_ORDER = ["Powerplay", "Middle Overs", "Death Overs", "Match"];
 
 /** ===================== Helpers (category-safe filtering) ===================== */
 
@@ -31,7 +32,7 @@ const parseCategoryTokens = (name) => {
   const s = String(name || "").toLowerCase();
   const u19   = /\bu-?19\b/.test(s) || /\bu19\b/.test(s);
   const women = /\bwomen\b/.test(s);
-  const men   = /\bmen\b/.test(s); // word 'men' (not the 'men' in 'women')
+  const men   = /\bmen\b/.test(s); // 'men' as a word, not the tail of 'women'
   const training = /\btraining\b/.test(s);
   return { u19, women, men, training };
 };
@@ -62,6 +63,7 @@ export default function PostGame() {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
   const cardVariant = isDarkMode ? "dark" : "light";
+  const cardVariantClass = isDarkMode ? "bg-secondary text-white border-0" : "";
 
   // -------- Filters --------
   const [category, setCategory] = useState("Men");
@@ -76,7 +78,7 @@ export default function PostGame() {
   const [showKpiModal, setShowKpiModal] = useState(false);
   const [kpisLoading, setKpisLoading] = useState(false);
   const [kpisError, setKpisError] = useState("");
-  const [kpisData, setKpisData] = useState([]);   // [{key,label,unit,bucket,phase,operator,target,actual,ok,notes}]
+  const [kpisData, setKpisData] = useState([]);   // [{key,label,unit,bucket,phase,operator,target,actual,ok?,notes}]
   const [showFailedOnly, setShowFailedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState("Batting");
 
@@ -163,9 +165,20 @@ export default function PostGame() {
       if (!EP_MATCH_KPIS) throw new Error(`No KPI endpoint mapped for ${category}`);
 
       const res = await api.get(EP_MATCH_KPIS, { params: { match_id: selectedMatchId } });
+
+      // Accept either {kpis:[...]} or [...]
       const arr = Array.isArray(res.data?.kpis) ? res.data.kpis
                 : Array.isArray(res.data) ? res.data
                 : [];
+
+      // (Optional) If backend hasn't returned the KPI yet, you can hardcode a placeholder here while testing:
+      // arr.push({
+      //   key: "bat_pp_scoring_shot_pct",
+      //   label: "Scoring Shot % (Batting • Powerplay)",
+      //   unit: "%", bucket: "Batting", phase: "Powerplay",
+      //   operator: ">=", target: 45, actual: 48.7, notes: "Includes byes/leg-byes as scoring shots"
+      // });
+
       setKpisData(arr);
     } catch (e) {
       console.error(e);
@@ -189,37 +202,57 @@ export default function PostGame() {
     return showFailedOnly ? base.filter(k => !k.ok) : base;
   }, [withPassFail, showFailedOnly]);
 
+  // Tab assignment based on KPI bucket
   const kpiToTab = (k) => {
     const b = String(k.bucket || "General").toLowerCase();
     if (b.includes("bat")) return "Batting";
     if (b.includes("bowl")) return "Bowling";
     if (b.includes("field")) return "Fielding";
-    return "Batting"; // default bucket
+    // default—non-mapped buckets: put under Match in Batting
+    return "Batting";
   };
 
-  const byTab = useMemo(() => {
-    return filteredKPIs.reduce((acc, k) => {
+  // Phase normalization
+  const phaseOf = (k) => {
+    const p = String(k.phase || "").toLowerCase();
+    if (p.startsWith("power")) return "Powerplay";
+    if (p.startsWith("middle")) return "Middle Overs";
+    if (p.startsWith("death")) return "Death Overs";
+    return "Match";
+  };
+
+  // Split KPIs into tab → phase → items
+  const byTabPhase = useMemo(() => {
+    const acc = {
+      Batting: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
+      Bowling: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
+      Fielding:{ "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
+    };
+    filteredKPIs.forEach(k => {
       const tab = kpiToTab(k);
-      (acc[tab] ||= []).push(k);
-      return acc;
-    }, { Batting: [], Bowling: [], Fielding: [] });
+      const phase = phaseOf(k);
+      acc[tab][phase].push(k);
+    });
+    return acc;
   }, [filteredKPIs]);
 
+  // Global summary
   const summary = useMemo(() => {
     const total = withPassFail.length;
     const passed = withPassFail.filter(k => k.ok).length;
     return { total, passed, pct: total ? Math.round((passed / total) * 100) : 0 };
   }, [withPassFail]);
 
+  // Per-tab % met (optional for tab headers)
   const tabSummary = useMemo(() => {
     const out = {};
-    ["Batting", "Bowling", "Fielding"].forEach(tabKey => {
-      const arr = byTab[tabKey] || [];
-      const met = arr.filter(k => k.ok).length;
-      out[tabKey] = { total: arr.length, met, pct: arr.length ? Math.round((met/arr.length)*100) : 0 };
+    TAB_KEYS.forEach(tabKey => {
+      const all = PHASE_ORDER.flatMap(ph => byTabPhase[tabKey][ph]);
+      const met = all.filter(k => k.ok).length;
+      out[tabKey] = { total: all.length, met, pct: all.length ? Math.round((met / all.length) * 100) : 0 };
     });
     return out;
-  }, [byTab]);
+  }, [byTabPhase]);
 
   // -------- UI helpers --------
   const matchLabel = (m) => {
@@ -228,58 +261,52 @@ export default function PostGame() {
     return `${m.team_a} vs ${m.team_b}${tour}${when ? " — " + when : ""}`;
   };
 
-  const cardVariantClass = isDarkMode ? "bg-secondary text-white border-0" : "";
+  const renderPhaseSection = (phaseKey, arr) => (
+    <Card key={phaseKey} className={`mb-3 ${cardVariantClass}`}>
+      <Card.Body>
+        <div className="d-flex align-items-center justify-content-between">
+          <h6 className="fw-bold mb-2">{phaseKey}</h6>
+          <Badge bg="secondary">{arr.filter(i => i.ok).length}/{arr.length} met</Badge>
+        </div>
+        {arr.length === 0 ? (
+          <div className="text-muted">No KPIs in this section.</div>
+        ) : (
+          <Table size="sm" bordered responsive className="mb-0">
+            <thead>
+              <tr>
+                <th>KPI</th>
+                <th className="text-center" style={{ width: 120 }}>Target</th>
+                <th className="text-center" style={{ width: 120 }}>Result</th>
+                <th className="text-center" style={{ width: 80 }}>Status</th>
+                <th style={{ width: 240 }}>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {arr.map(k => (
+                <tr key={k.key}>
+                  <td>
+                    <div className="fw-semibold">{k.label || k.key}</div>
+                    {k.phase && <div className="small text-muted">{k.phase}</div>}
+                  </td>
+                  <td className="text-center">{formatVal(k.target, k.unit)}</td>
+                  <td className="text-center">{formatVal(k.actual, k.unit)}</td>
+                  <td className="text-center">
+                    <Badge bg={k.ok ? "success" : "danger"}>{k.ok ? "Met" : "Missed"}</Badge>
+                  </td>
+                  <td className="small">{k.notes || ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card.Body>
+    </Card>
+  );
 
-  const renderBucketedTable = (items, tabKey) => {
-    // group by bucket label
-    const bucketMap = new Map();
-    items.forEach(k => {
-      const b = k.bucket || "General";
-      if (!bucketMap.has(b)) bucketMap.set(b, []);
-      bucketMap.get(b).push(k);
-    });
-
-    return (
-      <>
-        {Array.from(bucketMap.entries()).map(([bucket, arr]) => (
-          <Card key={`${tabKey}-${bucket}`} className={`mb-3 ${cardVariantClass}`}>
-            <Card.Body>
-              <div className="d-flex align-items-center justify-content-between">
-                <h6 className="fw-bold mb-2">{bucket}</h6>
-                <Badge bg="secondary">{arr.filter(i => i.ok).length}/{arr.length} met</Badge>
-              </div>
-              <Table size="sm" bordered responsive className="mb-0">
-                <thead>
-                  <tr>
-                    <th>KPI</th>
-                    <th className="text-center" style={{ width: 120 }}>Target</th>
-                    <th className="text-center" style={{ width: 120 }}>Result</th>
-                    <th className="text-center" style={{ width: 80 }}>Status</th>
-                    <th style={{ width: 240 }}>Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {arr.map(k => (
-                    <tr key={k.key}>
-                      <td>
-                        <div className="fw-semibold">{k.label || k.key}</div>
-                        {k.phase && <div className="small text-muted">{k.phase}</div>}
-                      </td>
-                      <td className="text-center">{formatVal(k.target, k.unit)}</td>
-                      <td className="text-center">{formatVal(k.actual, k.unit)}</td>
-                      <td className="text-center">
-                        <Badge bg={k.ok ? "success" : "danger"}>{k.ok ? "Met" : "Missed"}</Badge>
-                      </td>
-                      <td className="small">{k.notes || ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card.Body>
-          </Card>
-        ))}
-      </>
-    );
+  const renderTabBody = (tabKey) => {
+    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
+    const sections = PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]));
+    return <>{sections}</>;
   };
 
   return (
@@ -337,7 +364,7 @@ export default function PostGame() {
               <Card.Body>
                 <Card.Title className="fw-bold">Match KPIs</Card.Title>
                 <Card.Text className="mb-3">
-                  Targets vs results by section, with pass/fail and quick summaries.
+                  Batting, Bowling, Fielding — split by Powerplay, Middle, Death, and Match.
                 </Card.Text>
                 <Button disabled={!selectedMatchId || loadingMatches} onClick={openKpiModal}>
                   Open
@@ -364,26 +391,16 @@ export default function PostGame() {
         <Modal.Body>
           {kpisError && <Alert variant="danger" className="mb-2">{kpisError}</Alert>}
 
+          {/* Global summary + failed-only */}
           <div className="d-flex align-items-center justify-content-between mb-3">
             <div className="d-flex align-items-center gap-3">
               <div>
                 <div className="small text-muted">KPIs Met</div>
-                <div className="fw-bold">
-                  {(() => {
-                    const total = withPassFail.length;
-                    const passed = withPassFail.filter(k => k.ok).length;
-                    const pct = total ? Math.round((passed / total) * 100) : 0;
-                    return `${pct}%`;
-                  })()}
-                </div>
+                <div className="fw-bold">{summary.pct}%</div>
               </div>
               <div style={{ width: 220 }}>
                 <ProgressBar
-                  now={(() => {
-                    const total = withPassFail.length;
-                    const passed = withPassFail.filter(k => k.ok).length;
-                    return total ? Math.round((passed / total) * 100) : 0;
-                  })()}
+                  now={summary.pct}
                   variant={summary.pct >= 70 ? "success" : summary.pct >= 50 ? "warning" : "danger"}
                 />
               </div>
@@ -400,7 +417,7 @@ export default function PostGame() {
 
           {/* Tabs */}
           <Tabs id="kpi-tabs" activeKey={activeTab} onSelect={(key) => setActiveTab(key)} className="mb-3" justify>
-            {["Batting", "Bowling", "Fielding"].map(tabKey => (
+            {TAB_KEYS.map(tabKey => (
               <Tab
                 key={tabKey}
                 eventKey={tabKey}
@@ -423,13 +440,7 @@ export default function PostGame() {
                   </span>
                 }
               >
-                {kpisLoading ? (
-                  <div className="text-center py-4"><Spinner animation="border" /></div>
-                ) : (byTab[tabKey]?.length ? (
-                  renderBucketedTable(byTab[tabKey], tabKey)
-                ) : (
-                  <div className="text-muted">No KPIs in this section.</div>
-                ))}
+                {renderTabBody(tabKey)}
               </Tab>
             ))}
           </Tabs>
@@ -440,10 +451,17 @@ export default function PostGame() {
       </Modal>
     </div>
   );
-}
 
-// Helper is defined outside the component so JSX above can use it
-function renderBucketedTable(items, tabKey, isDarkModeInjected) {
-  // This wrapper is unused; the component uses the in-scope version.
-  return null;
+  // ---- Local render helper (inside component to access state) ----
+  function renderTabBody(tabKey) {
+    return renderTabBodyImpl(tabKey);
+  }
+  function renderTabBodyImpl(tabKey) {
+    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
+    return (
+      <>
+        {PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]))}
+      </>
+    );
+  }
 }
