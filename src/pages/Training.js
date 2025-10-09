@@ -63,7 +63,9 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
 
   // Fielders (WK/Bowler pre-placed + 9 fielder chips)
   const START_WK = { id: "wk", label: "WK", x: 0, y: -20, placed: true, role: "WK" };
-  const START_B = { id: "bowler", label: "Bowler", x: 0, y: BOUNDARY_R - 20, placed: true, role: "Bowler" };
+  // Slightly in front of the non-striker’s stumps, realistic run-up start
+  const START_B = { id: "bowler", label: "Bowler", x: 0, y: 140, placed: true, role: "Bowler" };
+
   const DEFAULT_FIELDERS = Array.from({ length: 9 }).map((_, i) => ({
     id: `f${i + 1}`, label: `F${i + 1}`, x: 0, y: 0, placed: false, role: "Fielder"
   }));
@@ -254,6 +256,10 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
           {/* Board */}
           <div className="col-lg-8">
             <div ref={exportRef} className={`rounded p-3 ${cardClass}`}>
+                <div className="text-center fw-bold mb-2" style={{ fontSize: 16 }}>
+                  Bowler: {bowlerName || "—"}
+                </div>
+
               <div
                 ref={stageRef}
                 className="position-relative mx-auto"
@@ -261,6 +267,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
               >
+                
                 {/* Ground */}
                 <svg width={CANVAS_SIZE} height={CANVAS_SIZE} className="d-block">
                   <circle cx={CENTER} cy={CENTER} r={BOUNDARY_R + 18} fill={isDarkMode ? "#0e1a12" : "#dff3e3"} stroke="#6c757d" />
