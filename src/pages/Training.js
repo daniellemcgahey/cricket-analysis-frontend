@@ -64,7 +64,7 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
   // Fielders (WK/Bowler pre-placed + 9 fielder chips)
   const START_WK = { id: "wk", label: "WK", x: 0, y: -20, placed: true, role: "WK" };
   // Slightly in front of the non-striker’s stumps, realistic run-up start
-  const START_B = { id: "bowler", label: "Bowler", x: 0, y: 140, placed: true, role: "Bowler" };
+  const START_B = { id: "bowler", label: "Bowler", x: 0, y: 100, placed: true, role: "Bowler" };
 
   const DEFAULT_FIELDERS = Array.from({ length: 9 }).map((_, i) => ({
     id: `f${i + 1}`, label: `F${i + 1}`, x: 0, y: 0, placed: false, role: "Fielder"
@@ -159,11 +159,6 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
       pdf.text(`Interactive Field – ${gender} – ${phase}`, margin, 40);
       pdf.text(`Bowler: ${bowlerName || "(unspecified)"}`, margin, 60);
       pdf.setFontSize(11);
-      pdf.text(
-        `Snapshot: outside=${outsideInnerCount}/${outsideMax}, off-side=${offSideCount}, leg-behind=${legBehindSquareCount}`,
-        margin,
-        78
-      );
       pdf.addImage(img, "PNG", margin, 96, targetW, imgH);
       pdf.save(`Field_${bowlerName || "bowler"}_${gender}_${phase}.pdf`);
 
@@ -368,9 +363,6 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                   </Button>
                 ))}
               </div>
-              <small className="text-muted d-block mt-2">
-                WK and Bowler are pre-placed. All chips are draggable; placement is never blocked.
-              </small>
             </div>
 
             <div className={`p-3 rounded ${cardClass}`}>
@@ -385,9 +377,6 @@ function InteractiveFieldModal({ show, onHide, isDarkMode }) {
                   </li>
                 ))}
               </ul>
-              <small className="text-muted d-block mt-2">
-                Informational only — does not block placement.
-              </small>
             </div>
           </div>
         </div>
