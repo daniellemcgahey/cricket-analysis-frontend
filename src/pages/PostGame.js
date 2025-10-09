@@ -8,10 +8,10 @@ import api from "../api";
 
 /** ===================== Config ===================== */
 
-// Your existing matches endpoint
+// Your backend endpoint for matches
 const EP_MATCHES_BY_CATEGORY = "/matches"; // GET ?teamCategory=Men|Women|U19 Men|U19 Women|Training
 
-// Category → KPI endpoint (different KPIs/targets per category)
+// Category → KPI endpoint (lets Men/Women/U19 have distinct KPI sets/targets)
 const KPI_ENDPOINT_BY_CATEGORY = {
   "Men":        "/postgame/men/match-kpis",
   "Women":      "/postgame/women/match-kpis",
@@ -22,21 +22,41 @@ const KPI_ENDPOINT_BY_CATEGORY = {
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
-/**
- * Expected KPI item shape from backend:
- * {
- *   key: "pp_dot_pct",
- *   label: "Powerplay Dot %",
- *   unit: "%",                 // "", "%", "runs", etc
- *   bucket: "Bowling",         // grouping
- *   phase: "Powerplay",        // optional grouping detail
- *   operator: ">=",            // >=, >, ==, <=, <, !=
- *   target: 55,
- *   actual: 58.3,
- *   notes: "…",
- *   ok: true                   // optional; if absent we compute
- * }
- */
+/** ===================== Helpers (category-safe filtering) ===================== */
+
+const isBrasil = (name) => /bra[sz]il/i.test(name || "");
+
+// Extract tokens from the team name to classify the category correctly.
+// e.g., "Brazil U19 Women" -> { u19: true, women: true, men: false }
+const parseCategoryTokens = (name) => {
+  const s = String(name || "").toLowerCase();
+  const u19   = /\bu-?19\b/.test(s) || /\bu19\b/.test(s);
+  const women = /\bwomen\b/.test(s);
+  const men   = /\bmen\b/.test(s); // the word "men" (not the 'men' inside 'women')
+  const training = /\btraining\b/.test(s);
+  return { u19, women, men, training };
+};
+
+const isNameInCategory = (name, category) => {
+  const { u19, women, men, training } = parseCategoryTokens(name);
+  switch (category) {
+    case "Men":        return !u19 && men && !women;
+    case "Women":      return !u19 && women;
+    case "U19 Men":    return u19 && men && !women;
+    case "U19 Women":  return u19 && women;
+    case "Training":   return training;
+    default:           return false;
+  }
+};
+
+// Check a match: (1) Brasil is one of the teams, and (2) the Brasil team name matches the selected category
+const matchIsBrasilInCategory = (m, category) => {
+  const a = m.team_a || "";
+  const b = m.team_b || "";
+  if (isBrasil(a)) return isNameInCategory(a, category);
+  if (isBrasil(b)) return isNameInCategory(b, category);
+  return false;
+};
 
 /** ===================== Page ===================== */
 
@@ -61,7 +81,7 @@ export default function PostGame() {
   const [kpisData, setKpisData] = useState([]);        // array of KPIs
   const [showFailedOnly, setShowFailedOnly] = useState(false);
 
-  // -------- Fetch matches (category + Brasil filter) --------
+  // -------- Fetch matches (category + Brasil + correct tokenization) --------
   useEffect(() => {
     let mounted = true;
     setError("");
@@ -74,12 +94,12 @@ export default function PostGame() {
         if (!mounted) return;
 
         const list = Array.isArray(res.data) ? res.data : [];
-        const brasilRegex = /bra[sz]il/i;
 
-        // Keep only matches where Brasil is either team
-        const filtered = list.filter(m =>
-          brasilRegex.test(m.team_a || "") || brasilRegex.test(m.team_b || "")
-        );
+        // Keep only matches that (1) include Brasil and (2) Brasil is in the selected category
+        const filtered = list.filter(m => {
+          const hasBrasil = isBrasil(m.team_a) || isBrasil(m.team_b);
+          return hasBrasil && matchIsBrasilInCategory(m, category);
+        });
 
         // Sort newest first (server already orders, but just in case)
         filtered.sort((a, b) => {
