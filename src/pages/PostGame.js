@@ -452,16 +452,4 @@ export default function PostGame() {
     </div>
   );
 
-  // ---- Local render helper (inside component to access state) ----
-  function renderTabBody(tabKey) {
-    return renderTabBodyImpl(tabKey);
-  }
-  function renderTabBodyImpl(tabKey) {
-    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
-    return (
-      <>
-        {PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]))}
-      </>
-    );
-  }
 }
