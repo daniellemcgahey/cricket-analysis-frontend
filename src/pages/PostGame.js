@@ -6,38 +6,51 @@ import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
 import api from "../api";
 
-/** ====== Endpoint names (tweak here if needed) ====== */
-const EP_MATCHES = "/matches";           // GET params: { teamCategory }
-const EP_MATCH_KPIS = "/match-kpis";     // GET params: { match_id, team_category }
+/** ===================== Config ===================== */
+
+// Your existing matches endpoint
+const EP_MATCHES_BY_CATEGORY = "/matches"; // GET ?teamCategory=Men|Women|U19 Men|U19 Women|Training
+
+// Category → KPI endpoint (different KPIs/targets per category)
+const KPI_ENDPOINT_BY_CATEGORY = {
+  "Men":        "/postgame/men/match-kpis",
+  "Women":      "/postgame/women/match-kpis",
+  "U19 Men":    "/postgame/u19-men/match-kpis",
+  "U19 Women":  "/postgame/u19-women/match-kpis",
+  "Training":   "/postgame/training/match-kpis",
+};
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
 /**
- * Expected KPI item shape (server response):
+ * Expected KPI item shape from backend:
  * {
  *   key: "pp_dot_pct",
  *   label: "Powerplay Dot %",
- *   unit: "%",
- *   target: 55,                   // numeric or string if categorical
- *   operator: ">=",               // ">= | > | == | <= | < | !="
- *   actual: 52.1,                 // numeric or string
- *   phase: "Powerplay",           // optional grouping
- *   bucket: "Batting",            // (Batting/Bowling/Fielding/Discipline/etc.)
- *   notes: "Stretch goal for this venue" // optional
+ *   unit: "%",                 // "", "%", "runs", etc
+ *   bucket: "Bowling",         // grouping
+ *   phase: "Powerplay",        // optional grouping detail
+ *   operator: ">=",            // >=, >, ==, <=, <, !=
+ *   target: 55,
+ *   actual: 58.3,
+ *   notes: "…",
+ *   ok: true                   // optional; if absent we compute
  * }
  */
+
+/** ===================== Page ===================== */
 
 export default function PostGame() {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
   const cardVariant = isDarkMode ? "dark" : "light";
 
-  // -------- Core selectors --------
+  // -------- Filters --------
   const [category, setCategory] = useState("Men");
-  const [matches, setMatches] = useState([]);          // [{id, home, away, date, venue, ...}]
+  const [matches, setMatches] = useState([]);          // backend shape
   const [selectedMatchId, setSelectedMatchId] = useState("");
 
-  // Loading & errors
+  // Loading / errors
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [error, setError] = useState("");
 
@@ -48,7 +61,7 @@ export default function PostGame() {
   const [kpisData, setKpisData] = useState([]);        // array of KPIs
   const [showFailedOnly, setShowFailedOnly] = useState(false);
 
-  // -------- Load matches for the category (Brasil only) --------
+  // -------- Fetch matches (category + Brasil filter) --------
   useEffect(() => {
     let mounted = true;
     setError("");
@@ -56,26 +69,27 @@ export default function PostGame() {
     setMatches([]);
     setSelectedMatchId("");
 
-    api.get(EP_MATCHES, { params: { teamCategory: category } })
+    api.get(EP_MATCHES_BY_CATEGORY, { params: { teamCategory: category } })
       .then(res => {
         if (!mounted) return;
+
         const list = Array.isArray(res.data) ? res.data : [];
-        // Keep only matches where Brasil is involved (case-insensitive, handles Bra/BraZil)
         const brasilRegex = /bra[sz]il/i;
+
+        // Keep only matches where Brasil is either team
         const filtered = list.filter(m =>
-          brasilRegex.test(`${m.home || m.team_a || ""}`) ||
-          brasilRegex.test(`${m.away || m.team_b || ""}`)
+          brasilRegex.test(m.team_a || "") || brasilRegex.test(m.team_b || "")
         );
 
-        // Sort by most recent first if we have a date
+        // Sort newest first (server already orders, but just in case)
         filtered.sort((a, b) => {
-          const da = new Date(a.date || a.start_time || 0).getTime();
-          const db = new Date(b.date || b.start_time || 0).getTime();
+          const da = new Date(a.match_date || 0).getTime();
+          const db = new Date(b.match_date || 0).getTime();
           return db - da;
         });
 
         setMatches(filtered);
-        setSelectedMatchId(filtered[0]?.id || "");
+        setSelectedMatchId(filtered[0]?.match_id || "");
       })
       .catch(() => setError("Could not load matches"))
       .finally(() => setLoadingMatches(false));
@@ -83,10 +97,9 @@ export default function PostGame() {
     return () => { mounted = false; };
   }, [category]);
 
-  // -------- Helpers: KPI evaluation & formatting --------
+  // -------- KPI helpers --------
   const coerceNum = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
   const cmp = (actual, operator, target) => {
-    // numeric if both parse; otherwise string compare for ==/!=
     const aNum = !Number.isNaN(coerceNum(actual));
     const tNum = !Number.isNaN(coerceNum(target));
 
@@ -100,10 +113,10 @@ export default function PostGame() {
         case "<=": return a <= t;
         case "<":  return a <  t;
         case "!=": return a !== t;
-        default:   return a >= t; // sensible default
+        default:   return a >= t; // sane default
       }
     } else {
-      // fallback to string compare for categorical targets
+      // categorical fallback
       switch (operator) {
         case "==": return String(actual) === String(target);
         case "!=": return String(actual) !== String(target);
@@ -114,13 +127,12 @@ export default function PostGame() {
 
   const formatVal = (v, unit) => {
     if (v === null || v === undefined || v === "") return "—";
-    if (typeof v === "number" && unit === "%") return `${(v).toFixed(1)}%`;
+    if (typeof v === "number" && unit === "%") return `${v.toFixed(1)}%`;
     if (typeof v === "number") return String(v);
-    // string
     return unit ? `${v} ${unit}` : String(v);
   };
 
-  // -------- KPI modal handlers --------
+  // -------- Open modal & load KPIs --------
   const openKpiModal = async () => {
     if (!selectedMatchId) {
       alert("Please select a match that includes Brasil.");
@@ -131,10 +143,14 @@ export default function PostGame() {
     setKpisData([]);
     setKpisLoading(true);
     try {
-      const res = await api.get(EP_MATCH_KPIS, {
-        params: { match_id: selectedMatchId, team_category: category }
-      });
-      const arr = Array.isArray(res.data?.kpis) ? res.data.kpis : Array.isArray(res.data) ? res.data : [];
+      const EP_MATCH_KPIS = KPI_ENDPOINT_BY_CATEGORY[category];
+      if (!EP_MATCH_KPIS) throw new Error(`No KPI endpoint mapped for ${category}`);
+      const res = await api.get(EP_MATCH_KPIS, { params: { match_id: selectedMatchId } });
+
+      // Accept either {kpis:[...]} or [...]
+      const arr = Array.isArray(res.data?.kpis) ? res.data.kpis
+                : Array.isArray(res.data) ? res.data
+                : [];
       setKpisData(arr);
     } catch (e) {
       console.error(e);
@@ -143,13 +159,12 @@ export default function PostGame() {
       setKpisLoading(false);
     }
   };
-
   const closeKpiModal = () => setShowKpiModal(false);
 
-  // -------- Derived summary --------
+  // -------- Derived KPI views --------
   const withPassFail = useMemo(() => {
     return kpisData.map(k => {
-      const ok = cmp(k.actual, k.operator || ">=", k.target);
+      const ok = typeof k.ok === "boolean" ? k.ok : cmp(k.actual, k.operator || ">=", k.target);
       return { ...k, ok };
     });
   }, [kpisData]);
@@ -177,11 +192,9 @@ export default function PostGame() {
 
   // -------- UI helpers --------
   const matchLabel = (m) => {
-    const home = m.home || m.team_a || "—";
-    const away = m.away || m.team_b || "—";
-    const when = m.date || m.start_time || "";
-    const venue = m.venue ? ` • ${m.venue}` : "";
-    return `${home} vs ${away}${venue} ${when ? " — " + new Date(when).toLocaleDateString() : ""}`;
+    const when = m.match_date ? new Date(m.match_date).toLocaleDateString() : "";
+    const tour = m.tournament ? ` • ${m.tournament}` : "";
+    return `${m.team_a} vs ${m.team_b}${tour}${when ? " — " + when : ""}`;
   };
 
   return (
@@ -189,7 +202,7 @@ export default function PostGame() {
       <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
 
-        {/* Filters card */}
+        {/* Filters */}
         <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="mb-4 shadow-sm">
           <Card.Body>
             <Row className="g-3 align-items-end">
@@ -217,7 +230,7 @@ export default function PostGame() {
                     <option value="">No Brasil matches found</option>
                   ) : (
                     matches.map(m => (
-                      <option key={m.id} value={m.id}>{matchLabel(m)}</option>
+                      <option key={m.match_id} value={m.match_id}>{matchLabel(m)}</option>
                     ))
                   )}
                 </Form.Select>
@@ -246,7 +259,7 @@ export default function PostGame() {
                   )}
                 </Card.Title>
                 <Card.Text className="mb-3">
-                  View targets vs outcomes for this match. Filter to failed KPIs in the modal.
+                  Targets vs results by bucket and phase, with pass/fail and a quick summary.
                 </Card.Text>
                 <Button disabled={!selectedMatchId || loadingMatches} onClick={openKpiModal}>
                   Open
@@ -255,11 +268,12 @@ export default function PostGame() {
             </Card>
           </Col>
 
-          {/* (Future) More post-game cards can go here: Wagon Wheel Review, Bowler Plans vs Reality, Phase Report, Fielding Summary, etc. */}
+          {/* Future: add more Post-Game cards here */}
+          {/* <Col md={4}>…</Col> */}
         </Row>
       </div>
 
-      {/* -------------- KPI Modal -------------- */}
+      {/* KPI Modal */}
       <Modal
         show={showKpiModal}
         onHide={closeKpiModal}
@@ -279,8 +293,11 @@ export default function PostGame() {
                 <div className="small text-muted">KPIs Met</div>
                 <div className="fw-bold">{summary.pct}%</div>
               </div>
-              <div style={{ width: 200 }}>
-                <ProgressBar now={summary.pct} variant={summary.pct >= 70 ? "success" : summary.pct >= 50 ? "warning" : "danger"} />
+              <div style={{ width: 220 }}>
+                <ProgressBar
+                  now={summary.pct}
+                  variant={summary.pct >= 70 ? "success" : summary.pct >= 50 ? "warning" : "danger"}
+                />
               </div>
             </div>
 
@@ -313,7 +330,7 @@ export default function PostGame() {
                           <th className="text-center" style={{ width: 120 }}>Target</th>
                           <th className="text-center" style={{ width: 120 }}>Result</th>
                           <th className="text-center" style={{ width: 80 }}>Status</th>
-                          <th style={{ width: 220 }}>Notes</th>
+                          <th style={{ width: 240 }}>Notes</th>
                         </tr>
                       </thead>
                       <tbody>
