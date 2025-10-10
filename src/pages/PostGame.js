@@ -278,7 +278,6 @@ export default function PostGame() {
                 <th className="text-center" style={{ width: 120 }}>Target</th>
                 <th className="text-center" style={{ width: 120 }}>Result</th>
                 <th className="text-center" style={{ width: 80 }}>Status</th>
-                <th style={{ width: 240 }}>Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -293,7 +292,6 @@ export default function PostGame() {
                   <td className="text-center">
                     <Badge bg={k.ok ? "success" : "danger"}>{k.ok ? "Met" : "Missed"}</Badge>
                   </td>
-                  <td className="small">{k.notes || ""}</td>
                 </tr>
               ))}
             </tbody>
