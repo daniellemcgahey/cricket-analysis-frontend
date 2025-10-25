@@ -226,7 +226,7 @@ export default function PostGame() {
     const acc = {
       Batting: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
       Bowling: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
-      Fielding:{ "Match": [] },
+      Fielding:{ "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
     };
     filteredKPIs.forEach(k => {
       const tab = kpiToTab(k);
