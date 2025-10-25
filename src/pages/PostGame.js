@@ -190,12 +190,15 @@ export default function PostGame() {
   const closeKpiModal = () => setShowKpiModal(false);
 
   // -------- Derived KPI views --------
-  const withPassFail = useMemo(() => {
-    return kpisData.map(k => {
-      const ok = typeof k.ok === "boolean" ? k.ok : cmp(k.actual, k.operator || ">=", k.target);
-      return { ...k, ok };
-    });
-  }, [kpisData]);
+const withPassFail = useMemo(() => {
+  return kpisData.map(k => {
+    if (typeof k.ok === "boolean") return k;        // backend already scored
+    if (isNA(k.actual)) return { ...k, ok: null };  // N/A → do not score
+    const ok = cmp(k.actual, k.operator || ">=", k.target);
+    return { ...k, ok };
+  });
+}, [kpisData]);
+
 
   const filteredKPIs = useMemo(() => {
     const base = withPassFail;
@@ -220,6 +223,12 @@ export default function PostGame() {
     if (p.startsWith("death")) return "Death Overs";
     return "Match";
   };
+
+  const isNA = (v) =>
+  v === null ||
+  v === undefined ||
+  (typeof v === "string" && ["na", "n/a", "not applicable"].includes(v.trim().toLowerCase()));
+
 
   // Split KPIs into tab → phase → items
   const byTabPhase = useMemo(() => {
