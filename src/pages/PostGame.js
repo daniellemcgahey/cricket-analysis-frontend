@@ -243,16 +243,24 @@ export default function PostGame() {
     return { total, passed, pct: total ? Math.round((passed / total) * 100) : 0 };
   }, [withPassFail]);
 
-  const tabSummary = useMemo(() => {
-    const out = {};
-    TAB_KEYS.forEach(tabKey => {
-      const all = PHASE_ORDER.flatMap(ph => byTabPhase[tabKey][ph]);
-      const valid = all.filter(k => typeof k.ok === "boolean");
-      const met = valid.filter(k => k.ok).length;
-      out[tabKey] = { total: valid.length, met, pct: valid.length ? Math.round((met / valid.length) * 100) : 0 };
-    });
-    return out;
-  }, [byTabPhase]);
+const tabSummary = useMemo(() => {
+  const out = {};
+  TAB_KEYS.forEach(tabKey => {
+    const all = PHASE_ORDER
+      .flatMap(ph => (byTabPhase[tabKey]?.[ph] || []))
+      .filter(Boolean);
+
+    const valid = all.filter(k => typeof k.ok === "boolean");
+    const met = valid.filter(k => k.ok).length;
+    out[tabKey] = {
+      total: valid.length,
+      met,
+      pct: valid.length ? Math.round((met / valid.length) * 100) : 0
+    };
+  });
+  return out;
+}, [byTabPhase]);
+
 
   // -------- UI helpers --------
   const matchLabel = (m) => {
@@ -261,13 +269,19 @@ export default function PostGame() {
     return `${m.team_a} vs ${m.team_b}${tour}${when ? " — " + when : ""}`;
   };
 
-  const renderPhaseSection = (phaseKey, arr) => (
+const renderPhaseSection = (phaseKey, itemsRaw) => {
+  const arr = Array.isArray(itemsRaw) ? itemsRaw.filter(Boolean) : [];
+
+  return (
     <Card key={phaseKey} className={`mb-3 ${cardVariantClass}`}>
       <Card.Body>
         <div className="d-flex align-items-center justify-content-between">
           <h6 className="fw-bold mb-2">{phaseKey}</h6>
-          <Badge bg="secondary">{arr.filter(i => i.ok).length}/{arr.length} met</Badge>
+          <Badge bg="secondary">
+            {arr.filter(i => i && i.ok === true).length}/{arr.length} met
+          </Badge>
         </div>
+
         {arr.length === 0 ? (
           <div className="text-muted">No KPIs in this section.</div>
         ) : (
@@ -285,7 +299,10 @@ export default function PostGame() {
                 <tr key={k.key}>
                   <td>
                     <div className="fw-semibold">{k.label || k.key}</div>
-                    {k.phase && <div className="small text-muted">{k.phase}</div>}
+                    {/* Hide the little phase subtitle for Fielding (match-wide) */}
+                    {k.bucket !== "Fielding" && k.phase && (
+                      <div className="small text-muted">{k.phase}</div>
+                    )}
                   </td>
                   <td className="text-center">{formatVal(k.target, k.unit)}</td>
                   <td className="text-center">{formatVal(k.actual, k.unit)}</td>
@@ -302,12 +319,35 @@ export default function PostGame() {
       </Card.Body>
     </Card>
   );
+};
 
-  const renderTabBody = (tabKey) => {
-    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
-    const sections = PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]));
-    return <>{sections}</>;
-  };
+
+const renderTabBody = (tabKey) => {
+  if (kpisLoading) {
+    return (
+      <div className="text-center py-4">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
+  // Fielding: single match-wide table (merge all phases)
+  if (tabKey === "Fielding") {
+    const allFielding = PHASE_ORDER
+      .flatMap(ph => (byTabPhase.Fielding?.[ph] || []))
+      .filter(Boolean);
+
+    return <>{renderPhaseSection("Match", allFielding)}</>;
+  }
+
+  // Batting / Bowling: keep phased sections
+  const sections = PHASE_ORDER.map(ph => {
+    const arr = (byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
+    return renderPhaseSection(ph, arr);
+  });
+  return <>{sections}</>;
+};
+
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
