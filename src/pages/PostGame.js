@@ -236,20 +236,20 @@ export default function PostGame() {
     return acc;
   }, [filteredKPIs]);
 
-  // Global summary
   const summary = useMemo(() => {
-    const total = withPassFail.length;
-    const passed = withPassFail.filter(k => k.ok).length;
+    const valid = withPassFail.filter(k => typeof k.ok === "boolean");
+    const total = valid.length;
+    const passed = valid.filter(k => k.ok).length;
     return { total, passed, pct: total ? Math.round((passed / total) * 100) : 0 };
   }, [withPassFail]);
 
-  // Per-tab % met (optional for tab headers)
   const tabSummary = useMemo(() => {
     const out = {};
     TAB_KEYS.forEach(tabKey => {
       const all = PHASE_ORDER.flatMap(ph => byTabPhase[tabKey][ph]);
-      const met = all.filter(k => k.ok).length;
-      out[tabKey] = { total: all.length, met, pct: all.length ? Math.round((met / all.length) * 100) : 0 };
+      const valid = all.filter(k => typeof k.ok === "boolean");
+      const met = valid.filter(k => k.ok).length;
+      out[tabKey] = { total: valid.length, met, pct: valid.length ? Math.round((met / valid.length) * 100) : 0 };
     });
     return out;
   }, [byTabPhase]);
@@ -290,7 +290,9 @@ export default function PostGame() {
                   <td className="text-center">{formatVal(k.target, k.unit)}</td>
                   <td className="text-center">{formatVal(k.actual, k.unit)}</td>
                   <td className="text-center">
-                    <Badge bg={k.ok ? "success" : "danger"}>{k.ok ? "Met" : "Missed"}</Badge>
+                    {k.ok === true && <Badge bg="success">Met</Badge>}
+                    {k.ok === false && <Badge bg="danger">Missed</Badge>}
+                    {k.ok == null && <Badge bg="secondary">N/A</Badge>}
                   </td>
                 </tr>
               ))}
