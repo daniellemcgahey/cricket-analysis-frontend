@@ -226,7 +226,7 @@ export default function PostGame() {
     const acc = {
       Batting: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
       Bowling: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
-      Fielding:{ "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
+      Fielding: ["Match"],
     };
     filteredKPIs.forEach(k => {
       const tab = kpiToTab(k);
@@ -303,11 +303,27 @@ export default function PostGame() {
     </Card>
   );
 
-  const renderTabBody = (tabKey) => {
-    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
-    const sections = PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]));
-    return <>{sections}</>;
-  };
+const renderTabBody = (tabKey) => {
+  if (kpisLoading) {
+    return (
+      <div className="text-center py-4">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
+  // Fielding: single match-wide section (merge everything into one table)
+  if (tabKey === "Fielding") {
+    const allFielding = PHASE_ORDER.flatMap(ph => (byTabPhase.Fielding?.[ph] || []));
+    // Label the card "Match" to make it clear this is match-wide
+    return <>{renderPhaseSection("Match", allFielding)}</>;
+  }
+
+  // Batting / Bowling: keep phase breakdown
+  const sections = PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]));
+  return <>{sections}</>;
+};
+
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
