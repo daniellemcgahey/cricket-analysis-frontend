@@ -116,6 +116,14 @@ export default function PostGame() {
   }, [category]);
 
   // -------- KPI helpers --------
+
+  // Treat "no data" as N/A
+  const isNA = (v) =>
+    v === null ||
+    v === undefined ||
+    (typeof v === "string" && ["na", "n/a", "not applicable"].includes(v.trim().toLowerCase()));
+
+
   const coerceNum = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
   const cmp = (actual, operator, target) => {
     const aNum = !Number.isNaN(coerceNum(actual));
@@ -143,7 +151,8 @@ export default function PostGame() {
   };
 
   const formatVal = (v, unit) => {
-    if (v === null || v === undefined || v === "") return "—";
+    if (isNA(v)) return "N/A";
+    if (v === "") return "—";
     if (typeof v === "number" && unit === "%") return `${v.toFixed(1)}%`;
     if (typeof v === "number") return String(v);
     return unit ? `${v} ${unit}` : String(v);
@@ -192,8 +201,8 @@ export default function PostGame() {
   // -------- Derived KPI views --------
 const withPassFail = useMemo(() => {
   return kpisData.map(k => {
-    if (typeof k.ok === "boolean") return k;        // backend already scored
-    if (isNA(k.actual)) return { ...k, ok: null };  // N/A → do not score
+    if (typeof k.ok === "boolean") return k;   // backend already decided
+    if (isNA(k.actual)) return { ...k, ok: null };  // do not score N/A rows
     const ok = cmp(k.actual, k.operator || ">=", k.target);
     return { ...k, ok };
   });
@@ -224,10 +233,6 @@ const withPassFail = useMemo(() => {
     return "Match";
   };
 
-  const isNA = (v) =>
-  v === null ||
-  v === undefined ||
-  (typeof v === "string" && ["na", "n/a", "not applicable"].includes(v.trim().toLowerCase()));
 
 
   // Split KPIs into tab → phase → items
