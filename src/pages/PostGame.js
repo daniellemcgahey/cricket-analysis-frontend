@@ -226,7 +226,7 @@ export default function PostGame() {
     const acc = {
       Batting: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
       Bowling: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
-      Fielding: ["Match"],
+      Fielding:{ "Match": [] },
     };
     filteredKPIs.forEach(k => {
       const tab = kpiToTab(k);
@@ -261,81 +261,53 @@ export default function PostGame() {
     return `${m.team_a} vs ${m.team_b}${tour}${when ? " — " + when : ""}`;
   };
 
-const renderPhaseSection = (phaseLabel, itemsRaw) => {
-  const items = Array.isArray(itemsRaw) ? itemsRaw.filter(Boolean) : [];
-
-  return (
-    <Row className="g-3" key={phaseLabel}>
-      <Col md={12}>
-        <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="shadow-sm">
-          <Card.Header className="fw-bold">{phaseLabel}</Card.Header>
-          <Card.Body>
-            {items.length === 0 ? (
-              <div className="text-muted">No KPIs.</div>
-            ) : (
-              <Table size="sm" bordered responsive>
-                <thead>
-                  <tr>
-                    <th>KPI</th>
-                    <th className="text-center" style={{ width: 120 }}>Target</th>
-                    <th className="text-center" style={{ width: 120 }}>Result</th>
-                    <th className="text-center" style={{ width: 80 }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((k) => (
-                    <tr key={k.key}>
-                      <td>
-                        <div className="fw-semibold">{k.label || k.key}</div>
-                        {k.bucket === "Fielding" ? null : (k.phase && <div className="small text-muted">{k.phase}</div>)}
-                      </td>
-                      <td className="text-center">{formatVal(k.target, k.unit)}</td>
-                      <td className="text-center">{formatVal(k.actual, k.unit)}</td>
-                      <td className="text-center">
-                        {k.ok === true && <Badge bg="success">Met</Badge>}
-                        {k.ok === false && <Badge bg="danger">Missed</Badge>}
-                        {k.ok == null && <Badge bg="secondary">N/A</Badge>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            )}
-          </Card.Body>
-        </Card>
-      </Col>
-    </Row>
+  const renderPhaseSection = (phaseKey, arr) => (
+    <Card key={phaseKey} className={`mb-3 ${cardVariantClass}`}>
+      <Card.Body>
+        <div className="d-flex align-items-center justify-content-between">
+          <h6 className="fw-bold mb-2">{phaseKey}</h6>
+          <Badge bg="secondary">{arr.filter(i => i.ok).length}/{arr.length} met</Badge>
+        </div>
+        {arr.length === 0 ? (
+          <div className="text-muted">No KPIs in this section.</div>
+        ) : (
+          <Table size="sm" bordered responsive className="mb-0">
+            <thead>
+              <tr>
+                <th>KPI</th>
+                <th className="text-center" style={{ width: 120 }}>Target</th>
+                <th className="text-center" style={{ width: 120 }}>Result</th>
+                <th className="text-center" style={{ width: 80 }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {arr.map(k => (
+                <tr key={k.key}>
+                  <td>
+                    <div className="fw-semibold">{k.label || k.key}</div>
+                    {k.phase && <div className="small text-muted">{k.phase}</div>}
+                  </td>
+                  <td className="text-center">{formatVal(k.target, k.unit)}</td>
+                  <td className="text-center">{formatVal(k.actual, k.unit)}</td>
+                  <td className="text-center">
+                    {k.ok === true && <Badge bg="success">Met</Badge>}
+                    {k.ok === false && <Badge bg="danger">Missed</Badge>}
+                    {k.ok == null && <Badge bg="secondary">N/A</Badge>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card.Body>
+    </Card>
   );
-};
 
-
-const renderTabBody = (tabKey) => {
-  if (kpisLoading) {
-    return (
-      <div className="text-center py-4">
-        <Spinner animation="border" />
-      </div>
-    );
-  }
-
-  // Fielding: single match-wide section
-  if (tabKey === "Fielding") {
-    const allFielding = PHASE_ORDER
-      .flatMap(ph => (byTabPhase.Fielding?.[ph] || []))
-      .filter(Boolean); // drop undefined/null items
-
-    return <>{renderPhaseSection("Match", allFielding)}</>;
-  }
-
-  // Batting / Bowling: phased sections
-  const sections = PHASE_ORDER.map(ph => {
-    const arr = (byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
-    return renderPhaseSection(ph, arr);
-  });
-  return <>{sections}</>;
-};
-
-
+  const renderTabBody = (tabKey) => {
+    if (kpisLoading) return <div className="text-center py-4"><Spinner animation="border" /></div>;
+    const sections = PHASE_ORDER.map(ph => renderPhaseSection(ph, byTabPhase[tabKey][ph]));
+    return <>{sections}</>;
+  };
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
