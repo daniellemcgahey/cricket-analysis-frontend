@@ -576,10 +576,41 @@ export default function PostGame() {
         </SectionBlock>
 
         <SectionBlock title="Phases">
-          <MetricRow label="Powerplay Runs" value={phase.powerplay_runs ?? "—"} />
-          <MetricRow label="Middle Overs Runs" value={phase.middle_overs_runs ?? "—"} />
-          <MetricRow label="Death Overs Runs" value={phase.death_overs_runs ?? "—"} />
+          <MetricRow
+            label="Powerplay"
+            value={
+              phase.powerplay_runs != null ? `${phase.powerplay_runs} runs` : "—"
+            }
+            sub={
+              phase.powerplay_scoring_shot_pct != null
+                ? `${phase.powerplay_scoring_shot_pct.toFixed(1)}% scoring shots`
+                : undefined
+            }
+          />
+          <MetricRow
+            label="Middle Overs"
+            value={
+              phase.middle_overs_runs != null ? `${phase.middle_overs_runs} runs` : "—"
+            }
+            sub={
+              phase.middle_overs_scoring_shot_pct != null
+                ? `${phase.middle_overs_scoring_shot_pct.toFixed(1)}% scoring shots`
+                : undefined
+            }
+          />
+          <MetricRow
+            label="Death Overs"
+            value={
+              phase.death_overs_runs != null ? `${phase.death_overs_runs} runs` : "—"
+            }
+            sub={
+              phase.death_overs_scoring_shot_pct != null
+                ? `${phase.death_overs_scoring_shot_pct.toFixed(1)}% scoring shots`
+                : undefined
+            }
+          />
         </SectionBlock>
+
 
         {batting.dismissal && (
           <SectionBlock title="Dismissal">
@@ -635,23 +666,58 @@ export default function PostGame() {
         </SectionBlock>
 
         <SectionBlock title="Phases">
+          {/* Powerplay */}
           <MetricRow
             label="Powerplay"
             value={
-              phase.powerplay_overs != null || phase.powerplay_econ != null
-                ? `${phase.powerplay_overs ?? 0} ov @ ${phase.powerplay_econ ?? "—"}`
+              phase.powerplay_overs != null ||
+              phase.powerplay_runs != null ||
+              phase.powerplay_wickets != null
+                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_maidens ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
                 : "—"
             }
+            sub={
+              phase.powerplay_dot_ball_pct != null
+                ? `${phase.powerplay_dot_ball_pct.toFixed(1)}% dot balls`
+                : undefined
+            }
           />
+
+          {/* Middle overs */}
           <MetricRow
             label="Middle Overs"
             value={
-              phase.middle_overs_overs != null || phase.middle_overs_econ != null
-                ? `${phase.middle_overs_overs ?? 0} ov @ ${phase.middle_overs_econ ?? "—"}`
+              phase.middle_overs_overs != null ||
+              phase.middle_overs_runs != null ||
+              phase.middle_overs_wickets != null
+                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_maidens ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
                 : "—"
+            }
+            sub={
+              phase.middle_overs_dot_ball_pct != null
+                ? `${phase.middle_overs_dot_ball_pct.toFixed(1)}% dot balls`
+                : undefined
+            }
+          />
+
+          {/* Death overs */}
+          <MetricRow
+            label="Death Overs"
+            value={
+              phase.death_overs_overs != null ||
+              phase.death_overs_runs != null ||
+              phase.death_overs_wickets != null
+                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_maidens ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
+                : "—"
+            }
+            sub={
+              phase.death_overs_dot_ball_pct != null
+                ? `${phase.death_overs_dot_ball_pct.toFixed(1)}% dot balls`
+                : undefined
             }
           />
         </SectionBlock>
+
       </>
     );
   };
