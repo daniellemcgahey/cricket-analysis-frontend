@@ -1,7 +1,19 @@
 // src/pages/PostGame.js
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import {
-  Row, Col, Card, Form, Button, Spinner, Alert, Badge, Modal, Table, ProgressBar, Tabs, Tab
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Spinner,
+  Alert,
+  Badge,
+  Modal,
+  Table,
+  ProgressBar,
+  Tabs,
+  Tab,
 } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
@@ -13,17 +25,17 @@ const EP_MATCHES_BY_CATEGORY = "/matches"; // GET ?teamCategory=Men|Women|U19 Me
 
 // Category → KPI endpoint (each category can have different KPI sets/targets)
 const KPI_ENDPOINT_BY_CATEGORY = {
-  "Men":        "/postgame/men/match-kpis",
-  "Women":      "/postgame/women/match-kpis",
-  "U19 Men":    "/postgame/u19-men/match-kpis",
-  "U19 Women":  "/postgame/u19-women/match-kpis",
-  "Training":   "/postgame/training/match-kpis",
+  Men: "/postgame/men/match-kpis",
+  Women: "/postgame/women/match-kpis",
+  "U19 Men": "/postgame/u19-men/match-kpis",
+  "U19 Women": "/postgame/u19-women/match-kpis",
+  Training: "/postgame/training/match-kpis",
 };
 
-// New endpoints for player summary (adjust to your backend)
-const EP_POSTGAME_TEAMS = "/postgame/teams";                // GET ?match_id=
-const EP_POSTGAME_PLAYERS = "/postgame/players";            // GET ?match_id=&team_id=
-const EP_POSTGAME_PLAYER_SUMMARY = "/postgame/player-summary"; // GET ?match_id=&team_id=&player_id=&team_category=
+// Player summary endpoints
+const EP_POSTGAME_TEAMS = "/postgame/teams";
+const EP_POSTGAME_PLAYERS = "/postgame/players";
+const EP_POSTGAME_PLAYER_SUMMARY = "/postgame/player-summary";
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 const TAB_KEYS = ["Batting", "Bowling", "Fielding"];
@@ -35,9 +47,9 @@ const isBrasil = (name) => /bra[sz]il/i.test(name || "");
 
 const parseCategoryTokens = (name) => {
   const s = String(name || "").toLowerCase();
-  const u19   = /\bu-?19\b/.test(s) || /\bu19\b/.test(s);
+  const u19 = /\bu-?19\b/.test(s) || /\bu19\b/.test(s);
   const women = /\bwomen\b/.test(s);
-  const men   = /\bmen\b/.test(s); // 'men' as a word, not the tail of 'women'
+  const men = /\bmen\b/.test(s);
   const training = /\btraining\b/.test(s);
   return { u19, women, men, training };
 };
@@ -45,12 +57,18 @@ const parseCategoryTokens = (name) => {
 const isNameInCategory = (name, category) => {
   const { u19, women, men, training } = parseCategoryTokens(name);
   switch (category) {
-    case "Men":        return !u19 && men && !women;
-    case "Women":      return !u19 && women;
-    case "U19 Men":    return u19 && men && !women;
-    case "U19 Women":  return u19 && women;
-    case "Training":   return training;
-    default:           return false;
+    case "Men":
+      return !u19 && men && !women;
+    case "Women":
+      return !u19 && women;
+    case "U19 Men":
+      return u19 && men && !women;
+    case "U19 Women":
+      return u19 && women;
+    case "Training":
+      return training;
+    default:
+      return false;
   }
 };
 
@@ -61,6 +79,33 @@ const matchIsBrasilInCategory = (m, category) => {
   if (isBrasil(b)) return isNameInCategory(b, category);
   return false;
 };
+
+/** ===================== Small UI helpers ===================== */
+
+function MetricRow({ label, value, sub }) {
+  return (
+    <div className="d-flex justify-content-between align-items-center mb-2">
+      <div className="me-3">
+        <div className="small text-muted text-uppercase">{label}</div>
+        {sub && <div className="small text-muted">{sub}</div>}
+      </div>
+      <div className="fw-semibold text-end" style={{ minWidth: 80 }}>
+        {value ?? "—"}
+      </div>
+    </div>
+  );
+}
+
+function SectionBlock({ title, children }) {
+  return (
+    <Card className="mb-3">
+      <Card.Body>
+        <div className="fw-bold mb-2">{title}</div>
+        {children}
+      </Card.Body>
+    </Card>
+  );
+}
 
 /** ===================== Page ===================== */
 
@@ -83,20 +128,20 @@ export default function PostGame() {
   const [showKpiModal, setShowKpiModal] = useState(false);
   const [kpisLoading, setKpisLoading] = useState(false);
   const [kpisError, setKpisError] = useState("");
-  const [kpisData, setKpisData] = useState([]);   // [{key,label,unit,bucket,phase,operator,target,actual,ok?,notes}]
+  const [kpisData, setKpisData] = useState([]);
   const [showFailedOnly, setShowFailedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState("Batting");
 
   // -------- Player Summary Modal --------
   const [showPlayerModal, setShowPlayerModal] = useState(false);
-  const [playerTeams, setPlayerTeams] = useState([]);          // [{ id, name }]
-  const [selectedPlayerTeamId, setSelectedPlayerTeamId] = useState("");
-  const [teamPlayers, setTeamPlayers] = useState([]);          // [{ id, name }]
+  const [playerModalTab, setPlayerModalTab] = useState("Batting");
+  const [teamsForMatch, setTeamsForMatch] = useState([]);
+  const [playersForTeam, setPlayersForTeam] = useState([]);
+  const [selectedTeamForPlayer, setSelectedTeamForPlayer] = useState("");
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
-  const [playerSummary, setPlayerSummary] = useState(null);    // full summary payload
-  const [playerLoading, setPlayerLoading] = useState(false);
-  const [playerError, setPlayerError] = useState("");
-  const [playerActiveTab, setPlayerActiveTab] = useState("Batting");
+  const [playerSummary, setPlayerSummary] = useState(null);
+  const [playerSummaryLoading, setPlayerSummaryLoading] = useState(false);
+  const [playerSummaryError, setPlayerSummaryError] = useState("");
 
   // -------- Fetch matches (category + Brasil) --------
   useEffect(() => {
@@ -106,12 +151,13 @@ export default function PostGame() {
     setMatches([]);
     setSelectedMatchId("");
 
-    api.get(EP_MATCHES_BY_CATEGORY, { params: { teamCategory: category } })
-      .then(res => {
+    api
+      .get(EP_MATCHES_BY_CATEGORY, { params: { teamCategory: category } })
+      .then((res) => {
         if (!mounted) return;
         const list = Array.isArray(res.data) ? res.data : [];
 
-        const filtered = list.filter(m => {
+        const filtered = list.filter((m) => {
           const hasBrasil = isBrasil(m.team_a) || isBrasil(m.team_b);
           return hasBrasil && matchIsBrasilInCategory(m, category);
         });
@@ -128,17 +174,17 @@ export default function PostGame() {
       .catch(() => setError("Could not load matches"))
       .finally(() => setLoadingMatches(false));
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [category]);
 
   // -------- KPI helpers --------
 
-  // Treat "no data" as N/A
   const isNA = (v) =>
     v === null ||
     v === undefined ||
     (typeof v === "string" && ["na", "n/a", "not applicable"].includes(v.trim().toLowerCase()));
-
 
   const coerceNum = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
   const cmp = (actual, operator, target) => {
@@ -149,19 +195,29 @@ export default function PostGame() {
       const a = Number(actual);
       const t = Number(target);
       switch (operator) {
-        case ">=": return a >= t;
-        case ">":  return a >  t;
-        case "==": return a === t;
-        case "<=": return a <= t;
-        case "<":  return a <  t;
-        case "!=": return a !== t;
-        default:   return a >= t;
+        case ">=":
+          return a >= t;
+        case ">":
+          return a > t;
+        case "==":
+          return a === t;
+        case "<=":
+          return a <= t;
+        case "<":
+          return a < t;
+        case "!=":
+          return a !== t;
+        default:
+          return a >= t;
       }
     } else {
       switch (operator) {
-        case "==": return String(actual) === String(target);
-        case "!=": return String(actual) !== String(target);
-        default:   return String(actual) === String(target);
+        case "==":
+          return String(actual) === String(target);
+        case "!=":
+          return String(actual) !== String(target);
+        default:
+          return String(actual) === String(target);
       }
     }
   };
@@ -172,15 +228,6 @@ export default function PostGame() {
     if (typeof v === "number" && unit === "%") return `${v.toFixed(1)}%`;
     if (typeof v === "number") return String(v);
     return unit ? `${v} ${unit}` : String(v);
-  };
-
-  // Simple helper for player summary values (NA handling)
-  const formatSummaryVal = (v, suffix = "") => {
-    if (v === null || v === undefined) return "NA";
-    if (typeof v === "number" && suffix === "%") {
-      return `${v.toFixed(1)}%`;
-    }
-    return `${v}${suffix}`;
   };
 
   // -------- Open modal & load KPIs --------
@@ -200,10 +247,11 @@ export default function PostGame() {
 
       const res = await api.get(EP_MATCH_KPIS, { params: { match_id: selectedMatchId } });
 
-      // Accept either {kpis:[...]} or [...]
-      const arr = Array.isArray(res.data?.kpis) ? res.data.kpis
-                : Array.isArray(res.data) ? res.data
-                : [];
+      const arr = Array.isArray(res.data?.kpis)
+        ? res.data.kpis
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
 
       setKpisData(arr);
     } catch (e) {
@@ -215,121 +263,29 @@ export default function PostGame() {
   };
   const closeKpiModal = () => setShowKpiModal(false);
 
-  // -------- Open Player Summary Modal --------
-  const openPlayerModal = async () => {
-    if (!selectedMatchId) {
-      alert("Please select a match that includes Brasil.");
-      return;
-    }
-    setShowPlayerModal(true);
-    setPlayerError("");
-    setPlayerSummary(null);
-    setTeamPlayers([]);
-    setSelectedPlayerTeamId("");
-    setSelectedPlayerId("");
-    setPlayerActiveTab("Batting");
-    setPlayerLoading(true);
-
-    try {
-      const res = await api.get(EP_POSTGAME_TEAMS, {
-        params: { match_id: selectedMatchId }
-      });
-      const arr = Array.isArray(res.data?.teams) ? res.data.teams : [];
-      setPlayerTeams(arr);
-    } catch (e) {
-      console.error(e);
-      setPlayerError("Could not load teams for this match.");
-    } finally {
-      setPlayerLoading(false);
-    }
-  };
-
-  const closePlayerModal = () => {
-    setShowPlayerModal(false);
-    setPlayerError("");
-    setPlayerSummary(null);
-    setTeamPlayers([]);
-    setSelectedPlayerTeamId("");
-    setSelectedPlayerId("");
-  };
-
-  // -------- Fetch players when team changes (Player Modal) --------
-  useEffect(() => {
-    if (!showPlayerModal || !selectedPlayerTeamId || !selectedMatchId) return;
-
-    setPlayerError("");
-    setTeamPlayers([]);
-    setSelectedPlayerId("");
-    setPlayerSummary(null);
-    setPlayerLoading(true);
-
-    api.get(EP_POSTGAME_PLAYERS, {
-      params: { match_id: selectedMatchId, team_id: selectedPlayerTeamId }
-    })
-      .then(res => {
-        const arr = Array.isArray(res.data?.players) ? res.data.players : [];
-        setTeamPlayers(arr);
-      })
-      .catch(e => {
-        console.error(e);
-        setPlayerError("Could not load players for this team.");
-      })
-      .finally(() => setPlayerLoading(false));
-  }, [showPlayerModal, selectedPlayerTeamId, selectedMatchId]);
-
-  // -------- Fetch player summary when player changes --------
-  useEffect(() => {
-    if (!showPlayerModal || !selectedPlayerTeamId || !selectedPlayerId || !selectedMatchId) return;
-
-    setPlayerError("");
-    setPlayerSummary(null);
-    setPlayerLoading(true);
-
-    api.get(EP_POSTGAME_PLAYER_SUMMARY, {
-      params: {
-        match_id: selectedMatchId,
-        team_id: selectedPlayerTeamId,
-        player_id: selectedPlayerId,
-        team_category: category
-      }
-    })
-      .then(res => {
-        setPlayerSummary(res.data || null);
-      })
-      .catch(e => {
-        console.error(e);
-        setPlayerError("Could not load player summary.");
-      })
-      .finally(() => setPlayerLoading(false));
-  }, [showPlayerModal, selectedPlayerTeamId, selectedPlayerId, selectedMatchId, category]);
-
   // -------- Derived KPI views --------
   const withPassFail = useMemo(() => {
-    return kpisData.map(k => {
-      if (typeof k.ok === "boolean") return k;   // backend already decided
-      if (isNA(k.actual)) return { ...k, ok: null };  // do not score N/A rows
+    return kpisData.map((k) => {
+      if (typeof k.ok === "boolean") return k;
+      if (isNA(k.actual)) return { ...k, ok: null };
       const ok = cmp(k.actual, k.operator || ">=", k.target);
       return { ...k, ok };
     });
   }, [kpisData]);
 
-
   const filteredKPIs = useMemo(() => {
     const base = withPassFail;
-    return showFailedOnly ? base.filter(k => !k.ok) : base;
+    return showFailedOnly ? base.filter((k) => !k.ok) : base;
   }, [withPassFail, showFailedOnly]);
 
-  // Tab assignment based on KPI bucket
   const kpiToTab = (k) => {
     const b = String(k.bucket || "General").toLowerCase();
     if (b.includes("bat")) return "Batting";
     if (b.includes("bowl")) return "Bowling";
     if (b.includes("field")) return "Fielding";
-    // default—non-mapped buckets: put under Match in Batting
     return "Batting";
   };
 
-  // Phase normalization
   const phaseOf = (k) => {
     const p = String(k.phase || "").toLowerCase();
     if (p.startsWith("power")) return "Powerplay";
@@ -338,14 +294,13 @@ export default function PostGame() {
     return "Match";
   };
 
-  // Split KPIs into tab → phase → items
   const byTabPhase = useMemo(() => {
     const acc = {
-      Batting: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
-      Bowling: { "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
-      Fielding:{ "Powerplay": [], "Middle Overs": [], "Death Overs": [], "Match": [] },
+      Batting: { Powerplay: [], "Middle Overs": [], "Death Overs": [], Match: [] },
+      Bowling: { Powerplay: [], "Middle Overs": [], "Death Overs": [], Match: [] },
+      Fielding: { Powerplay: [], "Middle Overs": [], "Death Overs": [], Match: [] },
     };
-    filteredKPIs.forEach(k => {
+    filteredKPIs.forEach((k) => {
       const tab = kpiToTab(k);
       const phase = phaseOf(k);
       acc[tab][phase].push(k);
@@ -354,25 +309,22 @@ export default function PostGame() {
   }, [filteredKPIs]);
 
   const summary = useMemo(() => {
-    const valid = withPassFail.filter(k => typeof k.ok === "boolean");
+    const valid = withPassFail.filter((k) => typeof k.ok === "boolean");
     const total = valid.length;
-    const passed = valid.filter(k => k.ok).length;
+    const passed = valid.filter((k) => k.ok).length;
     return { total, passed, pct: total ? Math.round((passed / total) * 100) : 0 };
   }, [withPassFail]);
 
   const tabSummary = useMemo(() => {
     const out = {};
-    TAB_KEYS.forEach(tabKey => {
-      const all = PHASE_ORDER
-        .flatMap(ph => (byTabPhase[tabKey]?.[ph] || []))
-        .filter(Boolean);
-
-      const valid = all.filter(k => typeof k.ok === "boolean");
-      const met = valid.filter(k => k.ok).length;
+    TAB_KEYS.forEach((tabKey) => {
+      const all = PHASE_ORDER.flatMap((ph) => byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
+      const valid = all.filter((k) => typeof k.ok === "boolean");
+      const met = valid.filter((k) => k.ok).length;
       out[tabKey] = {
         total: valid.length,
         met,
-        pct: valid.length ? Math.round((met / valid.length) * 100) : 0
+        pct: valid.length ? Math.round((met / valid.length) * 100) : 0,
       };
     });
     return out;
@@ -394,7 +346,7 @@ export default function PostGame() {
           <div className="d-flex align-items-center justify-content-between">
             <h6 className="fw-bold mb-2">{phaseKey}</h6>
             <Badge bg="secondary">
-              {arr.filter(i => i && i.ok === true).length}/{arr.length} met
+              {arr.filter((i) => i && i.ok === true).length}/{arr.length} met
             </Badge>
           </div>
 
@@ -405,17 +357,22 @@ export default function PostGame() {
               <thead>
                 <tr>
                   <th>KPI</th>
-                  <th className="text-center" style={{ width: 120 }}>Target</th>
-                  <th className="text-center" style={{ width: 120 }}>Result</th>
-                  <th className="text-center" style={{ width: 80 }}>Status</th>
+                  <th className="text-center" style={{ width: 120 }}>
+                    Target
+                  </th>
+                  <th className="text-center" style={{ width: 120 }}>
+                    Result
+                  </th>
+                  <th className="text-center" style={{ width: 80 }}>
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {arr.map(k => (
+                {arr.map((k) => (
                   <tr key={k.key}>
                     <td>
                       <div className="fw-semibold">{k.label || k.key}</div>
-                      {/* Hide the little phase subtitle for Fielding (match-wide) */}
                       {k.bucket !== "Fielding" && k.phase && (
                         <div className="small text-muted">{k.phase}</div>
                       )}
@@ -446,200 +403,303 @@ export default function PostGame() {
       );
     }
 
-    // Fielding: single match-wide table (merge all phases)
     if (tabKey === "Fielding") {
-      const allFielding = PHASE_ORDER
-        .flatMap(ph => (byTabPhase.Fielding?.[ph] || []))
-        .filter(Boolean);
-
+      const allFielding = PHASE_ORDER.flatMap((ph) => byTabPhase.Fielding?.[ph] || []).filter(
+        Boolean
+      );
       return <>{renderPhaseSection("Match", allFielding)}</>;
     }
 
-    // Batting / Bowling: keep phased sections
-    const sections = PHASE_ORDER.map(ph => {
+    const sections = PHASE_ORDER.map((ph) => {
       const arr = (byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
       return renderPhaseSection(ph, arr);
     });
     return <>{sections}</>;
   };
 
-  // -------- Player summary tab renderer --------
-  const renderPlayerTabBody = (tabKey) => {
-    if (!playerSummary) return null;
+  // -------- Player Summary logic --------
 
-    const batting = playerSummary.batting || {};
-    const bowling = playerSummary.bowling || {};
-    const fielding = playerSummary.fielding || {};
+  const openPlayerModal = async () => {
+    if (!selectedMatchId) {
+      alert("Please select a match first.");
+      return;
+    }
+    setShowPlayerModal(true);
+    setPlayerModalTab("Batting");
+    setTeamsForMatch([]);
+    setPlayersForTeam([]);
+    setSelectedTeamForPlayer("");
+    setSelectedPlayerId("");
+    setPlayerSummary(null);
+    setPlayerSummaryError("");
 
-    if (tabKey === "Batting") {
-      if (!batting.has_data) return <div>Did not bat.</div>;
-      return (
-        <>
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Runs (Balls)</strong><br />
-              {formatSummaryVal(batting.runs)} ({formatSummaryVal(batting.balls)})
-            </div>
-            <div>
-              <strong>Strike Rate</strong><br />
-              {formatSummaryVal(batting.strike_rate)}
-            </div>
-            <div>
-              <strong>4s / 6s</strong><br />
-              {formatSummaryVal(batting.fours)} / {formatSummaryVal(batting.sixes)}
-            </div>
-            <div>
-              <strong>Position</strong><br />
-              {formatSummaryVal(batting.batting_position)}
-            </div>
-          </div>
+    try {
+      const resTeams = await api.get(EP_POSTGAME_TEAMS, { params: { match_id: selectedMatchId } });
+      const teams = Array.isArray(resTeams.data?.teams) ? resTeams.data.teams : [];
+      setTeamsForMatch(teams);
+      if (teams.length) {
+        const firstTeamId = teams[0].id;
+        setSelectedTeamForPlayer(String(firstTeamId));
+        await loadPlayersForTeam(firstTeamId, true);
+      }
+    } catch (err) {
+      console.error(err);
+      setPlayerSummaryError("Failed to load teams for this match.");
+    }
+  };
 
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Boundary %</strong><br />
-              {formatSummaryVal(batting.boundary_percentage, "%")}
-            </div>
-            <div>
-              <strong>Dot %</strong><br />
-              {formatSummaryVal(batting.dot_ball_percentage, "%")}
-            </div>
-            <div>
-              <strong>Intent Score</strong><br />
-              {formatSummaryVal(batting.batting_intent_score)}
-            </div>
-            <div>
-              <strong>BPI</strong><br />
-              {formatSummaryVal(batting.batting_bpi)}
-            </div>
-          </div>
+  const closePlayerModal = () => setShowPlayerModal(false);
 
+  const loadPlayersForTeam = async (teamId, autoSelectFirst = false) => {
+    setPlayersForTeam([]);
+    setSelectedPlayerId("");
+    setPlayerSummary(null);
+    setPlayerSummaryError("");
+    if (!teamId) return;
+
+    try {
+      const resPlayers = await api.get(EP_POSTGAME_PLAYERS, {
+        params: { match_id: selectedMatchId, team_id: teamId },
+      });
+      const players = Array.isArray(resPlayers.data?.players) ? resPlayers.data.players : [];
+      setPlayersForTeam(players);
+
+      if (autoSelectFirst && players.length) {
+        const firstPlayerId = players[0].id;
+        setSelectedPlayerId(String(firstPlayerId));
+        await loadPlayerSummary(teamId, firstPlayerId);
+      }
+    } catch (err) {
+      console.error(err);
+      setPlayerSummaryError("Failed to load players for this team.");
+    }
+  };
+
+  const loadPlayerSummary = async (teamId, playerId) => {
+    if (!teamId || !playerId) return;
+    setPlayerSummaryLoading(true);
+    setPlayerSummaryError("");
+    setPlayerSummary(null);
+    try {
+      const res = await api.get(EP_POSTGAME_PLAYER_SUMMARY, {
+        params: {
+          match_id: selectedMatchId,
+          team_id: teamId,
+          player_id: playerId,
+          team_category: category,
+        },
+      });
+      setPlayerSummary(res.data || null);
+    } catch (err) {
+      console.error(err);
+      setPlayerSummaryError("Failed to load player summary.");
+    } finally {
+      setPlayerSummaryLoading(false);
+    }
+  };
+
+  const handleTeamChange = async (e) => {
+    const newTeamId = Number(e.target.value || "");
+    setSelectedTeamForPlayer(e.target.value);
+    await loadPlayersForTeam(newTeamId, true);
+  };
+
+  const handlePlayerChange = async (e) => {
+    const newPlayerId = Number(e.target.value || "");
+    setSelectedPlayerId(e.target.value);
+    await loadPlayerSummary(Number(selectedTeamForPlayer), newPlayerId);
+  };
+
+  // --- Player Summary Tab renderers ---
+
+  const renderBattingSummary = () => {
+    const batting = playerSummary?.batting;
+    if (!batting || !batting.has_data) {
+      return <div className="text-muted">No batting data for this player in this match.</div>;
+    }
+
+    const runs = batting.runs ?? null;
+    const balls = batting.balls ?? null;
+    const sr = batting.strike_rate ?? null;
+    const fours = batting.fours ?? null;
+    const sixes = batting.sixes ?? null;
+    const boundaryPct = batting.boundary_percentage ?? null;
+    const dotPct = batting.dot_ball_percentage ?? null;
+    const scoringShotPct =
+      typeof dotPct === "number" ? Number((100 - dotPct).toFixed(1)) : null;
+
+    const phase = batting.phase_breakdown || {};
+
+    return (
+      <>
+        <SectionBlock title="Score">
+          <MetricRow
+            label="Runs (Balls)"
+            value={
+              runs != null && balls != null ? `${runs} (${balls})` : runs != null ? runs : "—"
+            }
+          />
+          <MetricRow
+            label="Strike Rate"
+            value={sr != null ? sr.toFixed(1) : "—"}
+            sub="Runs per 100 balls"
+          />
+          <MetricRow label="4s / 6s" value={`${fours ?? 0} / ${sixes ?? 0}`} />
+        </SectionBlock>
+
+        <SectionBlock title="Scoring Shots">
           <div className="mb-2">
-            <strong>Phase Runs</strong><br />
-            PP: {formatSummaryVal(batting.phase_breakdown?.powerplay_runs)} ·{" "}
-            MO: {formatSummaryVal(batting.phase_breakdown?.middle_overs_runs)} ·{" "}
-            DO: {formatSummaryVal(batting.phase_breakdown?.death_overs_runs)}
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">Scoring Shot %</span>
+              <span className="fw-semibold">
+                {scoringShotPct != null ? `${scoringShotPct.toFixed(1)}%` : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={scoringShotPct != null ? scoringShotPct : 0}
+              variant={
+                scoringShotPct == null
+                  ? "secondary"
+                  : scoringShotPct >= 60
+                  ? "success"
+                  : scoringShotPct >= 50
+                  ? "warning"
+                  : "danger"
+              }
+            />
           </div>
+          <MetricRow
+            label="Boundary %"
+            value={boundaryPct != null ? `${boundaryPct.toFixed(1)}%` : "—"}
+            sub="4s + 6s as % of balls faced"
+          />
+        </SectionBlock>
 
-          <div className="mb-0">
-            <strong>Dismissal</strong><br />
-            {batting.dismissal || "Not out"}
-          </div>
-        </>
-      );
+        <SectionBlock title="Phases">
+          <MetricRow label="Powerplay Runs" value={phase.powerplay_runs ?? "—"} />
+          <MetricRow label="Middle Overs Runs" value={phase.middle_overs_runs ?? "—"} />
+          <MetricRow label="Death Overs Runs" value={phase.death_overs_runs ?? "—"} />
+        </SectionBlock>
+
+        {batting.dismissal && (
+          <SectionBlock title="Dismissal">
+            <div>{batting.dismissal}</div>
+          </SectionBlock>
+        )}
+      </>
+    );
+  };
+
+  const renderBowlingSummary = () => {
+    const bowling = playerSummary?.bowling;
+    if (!bowling || !bowling.has_data) {
+      return <div className="text-muted">No bowling data for this player in this match.</div>;
     }
 
-    if (tabKey === "Bowling") {
-      if (!bowling.has_data) return <div>Did not bowl.</div>;
-      return (
-        <>
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Figures</strong><br />
-              {formatSummaryVal(bowling.overs)}–
-              {formatSummaryVal(bowling.maidens)}–
-              {formatSummaryVal(bowling.runs_conceded)}–
-              {formatSummaryVal(bowling.wickets)}
-            </div>
-            <div>
-              <strong>Economy</strong><br />
-              {formatSummaryVal(bowling.economy)}
-            </div>
-            <div>
-              <strong>Dot %</strong><br />
-              {formatSummaryVal(bowling.dot_ball_percentage, "%")}
-            </div>
-            <div>
-              <strong>Intent Conceded</strong><br />
-              {formatSummaryVal(bowling.bowling_intent_conceded)}
-            </div>
-          </div>
+    const overs = bowling.overs ?? null;
+    const maidens = bowling.maidens ?? null;
+    const runs = bowling.runs_conceded ?? null;
+    const wkts = bowling.wickets ?? null;
+    const econ = bowling.economy ?? null;
+    const dotPct = bowling.dot_ball_percentage ?? null;
 
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Boundary Balls</strong><br />
-              {formatSummaryVal(bowling.boundary_balls)}
-            </div>
-            <div>
-              <strong>Wides</strong><br />
-              {formatSummaryVal(bowling.wides)}
-            </div>
-            <div>
-              <strong>No Balls</strong><br />
-              {formatSummaryVal(bowling.no_balls)}
-            </div>
-            <div>
-              <strong>BPI</strong><br />
-              {formatSummaryVal(bowling.bowling_bpi)}
-            </div>
-          </div>
+    const phase = bowling.phase_breakdown || {};
 
-          <div className="mb-0">
-            <strong>Phase Overview</strong><br />
-            PP: {formatSummaryVal(bowling.phase_breakdown?.powerplay_overs)} ov @{" "}
-            {formatSummaryVal(bowling.phase_breakdown?.powerplay_econ)}<br />
-            MO: {formatSummaryVal(bowling.phase_breakdown?.middle_overs_overs)} ov @{" "}
-            {formatSummaryVal(bowling.phase_breakdown?.middle_overs_econ)}
-          </div>
-        </>
-      );
+    return (
+      <>
+        <SectionBlock title="Figures">
+          <MetricRow
+            label="Overs–Maidens–Runs–Wickets"
+            value={
+              overs != null || maidens != null || runs != null || wkts != null
+                ? `${overs ?? 0}-${maidens ?? 0}-${runs ?? 0}-${wkts ?? 0}`
+                : "—"
+            }
+          />
+          <MetricRow
+            label="Economy"
+            value={econ != null ? econ.toFixed(2) : "—"}
+            sub="Runs conceded per over"
+          />
+          <MetricRow
+            label="Dot Ball %"
+            value={dotPct != null ? `${dotPct.toFixed(1)}%` : "—"}
+            sub="Dots as % of legal balls"
+          />
+        </SectionBlock>
+
+        <SectionBlock title="Extras & Boundaries">
+          <MetricRow label="Wides" value={bowling.wides ?? 0} />
+          <MetricRow label="No Balls" value={bowling.no_balls ?? 0} />
+          <MetricRow label="Boundary Balls" value={bowling.boundary_balls ?? 0} />
+        </SectionBlock>
+
+        <SectionBlock title="Phases">
+          <MetricRow
+            label="Powerplay"
+            value={
+              phase.powerplay_overs != null || phase.powerplay_econ != null
+                ? `${phase.powerplay_overs ?? 0} ov @ ${phase.powerplay_econ ?? "—"}`
+                : "—"
+            }
+          />
+          <MetricRow
+            label="Middle Overs"
+            value={
+              phase.middle_overs_overs != null || phase.middle_overs_econ != null
+                ? `${phase.middle_overs_overs ?? 0} ov @ ${phase.middle_overs_econ ?? "—"}`
+                : "—"
+            }
+          />
+        </SectionBlock>
+      </>
+    );
+  };
+
+  const renderFieldingSummary = () => {
+    const fielding = playerSummary?.fielding;
+    if (!fielding || !fielding.has_data) {
+      return <div className="text-muted">No fielding data for this player in this match.</div>;
     }
 
-    if (tabKey === "Fielding") {
-      if (!fielding.has_data) return <div>No fielding data.</div>;
-      return (
-        <>
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Balls Fielded</strong><br />
-              {formatSummaryVal(fielding.balls_fielded)}
-            </div>
-            <div>
-              <strong>Clean Hands %</strong><br />
-              {formatSummaryVal(fielding.clean_hands_pct, "%")}
-            </div>
-            <div>
-              <strong>Conversion %</strong><br />
-              {formatSummaryVal(fielding.conversion_rate, "%")}
-            </div>
-          </div>
+    return (
+      <>
+        <SectionBlock title="Involvement">
+          <MetricRow label="Balls Fielded" value={fielding.balls_fielded ?? 0} />
+          <MetricRow label="Clean Pickups" value={fielding.clean_pickups ?? 0} />
+          <MetricRow label="Fumbles" value={fielding.fumbles ?? 0} />
+          <MetricRow label="Overthrows Conceded" value={fielding.overthrows_conceded ?? 0} />
+        </SectionBlock>
 
-          <div className="d-flex justify-content-between mb-2">
-            <div>
-              <strong>Catches</strong><br />
-              Taken: {formatSummaryVal(fielding.catches_taken)}<br />
-              Drops: {formatSummaryVal(fielding.drops)}
-            </div>
-            <div>
-              <strong>Run Outs</strong><br />
-              Direct: {formatSummaryVal(fielding.run_outs_direct)}<br />
-              Assist: {formatSummaryVal(fielding.run_outs_assist)}
-            </div>
-            <div>
-              <strong>Ground Fielding</strong><br />
-              Clean: {formatSummaryVal(fielding.clean_pickups)}<br />
-              Fumbles: {formatSummaryVal(fielding.fumbles)}
-            </div>
-          </div>
+        <SectionBlock title="Catching & Run Outs">
+          <MetricRow label="Catches Taken" value={fielding.catches_taken ?? 0} />
+          <MetricRow label="Drops / Missed Catches" value={fielding.missed_catches ?? 0} />
+          <MetricRow
+            label="Run Outs (Direct)"
+            value={fielding.run_outs_direct != null ? fielding.run_outs_direct : 0}
+          />
+          <MetricRow
+            label="Run Outs (Assist)"
+            value={fielding.run_outs_assist != null ? fielding.run_outs_assist : 0}
+          />
+        </SectionBlock>
 
-          <div className="d-flex justify-content-between">
-            <div>
-              <strong>WK Catches</strong><br />
-              {formatSummaryVal(fielding.wk_catches)}
-            </div>
-            <div>
-              <strong>WK Stumpings</strong><br />
-              {formatSummaryVal(fielding.wk_stumpings)}
-            </div>
-            <div>
-              <strong>Overthrows Conceded</strong><br />
-              {formatSummaryVal(fielding.overthrows_conceded)}
-            </div>
-          </div>
-        </>
-      );
-    }
-
-    return null;
+        <SectionBlock title="Quality">
+          <MetricRow
+            label="Clean Hands %"
+            value={
+              fielding.clean_hands_pct != null ? `${fielding.clean_hands_pct.toFixed(1)}%` : "—"
+            }
+          />
+          <MetricRow
+            label="Chance Conversion %"
+            value={
+              fielding.conversion_rate != null ? `${fielding.conversion_rate.toFixed(1)}%` : "—"
+            }
+          />
+        </SectionBlock>
+      </>
+    );
   };
 
   return (
@@ -655,11 +715,13 @@ export default function PostGame() {
                 <Form.Label className="fw-bold">Category</Form.Label>
                 <Form.Select
                   value={category}
-                  onChange={e => setCategory(e.target.value)}
+                  onChange={(e) => setCategory(e.target.value)}
                   disabled={loadingMatches}
                 >
-                  {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c}</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </Form.Select>
               </Col>
@@ -668,14 +730,16 @@ export default function PostGame() {
                 <Form.Label className="fw-bold">Match (Brasil only)</Form.Label>
                 <Form.Select
                   value={selectedMatchId}
-                  onChange={e => setSelectedMatchId(e.target.value)}
+                  onChange={(e) => setSelectedMatchId(e.target.value)}
                   disabled={loadingMatches || !matches.length}
                 >
                   {matches.length === 0 ? (
                     <option value="">No Brasil matches found</option>
                   ) : (
-                    matches.map(m => (
-                      <option key={m.match_id} value={m.match_id}>{matchLabel(m)}</option>
+                    matches.map((m) => (
+                      <option key={m.match_id} value={m.match_id}>
+                        {matchLabel(m)}
+                      </option>
                     ))
                   )}
                 </Form.Select>
@@ -685,11 +749,15 @@ export default function PostGame() {
                 {loadingMatches && <Spinner animation="border" size="sm" />}
               </Col>
             </Row>
-            {error && <Alert className="mt-3" variant="danger">{error}</Alert>}
+            {error && (
+              <Alert className="mt-3" variant="danger">
+                {error}
+              </Alert>
+            )}
           </Card.Body>
         </Card>
 
-        {/* Cards grid (start with KPIs + Player Summary) */}
+        {/* Cards grid */}
         <Row className="g-4">
           {/* KPI Card */}
           <Col md={4}>
@@ -712,7 +780,7 @@ export default function PostGame() {
               <Card.Body>
                 <Card.Title className="fw-bold">Player Summary</Card.Title>
                 <Card.Text className="mb-3">
-                  Quick snapshot of an individual player&apos;s batting, bowling and fielding for this match.
+                  Quick batting, bowling and fielding snapshot for any player in this match.
                 </Card.Text>
                 <Button disabled={!selectedMatchId || loadingMatches} onClick={openPlayerModal}>
                   Open
@@ -721,7 +789,7 @@ export default function PostGame() {
             </Card>
           </Col>
 
-          {/* Future: add more Post-Game cards here */}
+          {/* Future: more Post-Game cards here */}
         </Row>
       </div>
 
@@ -737,9 +805,12 @@ export default function PostGame() {
           <Modal.Title>KPIs — Targets vs Results</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {kpisError && <Alert variant="danger" className="mb-2">{kpisError}</Alert>}
+          {kpisError && (
+            <Alert variant="danger" className="mb-2">
+              {kpisError}
+            </Alert>
+          )}
 
-          {/* Global summary + failed-only */}
           <div className="d-flex align-items-center justify-content-between mb-3">
             <div className="d-flex align-items-center gap-3">
               <div>
@@ -759,13 +830,18 @@ export default function PostGame() {
               id="failed-only"
               label="Show failed only"
               checked={showFailedOnly}
-              onChange={e => setShowFailedOnly(e.target.checked)}
+              onChange={(e) => setShowFailedOnly(e.target.checked)}
             />
           </div>
 
-          {/* Tabs */}
-          <Tabs id="kpi-tabs" activeKey={activeTab} onSelect={(key) => setActiveTab(key || "Batting")} className="mb-3" justify>
-            {TAB_KEYS.map(tabKey => (
+          <Tabs
+            id="kpi-tabs"
+            activeKey={activeTab}
+            onSelect={(key) => setActiveTab(key || "Batting")}
+            className="mb-3"
+            justify
+          >
+            {TAB_KEYS.map((tabKey) => (
               <Tab
                 key={tabKey}
                 eventKey={tabKey}
@@ -794,7 +870,9 @@ export default function PostGame() {
           </Tabs>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closeKpiModal}>Close</Button>
+          <Button variant="secondary" onClick={closeKpiModal}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
 
@@ -807,78 +885,96 @@ export default function PostGame() {
         contentClassName={isDarkMode ? "bg-dark text-white" : ""}
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            Individual Player Summary
-            {playerSummary?.player_name ? ` — ${playerSummary.player_name}` : ""}
-          </Modal.Title>
+          <Modal.Title>Player Summary</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {playerError && <Alert variant="danger" className="mb-2">{playerError}</Alert>}
+          {playerSummaryError && (
+            <Alert variant="danger" className="mb-2">
+              {playerSummaryError}
+            </Alert>
+          )}
 
-          {/* Team & Player selectors */}
-          <Row className="g-3 mb-3">
-            <Col md={6}>
+          {/* Team & Player selectors – vertical alignment */}
+          <Form className="mb-3">
+            <Form.Group className="mb-3">
               <Form.Label className="fw-bold">Team</Form.Label>
               <Form.Select
-                value={selectedPlayerTeamId}
-                onChange={e => setSelectedPlayerTeamId(e.target.value)}
-                disabled={playerLoading || !playerTeams.length}
+                value={selectedTeamForPlayer}
+                onChange={handleTeamChange}
+                disabled={!teamsForMatch.length}
               >
-                <option value="">Select team...</option>
-                {playerTeams.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                {!teamsForMatch.length && <option value="">No teams found</option>}
+                {teamsForMatch.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </Form.Select>
-            </Col>
-            <Col md={6}>
+            </Form.Group>
+
+            <Form.Group>
               <Form.Label className="fw-bold">Player</Form.Label>
               <Form.Select
                 value={selectedPlayerId}
-                onChange={e => setSelectedPlayerId(e.target.value)}
-                disabled={playerLoading || !selectedPlayerTeamId || !teamPlayers.length}
+                onChange={handlePlayerChange}
+                disabled={!playersForTeam.length}
               >
-                <option value="">Select player...</option>
-                {teamPlayers.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                {!playersForTeam.length && <option value="">No players found</option>}
+                {playersForTeam.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </Form.Select>
-            </Col>
-          </Row>
+            </Form.Group>
+          </Form>
 
-          {playerLoading && (
+          {playerSummaryLoading && (
             <div className="text-center py-4">
               <Spinner animation="border" />
             </div>
           )}
 
-          {!playerLoading && selectedPlayerTeamId && selectedPlayerId && !playerSummary && (
-            <div>No data found for this player.</div>
-          )}
-
-          {!playerLoading && playerSummary && (
+          {!playerSummaryLoading && playerSummary && (
             <>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div className="small text-muted">Player</div>
+                  <div className="fw-bold">{playerSummary.player_name}</div>
+                </div>
+                <div className="text-end">
+                  <div className="small text-muted">Team</div>
+                  <div className="fw-bold">{playerSummary.team_name}</div>
+                </div>
+              </div>
+
               <Tabs
                 id="player-summary-tabs"
-                activeKey={playerActiveTab}
-                onSelect={key => setPlayerActiveTab(key || "Batting")}
-                className="mb-3"
+                activeKey={playerModalTab}
+                onSelect={(key) => setPlayerModalTab(key || "Batting")}
+                className="mb-2"
                 justify
               >
-                {TAB_KEYS.map(tabKey => (
-                  <Tab key={tabKey} eventKey={tabKey} title={tabKey}>
-                    <Card className={cardVariantClass}>
-                      <Card.Body>
-                        {renderPlayerTabBody(tabKey)}
-                      </Card.Body>
-                    </Card>
-                  </Tab>
-                ))}
+                <Tab eventKey="Batting" title="Batting">
+                  {renderBattingSummary()}
+                </Tab>
+                <Tab eventKey="Bowling" title="Bowling">
+                  {renderBowlingSummary()}
+                </Tab>
+                <Tab eventKey="Fielding" title="Fielding">
+                  {renderFieldingSummary()}
+                </Tab>
               </Tabs>
             </>
           )}
+
+          {!playerSummaryLoading && !playerSummary && !playerSummaryError && (
+            <div className="text-muted">Select a team and player to see their summary.</div>
+          )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={closePlayerModal}>Close</Button>
+          <Button variant="secondary" onClick={closePlayerModal}>
+            Close</Button>
         </Modal.Footer>
       </Modal>
     </div>
