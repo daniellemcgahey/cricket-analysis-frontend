@@ -20,6 +20,11 @@ const KPI_ENDPOINT_BY_CATEGORY = {
   "Training":   "/postgame/training/match-kpis",
 };
 
+// New endpoints for player summary (adjust to your backend)
+const EP_POSTGAME_TEAMS = "/postgame/teams";                // GET ?match_id=
+const EP_POSTGAME_PLAYERS = "/postgame/players";            // GET ?match_id=&team_id=
+const EP_POSTGAME_PLAYER_SUMMARY = "/postgame/player-summary"; // GET ?match_id=&team_id=&player_id=&team_category=
+
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 const TAB_KEYS = ["Batting", "Bowling", "Fielding"];
 const PHASE_ORDER = ["Powerplay", "Middle Overs", "Death Overs", "Match"];
@@ -81,6 +86,17 @@ export default function PostGame() {
   const [kpisData, setKpisData] = useState([]);   // [{key,label,unit,bucket,phase,operator,target,actual,ok?,notes}]
   const [showFailedOnly, setShowFailedOnly] = useState(false);
   const [activeTab, setActiveTab] = useState("Batting");
+
+  // -------- Player Summary Modal --------
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [playerTeams, setPlayerTeams] = useState([]);          // [{ id, name }]
+  const [selectedPlayerTeamId, setSelectedPlayerTeamId] = useState("");
+  const [teamPlayers, setTeamPlayers] = useState([]);          // [{ id, name }]
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [playerSummary, setPlayerSummary] = useState(null);    // full summary payload
+  const [playerLoading, setPlayerLoading] = useState(false);
+  const [playerError, setPlayerError] = useState("");
+  const [playerActiveTab, setPlayerActiveTab] = useState("Batting");
 
   // -------- Fetch matches (category + Brasil) --------
   useEffect(() => {
@@ -158,6 +174,15 @@ export default function PostGame() {
     return unit ? `${v} ${unit}` : String(v);
   };
 
+  // Simple helper for player summary values (NA handling)
+  const formatSummaryVal = (v, suffix = "") => {
+    if (v === null || v === undefined) return "NA";
+    if (typeof v === "number" && suffix === "%") {
+      return `${v.toFixed(1)}%`;
+    }
+    return `${v}${suffix}`;
+  };
+
   // -------- Open modal & load KPIs --------
   const openKpiModal = async () => {
     if (!selectedMatchId) {
@@ -180,14 +205,6 @@ export default function PostGame() {
                 : Array.isArray(res.data) ? res.data
                 : [];
 
-      // (Optional) If backend hasn't returned the KPI yet, you can hardcode a placeholder here while testing:
-      // arr.push({
-      //   key: "bat_pp_scoring_shot_pct",
-      //   label: "Scoring Shot % (Batting • Powerplay)",
-      //   unit: "%", bucket: "Batting", phase: "Powerplay",
-      //   operator: ">=", target: 45, actual: 48.7, notes: "Includes byes/leg-byes as scoring shots"
-      // });
-
       setKpisData(arr);
     } catch (e) {
       console.error(e);
@@ -198,15 +215,103 @@ export default function PostGame() {
   };
   const closeKpiModal = () => setShowKpiModal(false);
 
+  // -------- Open Player Summary Modal --------
+  const openPlayerModal = async () => {
+    if (!selectedMatchId) {
+      alert("Please select a match that includes Brasil.");
+      return;
+    }
+    setShowPlayerModal(true);
+    setPlayerError("");
+    setPlayerSummary(null);
+    setTeamPlayers([]);
+    setSelectedPlayerTeamId("");
+    setSelectedPlayerId("");
+    setPlayerActiveTab("Batting");
+    setPlayerLoading(true);
+
+    try {
+      const res = await api.get(EP_POSTGAME_TEAMS, {
+        params: { match_id: selectedMatchId }
+      });
+      const arr = Array.isArray(res.data?.teams) ? res.data.teams : [];
+      setPlayerTeams(arr);
+    } catch (e) {
+      console.error(e);
+      setPlayerError("Could not load teams for this match.");
+    } finally {
+      setPlayerLoading(false);
+    }
+  };
+
+  const closePlayerModal = () => {
+    setShowPlayerModal(false);
+    setPlayerError("");
+    setPlayerSummary(null);
+    setTeamPlayers([]);
+    setSelectedPlayerTeamId("");
+    setSelectedPlayerId("");
+  };
+
+  // -------- Fetch players when team changes (Player Modal) --------
+  useEffect(() => {
+    if (!showPlayerModal || !selectedPlayerTeamId || !selectedMatchId) return;
+
+    setPlayerError("");
+    setTeamPlayers([]);
+    setSelectedPlayerId("");
+    setPlayerSummary(null);
+    setPlayerLoading(true);
+
+    api.get(EP_POSTGAME_PLAYERS, {
+      params: { match_id: selectedMatchId, team_id: selectedPlayerTeamId }
+    })
+      .then(res => {
+        const arr = Array.isArray(res.data?.players) ? res.data.players : [];
+        setTeamPlayers(arr);
+      })
+      .catch(e => {
+        console.error(e);
+        setPlayerError("Could not load players for this team.");
+      })
+      .finally(() => setPlayerLoading(false));
+  }, [showPlayerModal, selectedPlayerTeamId, selectedMatchId]);
+
+  // -------- Fetch player summary when player changes --------
+  useEffect(() => {
+    if (!showPlayerModal || !selectedPlayerTeamId || !selectedPlayerId || !selectedMatchId) return;
+
+    setPlayerError("");
+    setPlayerSummary(null);
+    setPlayerLoading(true);
+
+    api.get(EP_POSTGAME_PLAYER_SUMMARY, {
+      params: {
+        match_id: selectedMatchId,
+        team_id: selectedPlayerTeamId,
+        player_id: selectedPlayerId,
+        team_category: category
+      }
+    })
+      .then(res => {
+        setPlayerSummary(res.data || null);
+      })
+      .catch(e => {
+        console.error(e);
+        setPlayerError("Could not load player summary.");
+      })
+      .finally(() => setPlayerLoading(false));
+  }, [showPlayerModal, selectedPlayerTeamId, selectedPlayerId, selectedMatchId, category]);
+
   // -------- Derived KPI views --------
-const withPassFail = useMemo(() => {
-  return kpisData.map(k => {
-    if (typeof k.ok === "boolean") return k;   // backend already decided
-    if (isNA(k.actual)) return { ...k, ok: null };  // do not score N/A rows
-    const ok = cmp(k.actual, k.operator || ">=", k.target);
-    return { ...k, ok };
-  });
-}, [kpisData]);
+  const withPassFail = useMemo(() => {
+    return kpisData.map(k => {
+      if (typeof k.ok === "boolean") return k;   // backend already decided
+      if (isNA(k.actual)) return { ...k, ok: null };  // do not score N/A rows
+      const ok = cmp(k.actual, k.operator || ">=", k.target);
+      return { ...k, ok };
+    });
+  }, [kpisData]);
 
 
   const filteredKPIs = useMemo(() => {
@@ -233,8 +338,6 @@ const withPassFail = useMemo(() => {
     return "Match";
   };
 
-
-
   // Split KPIs into tab → phase → items
   const byTabPhase = useMemo(() => {
     const acc = {
@@ -257,24 +360,23 @@ const withPassFail = useMemo(() => {
     return { total, passed, pct: total ? Math.round((passed / total) * 100) : 0 };
   }, [withPassFail]);
 
-const tabSummary = useMemo(() => {
-  const out = {};
-  TAB_KEYS.forEach(tabKey => {
-    const all = PHASE_ORDER
-      .flatMap(ph => (byTabPhase[tabKey]?.[ph] || []))
-      .filter(Boolean);
+  const tabSummary = useMemo(() => {
+    const out = {};
+    TAB_KEYS.forEach(tabKey => {
+      const all = PHASE_ORDER
+        .flatMap(ph => (byTabPhase[tabKey]?.[ph] || []))
+        .filter(Boolean);
 
-    const valid = all.filter(k => typeof k.ok === "boolean");
-    const met = valid.filter(k => k.ok).length;
-    out[tabKey] = {
-      total: valid.length,
-      met,
-      pct: valid.length ? Math.round((met / valid.length) * 100) : 0
-    };
-  });
-  return out;
-}, [byTabPhase]);
-
+      const valid = all.filter(k => typeof k.ok === "boolean");
+      const met = valid.filter(k => k.ok).length;
+      out[tabKey] = {
+        total: valid.length,
+        met,
+        pct: valid.length ? Math.round((met / valid.length) * 100) : 0
+      };
+    });
+    return out;
+  }, [byTabPhase]);
 
   // -------- UI helpers --------
   const matchLabel = (m) => {
@@ -283,85 +385,262 @@ const tabSummary = useMemo(() => {
     return `${m.team_a} vs ${m.team_b}${tour}${when ? " — " + when : ""}`;
   };
 
-const renderPhaseSection = (phaseKey, itemsRaw) => {
-  const arr = Array.isArray(itemsRaw) ? itemsRaw.filter(Boolean) : [];
+  const renderPhaseSection = (phaseKey, itemsRaw) => {
+    const arr = Array.isArray(itemsRaw) ? itemsRaw.filter(Boolean) : [];
 
-  return (
-    <Card key={phaseKey} className={`mb-3 ${cardVariantClass}`}>
-      <Card.Body>
-        <div className="d-flex align-items-center justify-content-between">
-          <h6 className="fw-bold mb-2">{phaseKey}</h6>
-          <Badge bg="secondary">
-            {arr.filter(i => i && i.ok === true).length}/{arr.length} met
-          </Badge>
-        </div>
-
-        {arr.length === 0 ? (
-          <div className="text-muted">No KPIs in this section.</div>
-        ) : (
-          <Table size="sm" bordered responsive className="mb-0">
-            <thead>
-              <tr>
-                <th>KPI</th>
-                <th className="text-center" style={{ width: 120 }}>Target</th>
-                <th className="text-center" style={{ width: 120 }}>Result</th>
-                <th className="text-center" style={{ width: 80 }}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {arr.map(k => (
-                <tr key={k.key}>
-                  <td>
-                    <div className="fw-semibold">{k.label || k.key}</div>
-                    {/* Hide the little phase subtitle for Fielding (match-wide) */}
-                    {k.bucket !== "Fielding" && k.phase && (
-                      <div className="small text-muted">{k.phase}</div>
-                    )}
-                  </td>
-                  <td className="text-center">{formatVal(k.target, k.unit)}</td>
-                  <td className="text-center">{formatVal(k.actual, k.unit)}</td>
-                  <td className="text-center">
-                    {k.ok === true && <Badge bg="success">Met</Badge>}
-                    {k.ok === false && <Badge bg="danger">Missed</Badge>}
-                    {k.ok == null && <Badge bg="secondary">N/A</Badge>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card.Body>
-    </Card>
-  );
-};
-
-
-const renderTabBody = (tabKey) => {
-  if (kpisLoading) {
     return (
-      <div className="text-center py-4">
-        <Spinner animation="border" />
-      </div>
+      <Card key={phaseKey} className={`mb-3 ${cardVariantClass}`}>
+        <Card.Body>
+          <div className="d-flex align-items-center justify-content-between">
+            <h6 className="fw-bold mb-2">{phaseKey}</h6>
+            <Badge bg="secondary">
+              {arr.filter(i => i && i.ok === true).length}/{arr.length} met
+            </Badge>
+          </div>
+
+          {arr.length === 0 ? (
+            <div className="text-muted">No KPIs in this section.</div>
+          ) : (
+            <Table size="sm" bordered responsive className="mb-0">
+              <thead>
+                <tr>
+                  <th>KPI</th>
+                  <th className="text-center" style={{ width: 120 }}>Target</th>
+                  <th className="text-center" style={{ width: 120 }}>Result</th>
+                  <th className="text-center" style={{ width: 80 }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {arr.map(k => (
+                  <tr key={k.key}>
+                    <td>
+                      <div className="fw-semibold">{k.label || k.key}</div>
+                      {/* Hide the little phase subtitle for Fielding (match-wide) */}
+                      {k.bucket !== "Fielding" && k.phase && (
+                        <div className="small text-muted">{k.phase}</div>
+                      )}
+                    </td>
+                    <td className="text-center">{formatVal(k.target, k.unit)}</td>
+                    <td className="text-center">{formatVal(k.actual, k.unit)}</td>
+                    <td className="text-center">
+                      {k.ok === true && <Badge bg="success">Met</Badge>}
+                      {k.ok === false && <Badge bg="danger">Missed</Badge>}
+                      {k.ok == null && <Badge bg="secondary">N/A</Badge>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
     );
-  }
+  };
 
-  // Fielding: single match-wide table (merge all phases)
-  if (tabKey === "Fielding") {
-    const allFielding = PHASE_ORDER
-      .flatMap(ph => (byTabPhase.Fielding?.[ph] || []))
-      .filter(Boolean);
+  const renderTabBody = (tabKey) => {
+    if (kpisLoading) {
+      return (
+        <div className="text-center py-4">
+          <Spinner animation="border" />
+        </div>
+      );
+    }
 
-    return <>{renderPhaseSection("Match", allFielding)}</>;
-  }
+    // Fielding: single match-wide table (merge all phases)
+    if (tabKey === "Fielding") {
+      const allFielding = PHASE_ORDER
+        .flatMap(ph => (byTabPhase.Fielding?.[ph] || []))
+        .filter(Boolean);
 
-  // Batting / Bowling: keep phased sections
-  const sections = PHASE_ORDER.map(ph => {
-    const arr = (byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
-    return renderPhaseSection(ph, arr);
-  });
-  return <>{sections}</>;
-};
+      return <>{renderPhaseSection("Match", allFielding)}</>;
+    }
 
+    // Batting / Bowling: keep phased sections
+    const sections = PHASE_ORDER.map(ph => {
+      const arr = (byTabPhase[tabKey]?.[ph] || []).filter(Boolean);
+      return renderPhaseSection(ph, arr);
+    });
+    return <>{sections}</>;
+  };
+
+  // -------- Player summary tab renderer --------
+  const renderPlayerTabBody = (tabKey) => {
+    if (!playerSummary) return null;
+
+    const batting = playerSummary.batting || {};
+    const bowling = playerSummary.bowling || {};
+    const fielding = playerSummary.fielding || {};
+
+    if (tabKey === "Batting") {
+      if (!batting.has_data) return <div>Did not bat.</div>;
+      return (
+        <>
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Runs (Balls)</strong><br />
+              {formatSummaryVal(batting.runs)} ({formatSummaryVal(batting.balls)})
+            </div>
+            <div>
+              <strong>Strike Rate</strong><br />
+              {formatSummaryVal(batting.strike_rate)}
+            </div>
+            <div>
+              <strong>4s / 6s</strong><br />
+              {formatSummaryVal(batting.fours)} / {formatSummaryVal(batting.sixes)}
+            </div>
+            <div>
+              <strong>Position</strong><br />
+              {formatSummaryVal(batting.batting_position)}
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Boundary %</strong><br />
+              {formatSummaryVal(batting.boundary_percentage, "%")}
+            </div>
+            <div>
+              <strong>Dot %</strong><br />
+              {formatSummaryVal(batting.dot_ball_percentage, "%")}
+            </div>
+            <div>
+              <strong>Intent Score</strong><br />
+              {formatSummaryVal(batting.batting_intent_score)}
+            </div>
+            <div>
+              <strong>BPI</strong><br />
+              {formatSummaryVal(batting.batting_bpi)}
+            </div>
+          </div>
+
+          <div className="mb-2">
+            <strong>Phase Runs</strong><br />
+            PP: {formatSummaryVal(batting.phase_breakdown?.powerplay_runs)} ·{" "}
+            MO: {formatSummaryVal(batting.phase_breakdown?.middle_overs_runs)} ·{" "}
+            DO: {formatSummaryVal(batting.phase_breakdown?.death_overs_runs)}
+          </div>
+
+          <div className="mb-0">
+            <strong>Dismissal</strong><br />
+            {batting.dismissal || "Not out"}
+          </div>
+        </>
+      );
+    }
+
+    if (tabKey === "Bowling") {
+      if (!bowling.has_data) return <div>Did not bowl.</div>;
+      return (
+        <>
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Figures</strong><br />
+              {formatSummaryVal(bowling.overs)}–
+              {formatSummaryVal(bowling.maidens)}–
+              {formatSummaryVal(bowling.runs_conceded)}–
+              {formatSummaryVal(bowling.wickets)}
+            </div>
+            <div>
+              <strong>Economy</strong><br />
+              {formatSummaryVal(bowling.economy)}
+            </div>
+            <div>
+              <strong>Dot %</strong><br />
+              {formatSummaryVal(bowling.dot_ball_percentage, "%")}
+            </div>
+            <div>
+              <strong>Intent Conceded</strong><br />
+              {formatSummaryVal(bowling.bowling_intent_conceded)}
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Boundary Balls</strong><br />
+              {formatSummaryVal(bowling.boundary_balls)}
+            </div>
+            <div>
+              <strong>Wides</strong><br />
+              {formatSummaryVal(bowling.wides)}
+            </div>
+            <div>
+              <strong>No Balls</strong><br />
+              {formatSummaryVal(bowling.no_balls)}
+            </div>
+            <div>
+              <strong>BPI</strong><br />
+              {formatSummaryVal(bowling.bowling_bpi)}
+            </div>
+          </div>
+
+          <div className="mb-0">
+            <strong>Phase Overview</strong><br />
+            PP: {formatSummaryVal(bowling.phase_breakdown?.powerplay_overs)} ov @{" "}
+            {formatSummaryVal(bowling.phase_breakdown?.powerplay_econ)}<br />
+            MO: {formatSummaryVal(bowling.phase_breakdown?.middle_overs_overs)} ov @{" "}
+            {formatSummaryVal(bowling.phase_breakdown?.middle_overs_econ)}
+          </div>
+        </>
+      );
+    }
+
+    if (tabKey === "Fielding") {
+      if (!fielding.has_data) return <div>No fielding data.</div>;
+      return (
+        <>
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Balls Fielded</strong><br />
+              {formatSummaryVal(fielding.balls_fielded)}
+            </div>
+            <div>
+              <strong>Clean Hands %</strong><br />
+              {formatSummaryVal(fielding.clean_hands_pct, "%")}
+            </div>
+            <div>
+              <strong>Conversion %</strong><br />
+              {formatSummaryVal(fielding.conversion_rate, "%")}
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between mb-2">
+            <div>
+              <strong>Catches</strong><br />
+              Taken: {formatSummaryVal(fielding.catches_taken)}<br />
+              Drops: {formatSummaryVal(fielding.drops)}
+            </div>
+            <div>
+              <strong>Run Outs</strong><br />
+              Direct: {formatSummaryVal(fielding.run_outs_direct)}<br />
+              Assist: {formatSummaryVal(fielding.run_outs_assist)}
+            </div>
+            <div>
+              <strong>Ground Fielding</strong><br />
+              Clean: {formatSummaryVal(fielding.clean_pickups)}<br />
+              Fumbles: {formatSummaryVal(fielding.fumbles)}
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between">
+            <div>
+              <strong>WK Catches</strong><br />
+              {formatSummaryVal(fielding.wk_catches)}
+            </div>
+            <div>
+              <strong>WK Stumpings</strong><br />
+              {formatSummaryVal(fielding.wk_stumpings)}
+            </div>
+            <div>
+              <strong>Overthrows Conceded</strong><br />
+              {formatSummaryVal(fielding.overthrows_conceded)}
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
@@ -410,7 +689,7 @@ const renderTabBody = (tabKey) => {
           </Card.Body>
         </Card>
 
-        {/* Cards grid (start with KPIs) */}
+        {/* Cards grid (start with KPIs + Player Summary) */}
         <Row className="g-4">
           {/* KPI Card */}
           <Col md={4}>
@@ -421,6 +700,21 @@ const renderTabBody = (tabKey) => {
                   Batting, Bowling, Fielding — split by Powerplay, Middle, Death, and Match.
                 </Card.Text>
                 <Button disabled={!selectedMatchId || loadingMatches} onClick={openKpiModal}>
+                  Open
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
+
+          {/* Player Summary Card */}
+          <Col md={4}>
+            <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="h-100 shadow">
+              <Card.Body>
+                <Card.Title className="fw-bold">Player Summary</Card.Title>
+                <Card.Text className="mb-3">
+                  Quick snapshot of an individual player&apos;s batting, bowling and fielding for this match.
+                </Card.Text>
+                <Button disabled={!selectedMatchId || loadingMatches} onClick={openPlayerModal}>
                   Open
                 </Button>
               </Card.Body>
@@ -470,7 +764,7 @@ const renderTabBody = (tabKey) => {
           </div>
 
           {/* Tabs */}
-          <Tabs id="kpi-tabs" activeKey={activeTab} onSelect={(key) => setActiveTab(key)} className="mb-3" justify>
+          <Tabs id="kpi-tabs" activeKey={activeTab} onSelect={(key) => setActiveTab(key || "Batting")} className="mb-3" justify>
             {TAB_KEYS.map(tabKey => (
               <Tab
                 key={tabKey}
@@ -503,7 +797,90 @@ const renderTabBody = (tabKey) => {
           <Button variant="secondary" onClick={closeKpiModal}>Close</Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Player Summary Modal */}
+      <Modal
+        show={showPlayerModal}
+        onHide={closePlayerModal}
+        size="lg"
+        centered
+        contentClassName={isDarkMode ? "bg-dark text-white" : ""}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Individual Player Summary
+            {playerSummary?.player_name ? ` — ${playerSummary.player_name}` : ""}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {playerError && <Alert variant="danger" className="mb-2">{playerError}</Alert>}
+
+          {/* Team & Player selectors */}
+          <Row className="g-3 mb-3">
+            <Col md={6}>
+              <Form.Label className="fw-bold">Team</Form.Label>
+              <Form.Select
+                value={selectedPlayerTeamId}
+                onChange={e => setSelectedPlayerTeamId(e.target.value)}
+                disabled={playerLoading || !playerTeams.length}
+              >
+                <option value="">Select team...</option>
+                {playerTeams.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </Form.Select>
+            </Col>
+            <Col md={6}>
+              <Form.Label className="fw-bold">Player</Form.Label>
+              <Form.Select
+                value={selectedPlayerId}
+                onChange={e => setSelectedPlayerId(e.target.value)}
+                disabled={playerLoading || !selectedPlayerTeamId || !teamPlayers.length}
+              >
+                <option value="">Select player...</option>
+                {teamPlayers.map(p => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </Form.Select>
+            </Col>
+          </Row>
+
+          {playerLoading && (
+            <div className="text-center py-4">
+              <Spinner animation="border" />
+            </div>
+          )}
+
+          {!playerLoading && selectedPlayerTeamId && selectedPlayerId && !playerSummary && (
+            <div>No data found for this player.</div>
+          )}
+
+          {!playerLoading && playerSummary && (
+            <>
+              <Tabs
+                id="player-summary-tabs"
+                activeKey={playerActiveTab}
+                onSelect={key => setPlayerActiveTab(key || "Batting")}
+                className="mb-3"
+                justify
+              >
+                {TAB_KEYS.map(tabKey => (
+                  <Tab key={tabKey} eventKey={tabKey} title={tabKey}>
+                    <Card className={cardVariantClass}>
+                      <Card.Body>
+                        {renderPlayerTabBody(tabKey)}
+                      </Card.Body>
+                    </Card>
+                  </Tab>
+                ))}
+              </Tabs>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closePlayerModal}>Close</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
-
 }
