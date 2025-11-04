@@ -579,7 +579,10 @@ export default function PostGame() {
           <MetricRow
             label="Powerplay"
             value={
-              phase.powerplay_runs != null ? `${phase.powerplay_runs} runs` : "—"
+              phase.powerplay_runs != null || phase.powerplay_balls != null
+                ? `${phase.powerplay_runs ?? 0} runs` +
+                  (phase.powerplay_balls != null ? ` | ${phase.powerplay_balls} balls` : "")
+                : "—"
             }
             sub={
               phase.powerplay_scoring_shot_pct != null
@@ -587,10 +590,14 @@ export default function PostGame() {
                 : undefined
             }
           />
+
           <MetricRow
             label="Middle Overs"
             value={
-              phase.middle_overs_runs != null ? `${phase.middle_overs_runs} runs` : "—"
+              phase.middle_overs_runs != null || phase.middle_overs_balls != null
+                ? `${phase.middle_overs_runs ?? 0} runs` +
+                  (phase.middle_overs_balls != null ? ` | ${phase.middle_overs_balls} balls` : "")
+                : "—"
             }
             sub={
               phase.middle_overs_scoring_shot_pct != null
@@ -598,10 +605,14 @@ export default function PostGame() {
                 : undefined
             }
           />
+
           <MetricRow
             label="Death Overs"
             value={
-              phase.death_overs_runs != null ? `${phase.death_overs_runs} runs` : "—"
+              phase.death_overs_runs != null || phase.death_overs_balls != null
+                ? `${phase.death_overs_runs ?? 0} runs` +
+                  (phase.death_overs_balls != null ? ` | ${phase.death_overs_balls} balls` : "")
+                : "—"
             }
             sub={
               phase.death_overs_scoring_shot_pct != null
@@ -610,6 +621,7 @@ export default function PostGame() {
             }
           />
         </SectionBlock>
+
 
 
         {batting.dismissal && (
