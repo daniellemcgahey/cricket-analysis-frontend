@@ -628,36 +628,39 @@ export default function PostGame() {
     }
 
     const overs = bowling.overs ?? null;
-    const maidens = bowling.maidens ?? null;
+    const maidens = bowling.maidens ?? null; // no longer used in display, but still there
     const runs = bowling.runs_conceded ?? null;
     const wkts = bowling.wickets ?? null;
     const econ = bowling.economy ?? null;
     const dotPct = bowling.dot_ball_percentage ?? null;
+    const dotBallsCount = bowling.dot_balls ?? null; // ⬅️ NEW
+
 
     const phase = bowling.phase_breakdown || {};
 
     return (
       <>
-        <SectionBlock title="Figures">
-          <MetricRow
-            label="Overs–Maidens–Runs–Wickets"
-            value={
-              overs != null || maidens != null || runs != null || wkts != null
-                ? `${overs ?? 0}-${maidens ?? 0}-${runs ?? 0}-${wkts ?? 0}`
-                : "—"
-            }
-          />
-          <MetricRow
-            label="Economy"
-            value={econ != null ? econ.toFixed(2) : "—"}
-            sub="Runs conceded per over"
-          />
-          <MetricRow
-            label="Dot Ball %"
-            value={dotPct != null ? `${dotPct.toFixed(1)}%` : "—"}
-            sub="Dots as % of legal balls"
-          />
-        </SectionBlock>
+      <SectionBlock title="Figures">
+        <MetricRow
+          label="Overs–Dots–Runs–Wickets"
+          value={
+            overs != null || dotBallsCount != null || runs != null || wkts != null
+              ? `${overs ?? 0}-${dotBallsCount ?? 0}-${runs ?? 0}-${wkts ?? 0}`
+              : "—"
+          }
+        />
+        <MetricRow
+          label="Economy"
+          value={econ != null ? econ.toFixed(2) : "—"}
+          sub="Runs conceded per over"
+        />
+        <MetricRow
+          label="Dot Ball %"
+          value={dotPct != null ? `${dotPct.toFixed(1)}%` : "—"}
+          sub="Dots as % of legal balls"
+        />
+      </SectionBlock>
+
 
         <SectionBlock title="Extras & Boundaries">
           <MetricRow label="Wides" value={bowling.wides ?? 0} />
@@ -673,7 +676,7 @@ export default function PostGame() {
               phase.powerplay_overs != null ||
               phase.powerplay_runs != null ||
               phase.powerplay_wickets != null
-                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_maidens ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
+                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_dot_balls ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -690,7 +693,7 @@ export default function PostGame() {
               phase.middle_overs_overs != null ||
               phase.middle_overs_runs != null ||
               phase.middle_overs_wickets != null
-                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_maidens ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
+                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_dot_balls ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -707,7 +710,7 @@ export default function PostGame() {
               phase.death_overs_overs != null ||
               phase.death_overs_runs != null ||
               phase.death_overs_wickets != null
-                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_maidens ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
+                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_dot_balls ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -717,6 +720,7 @@ export default function PostGame() {
             }
           />
         </SectionBlock>
+
 
       </>
     );
