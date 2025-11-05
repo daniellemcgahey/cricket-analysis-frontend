@@ -1226,7 +1226,9 @@ export default function PostTournament() {
                     }
                   >
                     <div className="fw-semibold">{p.player_name}</div>
-                    <small className="text-muted">
+                    <small
+                      className={isDarkMode ? "text-light" : "text-muted"}
+                    >
                       {p.runs} runs
                       {p.strike_rate != null
                         ? ` • SR ${p.strike_rate.toFixed(1)}`
@@ -1260,7 +1262,9 @@ export default function PostTournament() {
                     }
                   >
                     <div className="fw-semibold">{p.player_name}</div>
-                    <small className="text-muted">
+                    <small
+                      className={isDarkMode ? "text-light" : "text-muted"}
+                    >
                       {p.wickets} wickets
                       {p.economy != null
                         ? ` • Econ ${p.economy.toFixed(2)}`
@@ -1294,7 +1298,9 @@ export default function PostTournament() {
                     }
                   >
                     <div className="fw-semibold">{p.player_name}</div>
-                    <small className="text-muted">
+                    <small
+                      className={isDarkMode ? "text-light" : "text-muted"}
+                    >
                       {p.catches} catches • {p.run_outs} run outs
                     </small>
                   </li>
