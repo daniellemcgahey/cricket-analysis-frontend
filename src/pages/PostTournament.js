@@ -1,35 +1,34 @@
 // src/pages/PostTournament.js
 import React, { useContext, useEffect, useState } from "react";
 import {
-  Card,
   Row,
   Col,
+  Card,
   Form,
+  Button,
   Spinner,
   Alert,
+  Modal,
   Tabs,
   Tab,
   ProgressBar,
-  Container,
-  Modal,
 } from "react-bootstrap";
-
 import DarkModeContext from "../DarkModeContext";
 import BackButton from "../components/BackButton";
 import api from "../api";
 
-// --------- Config ---------
+/** ===================== Config ===================== */
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
-// Tournament-level endpoints (adjust names if your backend differs)
+// Tournament-level endpoints
 const EP_TOURNAMENTS = "/posttournament/tournaments"; // GET ?teamCategory=
 const EP_TOURNAMENT_TEAMS = "/posttournament/teams"; // GET ?tournament_id=
 const EP_TOURNAMENT_PLAYERS = "/posttournament/players"; // GET ?tournament_id=&team_id=
 const EP_TOURNAMENT_PLAYER_SUMMARY =
   "/posttournament/player-summary"; // GET ?tournament_id=&team_id=&player_id=&team_category=
 
-// --------- Small UI helpers (same style as match player summaries) ---------
+/** ===================== Small UI helpers ===================== */
 
 function MetricRow({ label, value, sub }) {
   return (
@@ -56,16 +55,14 @@ function SectionBlock({ title, children }) {
   );
 }
 
-// ======================================
-// Page: PostTournament
-// ======================================
+/** ===================== Page ===================== */
 
 export default function PostTournament() {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
   const cardVariant = isDarkMode ? "dark" : "light";
 
-  // Filters
+  // -------- Filters --------
   const [category, setCategory] = useState("Men");
   const [tournaments, setTournaments] = useState([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
@@ -76,19 +73,22 @@ export default function PostTournament() {
   const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
 
-  // Data
+  // -------- Player summary --------
   const [playerSummary, setPlayerSummary] = useState(null);
-  const [activeTab, setActiveTab] = useState("Batting");
-  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [playerSummaryLoading, setPlayerSummaryLoading] = useState(false);
+  const [playerSummaryError, setPlayerSummaryError] = useState("");
 
-  // Loading / error
+  // modal/tab
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
+  const [playerModalTab, setPlayerModalTab] = useState("Batting");
+
+  // loading for filters / dropdowns
   const [loadingTournaments, setLoadingTournaments] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
-  const [loadingSummary, setLoadingSummary] = useState(false);
   const [error, setError] = useState("");
 
-  // --------- Load tournaments for category ---------
+  /** -------- Load tournaments for category -------- */
   useEffect(() => {
     let mounted = true;
     setError("");
@@ -99,6 +99,7 @@ export default function PostTournament() {
     setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
+    setPlayerSummaryError("");
     setShowPlayerModal(false);
 
     setLoadingTournaments(true);
@@ -125,7 +126,7 @@ export default function PostTournament() {
     };
   }, [category]);
 
-  // --------- Load teams for tournament ---------
+  /** -------- Load teams for tournament -------- */
   useEffect(() => {
     if (!selectedTournamentId) {
       setTeams([]);
@@ -133,6 +134,7 @@ export default function PostTournament() {
       setPlayers([]);
       setSelectedPlayerId("");
       setPlayerSummary(null);
+      setPlayerSummaryError("");
       setShowPlayerModal(false);
       return;
     }
@@ -144,6 +146,7 @@ export default function PostTournament() {
     setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
+    setPlayerSummaryError("");
     setShowPlayerModal(false);
 
     setLoadingTeams(true);
@@ -168,12 +171,13 @@ export default function PostTournament() {
     };
   }, [selectedTournamentId]);
 
-  // --------- Load players for team ---------
+  /** -------- Load players for team -------- */
   useEffect(() => {
     if (!selectedTournamentId || !selectedTeamId) {
       setPlayers([]);
       setSelectedPlayerId("");
       setPlayerSummary(null);
+      setPlayerSummaryError("");
       setShowPlayerModal(false);
       return;
     }
@@ -183,6 +187,7 @@ export default function PostTournament() {
     setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
+    setPlayerSummaryError("");
     setShowPlayerModal(false);
 
     setLoadingPlayers(true);
@@ -212,20 +217,19 @@ export default function PostTournament() {
     };
   }, [selectedTournamentId, selectedTeamId]);
 
-  // --------- Load player tournament summary ---------
+  /** -------- Load player tournament summary -------- */
   useEffect(() => {
     if (!selectedTournamentId || !selectedTeamId || !selectedPlayerId) {
       setPlayerSummary(null);
-      setShowPlayerModal(false);
+      setPlayerSummaryError("");
       return;
     }
 
     let mounted = true;
-    setError("");
     setPlayerSummary(null);
-    setLoadingSummary(true);
-    setActiveTab("Batting");
-    setShowPlayerModal(false);
+    setPlayerSummaryError("");
+    setPlayerSummaryLoading(true);
+    setPlayerModalTab("Batting");
 
     api
       .get(EP_TOURNAMENT_PLAYER_SUMMARY, {
@@ -242,16 +246,16 @@ export default function PostTournament() {
       })
       .catch((err) => {
         console.error(err);
-        setError("Could not load player tournament summary.");
+        setPlayerSummaryError("Could not load player tournament summary.");
       })
-      .finally(() => setLoadingSummary(false));
+      .finally(() => setPlayerSummaryLoading(false));
 
     return () => {
       mounted = false;
     };
   }, [selectedTournamentId, selectedTeamId, selectedPlayerId, category]);
 
-  // --------- Render Batting tab ---------
+  /** -------- Batting tab renderer (Tournament) -------- */
   const renderBattingSummary = () => {
     const batting = playerSummary?.batting;
     if (!batting || !batting.has_data) {
@@ -465,7 +469,7 @@ export default function PostTournament() {
     );
   };
 
-  // --------- Render Bowling tab ---------
+  /** -------- Bowling tab renderer (Tournament) -------- */
   const renderBowlingSummary = () => {
     const bowling = playerSummary?.bowling;
     if (!bowling || !bowling.has_data) {
@@ -521,9 +525,7 @@ export default function PostTournament() {
               phase.powerplay_overs != null ||
               phase.powerplay_runs != null ||
               phase.powerplay_wickets != null
-                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${
-                    phase.powerplay_dot_balls ?? 0
-                  }-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
+                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_dot_balls ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -540,9 +542,7 @@ export default function PostTournament() {
               phase.middle_overs_overs != null ||
               phase.middle_overs_runs != null ||
               phase.middle_overs_wickets != null
-                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${
-                    phase.middle_overs_dot_balls ?? 0
-                  }-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
+                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_dot_balls ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -559,9 +559,7 @@ export default function PostTournament() {
               phase.death_overs_overs != null ||
               phase.death_overs_runs != null ||
               phase.death_overs_wickets != null
-                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${
-                    phase.death_overs_dot_balls ?? 0
-                  }-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
+                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_dot_balls ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -575,7 +573,7 @@ export default function PostTournament() {
     );
   };
 
-  // --------- Render Fielding tab ---------
+  /** -------- Fielding tab renderer (Tournament) -------- */
   const renderFieldingSummary = () => {
     const fielding = playerSummary?.fielding;
     if (!fielding || !fielding.has_data) {
@@ -636,30 +634,20 @@ export default function PostTournament() {
     );
   };
 
-  // --------- Page layout ---------
+  /** -------- Page layout -------- */
   return (
     <div className={containerClass} style={{ minHeight: "100vh" }}>
-      <Container className="py-4">
+      <div className="container-fluid py-4">
         <BackButton isDarkMode={isDarkMode} />
 
+        {/* Filters */}
         <Card
           bg={cardVariant}
           text={isDarkMode ? "light" : "dark"}
           className="mb-4 shadow-sm"
         >
           <Card.Body>
-            <Card.Title className="fw-bold mb-3">
-              Post-Tournament Player Summary
-            </Card.Title>
-
-            {error && (
-              <Alert variant="danger" className="mb-3">
-                {error}
-              </Alert>
-            )}
-
-            {/* Filters */}
-            <Row className="g-3">
+            <Row className="g-3 align-items-end">
               <Col md={3}>
                 <Form.Label className="fw-bold">Category</Form.Label>
                 <Form.Select
@@ -725,121 +713,162 @@ export default function PostTournament() {
                 </Form.Select>
               </Col>
             </Row>
+
+            {(loadingTournaments || loadingTeams || loadingPlayers) && (
+              <div className="mt-3">
+                <Spinner animation="border" size="sm" />{" "}
+                <span className="small">Loading...</span>
+              </div>
+            )}
+
+            {error && (
+              <Alert className="mt-3" variant="danger">
+                {error}
+              </Alert>
+            )}
           </Card.Body>
         </Card>
 
-        {/* Selector tiles - space to add Team Summary, etc. */}
-        <Row className="mb-4 g-3">
+        {/* Cards grid, to mirror PostGame style */}
+        <Row className="g-4">
+          {/* Player Tournament Summary Card */}
           <Col md={4}>
             <Card
               bg={cardVariant}
               text={isDarkMode ? "light" : "dark"}
-              className="shadow-sm h-100"
-              style={{
-                cursor:
-                  playerSummary && !loadingSummary ? "pointer" : "default",
-                opacity: playerSummary ? 1 : 0.7,
-              }}
-              onClick={() => {
-                if (playerSummary && !loadingSummary) {
-                  setShowPlayerModal(true);
-                }
-              }}
+              className="h-100 shadow"
             >
               <Card.Body>
-                <Card.Title className="fw-bold mb-2">
+                <Card.Title className="fw-bold">
                   Player Tournament Summary
                 </Card.Title>
-
-                {loadingSummary && (
-                  <div className="text-center py-2">
-                    <Spinner animation="border" size="sm" />
-                  </div>
-                )}
-
-                {!loadingSummary && playerSummary && (
-                  <>
-                    <div className="small text-muted">Player</div>
-                    <div className="fw-semibold mb-1">
-                      {playerSummary.player_name}
-                    </div>
-                    <div className="small text-muted">Team</div>
-                    <div className="fw-semibold">
-                      {playerSummary.team_name}
-                    </div>
-                    <div className="mt-3 small text-muted">
-                      Click to view detailed batting, bowling &amp; fielding
-                      summary.
-                    </div>
-                  </>
-                )}
-
-                {!loadingSummary && !playerSummary && !error && (
-                  <div className="text-muted small mt-2">
-                    Select a tournament, team &amp; player above to enable this
-                    summary.
-                  </div>
+                <Card.Text className="mb-3">
+                  Tournament-long batting, bowling and fielding snapshot for the
+                  selected player.
+                </Card.Text>
+                <Button
+                  disabled={
+                    !selectedPlayerId ||
+                    loadingTournaments ||
+                    loadingTeams ||
+                    loadingPlayers ||
+                    playerSummaryLoading ||
+                    !!playerSummaryError
+                  }
+                  onClick={() => setShowPlayerModal(true)}
+                >
+                  {playerSummaryLoading ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Loading…
+                    </>
+                  ) : (
+                    "Open"
+                  )}
+                </Button>
+                {playerSummaryError && (
+                  <Alert variant="danger" className="mt-3 mb-0 py-2">
+                    {playerSummaryError}
+                  </Alert>
                 )}
               </Card.Body>
             </Card>
           </Col>
 
-          {/* Placeholder for future Team Summary, etc. */}
-          {/* <Col md={4}>
-            <Card ...>Team Summary (coming soon)</Card>
-          </Col> */}
+          {/* Team Tournament Summary Card (placeholder for future) */}
+          <Col md={4}>
+            <Card
+              bg={cardVariant}
+              text={isDarkMode ? "light" : "dark"}
+              className="h-100 shadow"
+            >
+              <Card.Body>
+                <Card.Title className="fw-bold">
+                  Team Tournament Summary
+                </Card.Title>
+                <Card.Text className="mb-3">
+                  Coming soon: quick high-level team metrics, leaders and
+                  trends across the tournament.
+                </Card.Text>
+                <Button disabled variant="secondary">
+                  Coming Soon
+                </Button>
+              </Card.Body>
+            </Card>
+          </Col>
         </Row>
+      </div>
 
-        {/* Player Summary Modal */}
-        <Modal
-          show={showPlayerModal}
-          onHide={() => setShowPlayerModal(false)}
-          size="lg"
-          centered
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Player Tournament Summary</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {playerSummary ? (
-              <>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div>
-                    <div className="small text-muted">Player</div>
-                    <div className="fw-bold">{playerSummary.player_name}</div>
-                  </div>
-                  <div className="text-end">
-                    <div className="small text-muted">Team</div>
-                    <div className="fw-bold">{playerSummary.team_name}</div>
-                  </div>
+      {/* Player Summary Modal */}
+      <Modal
+        show={showPlayerModal}
+        onHide={() => setShowPlayerModal(false)}
+        size="lg"
+        centered
+        contentClassName={isDarkMode ? "bg-dark text-white" : ""}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Player Tournament Summary</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {playerSummaryError && (
+            <Alert variant="danger" className="mb-2">
+              {playerSummaryError}
+            </Alert>
+          )}
+
+          {playerSummaryLoading && (
+            <div className="text-center py-4">
+              <Spinner animation="border" />
+            </div>
+          )}
+
+          {!playerSummaryLoading && playerSummary && (
+            <>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <div className="small text-muted">Player</div>
+                  <div className="fw-bold">{playerSummary.player_name}</div>
                 </div>
-
-                <Tabs
-                  id="tournament-player-summary-tabs"
-                  activeKey={activeTab}
-                  onSelect={(key) => setActiveTab(key || "Batting")}
-                  className="mb-2"
-                  justify
-                >
-                  <Tab eventKey="Batting" title="Batting">
-                    {renderBattingSummary()}
-                  </Tab>
-                  <Tab eventKey="Bowling" title="Bowling">
-                    {renderBowlingSummary()}
-                  </Tab>
-                  <Tab eventKey="Fielding" title="Fielding">
-                    {renderFieldingSummary()}
-                  </Tab>
-                </Tabs>
-              </>
-            ) : (
-              <div className="text-muted">
-                No summary available. Please select a tournament, team and player.
+                <div className="text-end">
+                  <div className="small text-muted">Team</div>
+                  <div className="fw-bold">{playerSummary.team_name}</div>
+                </div>
               </div>
-            )}
-          </Modal.Body>
-        </Modal>
-      </Container>
+
+              <Tabs
+                id="tournament-player-summary-tabs"
+                activeKey={playerModalTab}
+                onSelect={(key) => setPlayerModalTab(key || "Batting")}
+                className="mb-2"
+                justify
+              >
+                <Tab eventKey="Batting" title="Batting">
+                  {renderBattingSummary()}
+                </Tab>
+                <Tab eventKey="Bowling" title="Bowling">
+                  {renderBowlingSummary()}
+                </Tab>
+                <Tab eventKey="Fielding" title="Fielding">
+                  {renderFieldingSummary()}
+                </Tab>
+              </Tabs>
+            </>
+          )}
+
+          {!playerSummaryLoading && !playerSummary && !playerSummaryError && (
+            <div className="text-muted">
+              Select a tournament, team &amp; player above, then open this card
+              again to see their tournament summary.
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPlayerModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
