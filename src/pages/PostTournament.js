@@ -243,158 +243,223 @@ export default function PostTournament() {
   }, [selectedTournamentId, selectedTeamId, selectedPlayerId, category]);
 
   // --------- Render Batting tab (same format as match summary, but tournament totals) ---------
-  const renderBattingSummary = () => {
-    const batting = playerSummary?.batting;
-    if (!batting || !batting.has_data) {
-      return (
-        <div className="text-muted">
-          No batting data for this player in this tournament.
-        </div>
-      );
-    }
-
-    const runs = batting.runs ?? null;
-    const balls = batting.balls ?? null;
-    const sr = batting.strike_rate ?? null;
-    const fours = batting.fours ?? null;
-    const sixes = batting.sixes ?? null;
-    const boundaryPct = batting.boundary_percentage ?? null;
-    const dotPct = batting.dot_ball_percentage ?? null;
-    const scoringShotPct =
-      typeof dotPct === "number" ? Number((100 - dotPct).toFixed(1)) : null;
-
-    const phase = batting.phase_breakdown || {};
-
+const renderBattingSummary = () => {
+  const batting = playerSummary?.batting;
+  if (!batting || !batting.has_data) {
     return (
-      <>
-        <SectionBlock title="Score (Tournament)">
-          <MetricRow
-            label="Runs (Balls)"
-            value={
-              runs != null && balls != null
-                ? `${runs} (${balls})`
-                : runs != null
-                ? runs
-                : "—"
-            }
-          />
-          <MetricRow
-            label="Strike Rate"
-            value={sr != null ? sr.toFixed(1) : "—"}
-            sub="Runs per 100 balls"
-          />
-          <MetricRow label="4s / 6s" value={`${fours ?? 0} / ${sixes ?? 0}`} />
-        </SectionBlock>
-
-        <SectionBlock title="Scoring Shots">
-          <div className="mb-2">
-            <div className="d-flex justify-content-between mb-1">
-              <span className="small text-muted text-uppercase">
-                Scoring Shot %
-              </span>
-              <span className="fw-semibold">
-                {scoringShotPct != null
-                  ? `${scoringShotPct.toFixed(1)}%`
-                  : "—"}
-              </span>
-            </div>
-            <ProgressBar
-              now={scoringShotPct != null ? scoringShotPct : 0}
-              variant={
-                scoringShotPct == null
-                  ? "secondary"
-                  : scoringShotPct >= 60
-                  ? "success"
-                  : scoringShotPct >= 50
-                  ? "warning"
-                  : "danger"
-              }
-            />
-          </div>
-          <MetricRow
-            label="Boundary %"
-            value={
-              boundaryPct != null ? `${boundaryPct.toFixed(1)}%` : "—"
-            }
-            sub="4s + 6s as % of balls faced"
-          />
-        </SectionBlock>
-
-        <SectionBlock title="Phases (Tournament)">
-          {/* Powerplay */}
-          <MetricRow
-            label="Powerplay"
-            value={
-              phase.powerplay_runs != null || phase.powerplay_balls != null
-                ? `${phase.powerplay_runs ?? 0} runs${
-                    phase.powerplay_balls != null
-                      ? ` | ${phase.powerplay_balls} balls`
-                      : ""
-                  }`
-                : "—"
-            }
-            sub={
-              phase.powerplay_scoring_shot_pct != null
-                ? `${phase.powerplay_scoring_shot_pct.toFixed(
-                    1
-                  )}% scoring shots`
-                : undefined
-            }
-          />
-
-          {/* Middle overs */}
-          <MetricRow
-            label="Middle Overs"
-            value={
-              phase.middle_overs_runs != null ||
-              phase.middle_overs_balls != null
-                ? `${phase.middle_overs_runs ?? 0} runs${
-                    phase.middle_overs_balls != null
-                      ? ` | ${phase.middle_overs_balls} balls`
-                      : ""
-                  }`
-                : "—"
-            }
-            sub={
-              phase.middle_overs_scoring_shot_pct != null
-                ? `${phase.middle_overs_scoring_shot_pct.toFixed(
-                    1
-                  )}% scoring shots`
-                : undefined
-            }
-          />
-
-          {/* Death overs */}
-          <MetricRow
-            label="Death Overs"
-            value={
-              phase.death_overs_runs != null ||
-              phase.death_overs_balls != null
-                ? `${phase.death_overs_runs ?? 0} runs${
-                    phase.death_overs_balls != null
-                      ? ` | ${phase.death_overs_balls} balls`
-                      : ""
-                  }`
-                : "—"
-            }
-            sub={
-              phase.death_overs_scoring_shot_pct != null
-                ? `${phase.death_overs_scoring_shot_pct.toFixed(
-                    1
-                  )}% scoring shots`
-                : undefined
-            }
-          />
-        </SectionBlock>
-
-        {batting.dismissal && (
-          <SectionBlock title="Most Recent Dismissal (Tournament)">
-            <div>{batting.dismissal}</div>
-          </SectionBlock>
-        )}
-      </>
+      <div className="text-muted">
+        No batting data for this player in this tournament.
+      </div>
     );
-  };
+  }
+
+  const runs = batting.runs ?? null;
+  const balls = batting.balls ?? null;
+  const sr = batting.strike_rate ?? null;
+
+  const fours = batting.fours ?? 0;
+  const sixes = batting.sixes ?? 0;
+  const ones = batting.ones ?? 0;
+  const twos = batting.twos ?? 0;
+  const threes = batting.threes ?? 0;
+
+  const boundaryPct = batting.boundary_percentage ?? null;
+  const dotPct = batting.dot_ball_percentage ?? null;
+  const scoringShotPct =
+    typeof dotPct === "number" ? Number((100 - dotPct).toFixed(1)) : null;
+
+  const phase = batting.phase_breakdown || {};
+  const matchSummaries = Array.isArray(batting.match_summaries)
+    ? batting.match_summaries
+    : [];
+
+  return (
+    <>
+      {/* Score (Tournament) */}
+      <SectionBlock title="Score (Tournament)">
+        <MetricRow
+          label="Runs (Balls)"
+          value={
+            runs != null && balls != null
+              ? `${runs} (${balls})`
+              : runs != null
+              ? runs
+              : "—"
+          }
+        />
+        <MetricRow
+          label="Strike Rate"
+          value={sr != null ? sr.toFixed(1) : "—"}
+          sub="Runs per 100 balls"
+        />
+        <MetricRow label="4s / 6s" value={`${fours} / ${sixes}`} />
+        <MetricRow
+          label="1s / 2s / 3s"
+          value={`${ones} / ${twos} / ${threes}`}
+        />
+      </SectionBlock>
+
+      {/* Scoring Shots (Tournament) */}
+      <SectionBlock title="Scoring Shots">
+        <div className="mb-2">
+          <div className="d-flex justify-content-between mb-1">
+            <span className="small text-muted text-uppercase">
+              Scoring Shot %
+            </span>
+            <span className="fw-semibold">
+              {scoringShotPct != null
+                ? `${scoringShotPct.toFixed(1)}%`
+                : "—"}
+            </span>
+          </div>
+          <ProgressBar
+            now={scoringShotPct != null ? scoringShotPct : 0}
+            variant={
+              scoringShotPct == null
+                ? "secondary"
+                : scoringShotPct >= 60
+                ? "success"
+                : scoringShotPct >= 50
+                ? "warning"
+                : "danger"
+            }
+          />
+        </div>
+        <MetricRow
+          label="Boundary %"
+          value={
+            boundaryPct != null ? `${boundaryPct.toFixed(1)}%` : "—"
+          }
+          sub="4s + 6s as % of balls faced"
+        />
+      </SectionBlock>
+
+      {/* Phases (Tournament) */}
+      <SectionBlock title="Phases (Tournament)">
+        {/* Powerplay */}
+        <MetricRow
+          label="Powerplay"
+          value={
+            phase.powerplay_runs != null || phase.powerplay_balls != null
+              ? `${phase.powerplay_runs ?? 0} runs${
+                  phase.powerplay_balls != null
+                    ? ` | ${phase.powerplay_balls} balls`
+                    : ""
+                }`
+              : "—"
+          }
+          sub={
+            phase.powerplay_scoring_shot_pct != null
+              ? `${phase.powerplay_scoring_shot_pct.toFixed(
+                  1
+                )}% scoring shots`
+              : undefined
+          }
+        />
+
+        {/* Middle overs */}
+        <MetricRow
+          label="Middle Overs"
+          value={
+            phase.middle_overs_runs != null ||
+            phase.middle_overs_balls != null
+              ? `${phase.middle_overs_runs ?? 0} runs${
+                  phase.middle_overs_balls != null
+                    ? ` | ${phase.middle_overs_balls} balls`
+                    : ""
+                }`
+              : "—"
+          }
+          sub={
+            phase.middle_overs_scoring_shot_pct != null
+              ? `${phase.middle_overs_scoring_shot_pct.toFixed(
+                  1
+                )}% scoring shots`
+              : undefined
+          }
+        />
+
+        {/* Death overs */}
+        <MetricRow
+          label="Death Overs"
+          value={
+            phase.death_overs_runs != null ||
+            phase.death_overs_balls != null
+              ? `${phase.death_overs_runs ?? 0} runs${
+                  phase.death_overs_balls != null
+                    ? ` | ${phase.death_overs_balls} balls`
+                    : ""
+                }`
+              : "—"
+          }
+          sub={
+            phase.death_overs_scoring_shot_pct != null
+              ? `${phase.death_overs_scoring_shot_pct.toFixed(
+                  1
+                )}% scoring shots`
+              : undefined
+          }
+        />
+      </SectionBlock>
+
+      {/* Match-by-Match Tournament Summary */}
+      {matchSummaries.length > 0 && (
+        <SectionBlock title="Tournament Summary (Match by Match)">
+          {matchSummaries.map((ms) => {
+            const ss = ms.scoring_shot_pct;
+            const ssDisplay =
+              ss != null ? `${ss.toFixed(1)}%` : "—";
+
+            const barVariant =
+              ss == null
+                ? "secondary"
+                : ss >= 60
+                ? "success"
+                : ss >= 50
+                ? "warning"
+                : "danger";
+
+            return (
+              <Card key={ms.match_id} className="mb-2">
+                <Card.Body>
+                  <div className="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                      <div className="small text-muted">vs</div>
+                      <div className="fw-semibold">{ms.opponent}</div>
+                    </div>
+                    <div className="text-end">
+                      <div className="small text-muted">
+                        {ms.dismissal}
+                      </div>
+                      <div className="fw-semibold">
+                        {ms.runs} from {ms.balls} balls
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="small text-muted">
+                        Scoring Shot %
+                      </span>
+                      <span className="fw-semibold">
+                        {ssDisplay}
+                      </span>
+                    </div>
+                    <ProgressBar
+                      now={ss != null ? ss : 0}
+                      variant={barVariant}
+                    />
+                  </div>
+                </Card.Body>
+              </Card>
+            );
+          })}
+        </SectionBlock>
+      )}
+    </>
+  );
+};
+
 
   // --------- Render Bowling tab ---------
   const renderBowlingSummary = () => {
