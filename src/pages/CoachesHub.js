@@ -13,6 +13,7 @@ export default function CoachesHub() {
   const items = [
     { title: "Pre-game", desc: "Plans, matchups, venue & toss", href: "/coaches/pre" },
     { title: "Post-game", desc: "Team & player reports, KPIs, medals", href: "/coaches/post" },
+    { title: "Post-tournament", desc: "Post Tournament analysis", href: "/coaches/tournament" },
     { title: "Training", desc: "Focus & drills (placeholder)", href: "/coaches/training" },
   ];
 

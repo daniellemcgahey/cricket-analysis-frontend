@@ -6,6 +6,7 @@ import BackButton from "../components/BackButton";
 
 import PreGame from "./PreGame";
 import PostGame from "./PostGame";
+import PostTournament from "./PostTournament";
 import Training from "./Training";
 
 import "./TabStyles.css"; // keep your custom tab styling
@@ -43,6 +44,9 @@ const CoachesHubTabs = () => {
           </Tab>
           <Tab eventKey="post" title="Post-game">
             <PostGame />
+          </Tab>
+          <Tab eventKey="post-tournament" title="Post-Tournament">
+            <PostTournament />
           </Tab>
           <Tab eventKey="training" title="Training">
             <Training />
