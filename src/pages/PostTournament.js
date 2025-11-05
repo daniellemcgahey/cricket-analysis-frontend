@@ -1211,11 +1211,9 @@ export default function PostTournament() {
           </Row>
         </SectionBlock>
 
-        {/* Leaders */}
-                {/* Leaders */}
         <SectionBlock title="Leaders">
           <Row>
-            {/* Batting leaders */}
+            {/* Batting */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Batting</div>
               <ul className="list-group list-group-flush">
@@ -1249,7 +1247,7 @@ export default function PostTournament() {
               </ul>
             </Col>
 
-            {/* Bowling leaders */}
+            {/* Bowling */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Bowling</div>
               <ul className="list-group list-group-flush">
@@ -1283,7 +1281,7 @@ export default function PostTournament() {
               </ul>
             </Col>
 
-            {/* Fielding leaders */}
+            {/* Fielding */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Fielding</div>
               <ul className="list-group list-group-flush">
@@ -1297,9 +1295,7 @@ export default function PostTournament() {
                   >
                     <div className="fw-semibold">{p.player_name}</div>
                     <small className="text-muted">
-                      {p.catches} catches
-                      {" • "}
-                      {p.run_outs} run outs
+                      {p.catches} catches • {p.run_outs} run outs
                     </small>
                   </li>
                 ))}
@@ -1317,6 +1313,7 @@ export default function PostTournament() {
             </Col>
           </Row>
         </SectionBlock>
+
 
       </>
     );
