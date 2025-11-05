@@ -27,6 +27,7 @@ const EP_TOURNAMENT_TEAMS = "/posttournament/teams"; // GET ?tournament_id=
 const EP_TOURNAMENT_PLAYERS = "/posttournament/players"; // GET ?tournament_id=&team_id=
 const EP_TOURNAMENT_PLAYER_SUMMARY =
   "/posttournament/player-summary"; // GET ?tournament_id=&team_id=&player_id=&team_category=
+const EP_TEAM_SUMMARY = "/posttournament/team-summary"; // POST {teamCategory, tournamentId, teamId}
 
 /** ===================== Small UI helpers ===================== */
 
@@ -82,6 +83,12 @@ export default function PostTournament() {
   const [showPlayerModal, setShowPlayerModal] = useState(false);
   const [playerModalTab, setPlayerModalTab] = useState("Batting");
 
+  // -------- Team summary --------
+  const [teamSummary, setTeamSummary] = useState(null);
+  const [teamSummaryLoading, setTeamSummaryLoading] = useState(false);
+  const [teamSummaryError, setTeamSummaryError] = useState("");
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
   // loading for filters / dropdowns
   const [loadingTournaments, setLoadingTournaments] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState(false);
@@ -101,6 +108,9 @@ export default function PostTournament() {
     setPlayerSummary(null);
     setPlayerSummaryError("");
     setShowPlayerModal(false);
+    setTeamSummary(null);
+    setTeamSummaryError("");
+    setShowTeamModal(false);
 
     setLoadingTournaments(true);
     api
@@ -136,6 +146,9 @@ export default function PostTournament() {
       setPlayerSummary(null);
       setPlayerSummaryError("");
       setShowPlayerModal(false);
+      setTeamSummary(null);
+      setTeamSummaryError("");
+      setShowTeamModal(false);
       return;
     }
 
@@ -148,6 +161,9 @@ export default function PostTournament() {
     setPlayerSummary(null);
     setPlayerSummaryError("");
     setShowPlayerModal(false);
+    setTeamSummary(null);
+    setTeamSummaryError("");
+    setShowTeamModal(false);
 
     setLoadingTeams(true);
     api
@@ -179,6 +195,9 @@ export default function PostTournament() {
       setPlayerSummary(null);
       setPlayerSummaryError("");
       setShowPlayerModal(false);
+      setTeamSummary(null);
+      setTeamSummaryError("");
+      setShowTeamModal(false);
       return;
     }
 
@@ -189,6 +208,9 @@ export default function PostTournament() {
     setPlayerSummary(null);
     setPlayerSummaryError("");
     setShowPlayerModal(false);
+    setTeamSummary(null);
+    setTeamSummaryError("");
+    setShowTeamModal(false);
 
     setLoadingPlayers(true);
     api
@@ -254,6 +276,35 @@ export default function PostTournament() {
       mounted = false;
     };
   }, [selectedTournamentId, selectedTeamId, selectedPlayerId, category]);
+
+  /** -------- Fetch team tournament summary -------- */
+  const fetchTeamSummary = () => {
+    if (!selectedTournamentId || !selectedTeamId) {
+      setTeamSummary(null);
+      setTeamSummaryError("Select a tournament and team first.");
+      return;
+    }
+
+    setTeamSummaryLoading(true);
+    setTeamSummaryError("");
+
+    api
+      .post(EP_TEAM_SUMMARY, {
+        teamCategory: category,
+        tournamentId: Number(selectedTournamentId),
+        teamId: Number(selectedTeamId),
+      })
+      .then((res) => {
+        setTeamSummary(res.data || null);
+      })
+      .catch((err) => {
+        console.error(err);
+        setTeamSummaryError("Could not load team tournament summary.");
+      })
+      .finally(() => {
+        setTeamSummaryLoading(false);
+      });
+  };
 
   /** -------- Batting tab renderer (Tournament) -------- */
   const renderBattingSummary = () => {
@@ -695,7 +746,6 @@ export default function PostTournament() {
     );
   };
 
-
   /** -------- Fielding tab renderer (Tournament) -------- */
   const renderFieldingSummary = () => {
     const fielding = playerSummary?.fielding;
@@ -752,6 +802,487 @@ export default function PostTournament() {
                 : "—"
             }
           />
+        </SectionBlock>
+      </>
+    );
+  };
+
+  /** -------- Team Tournament Summary renderer -------- */
+  const renderTeamSummary = () => {
+    if (!teamSummary) {
+      return (
+        <div className="text-muted">
+          Select a tournament &amp; team, then generate the summary.
+        </div>
+      );
+    }
+
+    const { overview, batting, bowling, fielding, leaders } = teamSummary;
+
+    const clamp100 = (v) => Math.max(0, Math.min(100, v || 0));
+
+    const battingTargets = {
+      avg_runs: 130,
+      scoring_shot_pct: 55,
+      boundary_pct: 18,
+    };
+
+    const bowlingTargets = {
+      economy: 6.8,
+      dot_pct: 55,
+      avg_runs_conceded: 120,
+    };
+
+    const battingScores = {
+      avg_runs: clamp100(
+        (batting.avg_runs / battingTargets.avg_runs) * 100
+      ),
+      scoring_shot_pct: clamp100(
+        (batting.scoring_shot_pct / battingTargets.scoring_shot_pct) * 100
+      ),
+      boundary_pct: clamp100(
+        (batting.boundary_pct / battingTargets.boundary_pct) * 100
+      ),
+    };
+
+    const bowlingScores = {
+      economy: clamp100(
+        bowling.economy
+          ? (bowlingTargets.economy / bowling.economy) * 100
+          : 0
+      ),
+      dot_pct: clamp100(
+        (bowling.dot_pct / bowlingTargets.dot_pct) * 100
+      ),
+      avg_runs_conceded: clamp100(
+        bowling.avg_runs_conceded
+          ? (bowlingTargets.avg_runs_conceded /
+              bowling.avg_runs_conceded) *
+              100
+          : 0
+      ),
+    };
+
+    const PHASE_LABELS = {
+      PP: "Powerplay",
+      MO: "Middle Overs",
+      DO: "Death Overs",
+    };
+
+    const phaseKeys = ["PP", "MO", "DO"];
+
+    return (
+      <>
+        {/* Overview */}
+        <SectionBlock title="Overview">
+          <Row className="text-center mb-3">
+            <Col xs={3}>
+              <div className="h4 mb-0">
+                {overview.matches_played ?? 0}
+              </div>
+              <small className="text-muted">Matches</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h4 mb-0 text-success">
+                {overview.wins ?? 0}
+              </div>
+              <small className="text-muted">Wins</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h4 mb-0 text-danger">
+                {overview.losses ?? 0}
+              </div>
+              <small className="text-muted">Losses</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h4 mb-0">
+                {overview.no_result ?? 0}
+              </div>
+              <small className="text-muted">No Result</small>
+            </Col>
+          </Row>
+          <Row className="text-center">
+            <Col xs={4}>
+              <div className="fw-semibold">
+                {overview.win_pct != null
+                  ? overview.win_pct.toFixed(1)
+                  : "—"}
+                %
+              </div>
+              <small className="text-muted">Win %</small>
+            </Col>
+            <Col xs={4}>
+              <div className="fw-semibold">
+                {overview.run_rate_for != null
+                  ? overview.run_rate_for.toFixed(2)
+                  : "—"}
+              </div>
+              <small className="text-muted">Run Rate For</small>
+            </Col>
+            <Col xs={4}>
+              <div className="fw-semibold">
+                {overview.net_run_rate != null
+                  ? overview.net_run_rate.toFixed(2)
+                  : "—"}
+              </div>
+              <small className="text-muted">Net Run Rate</small>
+            </Col>
+          </Row>
+        </SectionBlock>
+
+        {/* Team Batting */}
+        <SectionBlock title="Team Batting">
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Average Runs
+              </span>
+              <span className="fw-semibold">
+                {batting.avg_runs != null
+                  ? batting.avg_runs.toFixed(1)
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={battingScores.avg_runs}
+              variant={
+                batting.avg_runs >= battingTargets.avg_runs
+                  ? "success"
+                  : batting.avg_runs >= battingTargets.avg_runs * 0.8
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Scoring Shot %
+              </span>
+              <span className="fw-semibold">
+                {batting.scoring_shot_pct != null
+                  ? `${batting.scoring_shot_pct.toFixed(1)}%`
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={battingScores.scoring_shot_pct}
+              variant={
+                batting.scoring_shot_pct >= 60
+                  ? "success"
+                  : batting.scoring_shot_pct >= 50
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Boundary %
+              </span>
+              <span className="fw-semibold">
+                {batting.boundary_pct != null
+                  ? `${batting.boundary_pct.toFixed(1)}%`
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={battingScores.boundary_pct}
+              variant={
+                batting.boundary_pct >= battingTargets.boundary_pct
+                  ? "success"
+                  : batting.boundary_pct >=
+                    battingTargets.boundary_pct * 0.7
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          {/* Phase breakdown */}
+          <div className="table-responsive">
+            <table className="table table-sm table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Phase</th>
+                  <th>Runs</th>
+                  <th>Overs</th>
+                  <th>RR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {phaseKeys.map((p) => {
+                  const ph = batting.phase?.[p] || {};
+                  return (
+                    <tr key={p}>
+                      <td>{PHASE_LABELS[p] || p}</td>
+                      <td>{ph.runs ?? "—"}</td>
+                      <td>
+                        {ph.overs != null ? ph.overs.toFixed(1) : "—"}
+                      </td>
+                      <td>
+                        {ph.run_rate != null
+                          ? ph.run_rate.toFixed(2)
+                          : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionBlock>
+
+        {/* Team Bowling */}
+        <SectionBlock title="Team Bowling">
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Avg Runs Conceded
+              </span>
+              <span className="fw-semibold">
+                {bowling.avg_runs_conceded != null
+                  ? bowling.avg_runs_conceded.toFixed(1)
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={bowlingScores.avg_runs_conceded}
+              variant={
+                bowling.avg_runs_conceded <=
+                bowlingTargets.avg_runs_conceded
+                  ? "success"
+                  : bowling.avg_runs_conceded <=
+                    bowlingTargets.avg_runs_conceded * 1.15
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Economy Rate
+              </span>
+              <span className="fw-semibold">
+                {bowling.economy != null
+                  ? bowling.economy.toFixed(2)
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={bowlingScores.economy}
+              variant={
+                bowling.economy <= bowlingTargets.economy
+                  ? "success"
+                  : bowling.economy <= bowlingTargets.economy * 1.15
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          <div className="mb-3">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Dot Ball %
+              </span>
+              <span className="fw-semibold">
+                {bowling.dot_pct != null
+                  ? `${bowling.dot_pct.toFixed(1)}%`
+                  : "—"}
+              </span>
+            </div>
+            <ProgressBar
+              now={bowlingScores.dot_pct}
+              variant={
+                bowling.dot_pct >= 60
+                  ? "success"
+                  : bowling.dot_pct >= 50
+                  ? "warning"
+                  : "danger"
+              }
+            />
+          </div>
+
+          {/* Phase breakdown */}
+          <div className="table-responsive">
+            <table className="table table-sm table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Phase</th>
+                  <th>Runs</th>
+                  <th>Overs</th>
+                  <th>Eco</th>
+                  <th>Wkts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {phaseKeys.map((p) => {
+                  const ph = bowling.phase?.[p] || {};
+                  return (
+                    <tr key={p}>
+                      <td>{PHASE_LABELS[p] || p}</td>
+                      <td>{ph.runs_conceded ?? "—"}</td>
+                      <td>
+                        {ph.overs != null ? ph.overs.toFixed(1) : "—"}
+                      </td>
+                      <td>
+                        {ph.economy != null
+                          ? ph.economy.toFixed(2)
+                          : "—"}
+                      </td>
+                      <td>{ph.wickets ?? "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionBlock>
+
+        {/* Fielding */}
+        <SectionBlock title="Fielding">
+          <Row className="text-center mb-3">
+            <Col xs={3}>
+              <div className="h5 mb-0">
+                {fielding.catches ?? 0}
+              </div>
+              <small className="text-muted">Catches</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h5 mb-0">
+                {fielding.run_outs ?? 0}
+              </div>
+              <small className="text-muted">Run Outs</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h5 mb-0 text-warning">
+                {fielding.drop_catches ?? 0}
+              </div>
+              <small className="text-muted">Drops</small>
+            </Col>
+            <Col xs={3}>
+              <div className="h5 mb-0 text-warning">
+                {fielding.missed_run_outs ?? 0}
+              </div>
+              <small className="text-muted">Missed ROs</small>
+            </Col>
+          </Row>
+
+          <Row className="text-center mb-3">
+            <Col xs={4}>
+              <div className="h6 mb-0">
+                {fielding.clean_pickups ?? 0}
+              </div>
+              <small className="text-muted">Clean Pickups</small>
+            </Col>
+            <Col xs={4}>
+              <div className="h6 mb-0 text-warning">
+                {fielding.fumbles ?? 0}
+              </div>
+              <small className="text-muted">Fumbles</small>
+            </Col>
+            <Col xs={4}>
+              <div className="h6 mb-0 text-warning">
+                {fielding.overthrows ?? 0}
+              </div>
+              <small className="text-muted">Overthrows</small>
+            </Col>
+          </Row>
+
+          <Row className="text-center">
+            <Col xs={6}>
+              <div className="h6 mb-0 text-warning">
+                {fielding.discipline?.wides ?? 0}
+              </div>
+              <small className="text-muted">Wides</small>
+            </Col>
+            <Col xs={6}>
+              <div className="h6 mb-0 text-warning">
+                {fielding.discipline?.no_balls ?? 0}
+              </div>
+              <small className="text-muted">No Balls</small>
+            </Col>
+          </Row>
+        </SectionBlock>
+
+        {/* Leaders */}
+        <SectionBlock title="Leaders">
+          <Row>
+            <Col md={4} className="mb-3">
+              <div className="fw-semibold mb-2">Batting</div>
+              <ul className="list-group list-group-flush">
+                {(leaders.batting || []).map((p) => (
+                  <li
+                    key={p.player_id}
+                    className={
+                      "list-group-item " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    <div className="fw-semibold">{p.player_name}</div>
+                    <small className="text-muted">
+                      {p.runs} runs
+                      {p.strike_rate != null
+                        ? ` @ SR ${p.strike_rate.toFixed(1)}`
+                        : ""}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </Col>
+
+            <Col md={4} className="mb-3">
+              <div className="fw-semibold mb-2">Bowling</div>
+              <ul className="list-group list-group-flush">
+                {(leaders.bowling || []).map((p) => (
+                  <li
+                    key={p.player_id}
+                    className={
+                      "list-group-item " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    <div className="fw-semibold">{p.player_name}</div>
+                    <small className="text-muted">
+                      {p.wickets} wkts
+                      {p.economy != null
+                        ? ` @ ${p.economy.toFixed(2)} econ`
+                        : ""}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </Col>
+
+            <Col md={4} className="mb-3">
+              <div className="fw-semibold mb-2">Fielding</div>
+              <ul className="list-group list-group-flush">
+                {(leaders.fielding || []).map((p) => (
+                  <li
+                    key={p.player_id}
+                    className={
+                      "list-group-item " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    <div className="fw-semibold">{p.player_name}</div>
+                    <small className="text-muted">
+                      {p.dismissals} dismissals
+                      {p.catches
+                        ? ` (${p.catches} catches)`
+                        : ""}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            </Col>
+          </Row>
         </SectionBlock>
       </>
     );
@@ -898,7 +1429,7 @@ export default function PostTournament() {
             </Card>
           </Col>
 
-          {/* Team Tournament Summary Card (placeholder for future) */}
+          {/* Team Tournament Summary Card */}
           <Col md={4}>
             <Card
               bg={cardVariant}
@@ -910,12 +1441,35 @@ export default function PostTournament() {
                   Team Tournament Summary
                 </Card.Title>
                 <Card.Text className="mb-3">
-                  Coming soon: quick high-level team metrics, leaders and
-                  trends across the tournament.
+                  Tournament-long overview of batting, bowling, fielding and
+                  key leaders for the selected team.
                 </Card.Text>
-                <Button disabled variant="secondary">
-                  Coming Soon
+                <Button
+                  disabled={
+                    !selectedTeamId ||
+                    loadingTournaments ||
+                    loadingTeams ||
+                    teamSummaryLoading
+                  }
+                  onClick={() => {
+                    fetchTeamSummary();
+                    setShowTeamModal(true);
+                  }}
+                >
+                  {teamSummaryLoading ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Loading…
+                    </>
+                  ) : (
+                    "Open"
+                  )}
                 </Button>
+                {teamSummaryError && (
+                  <Alert variant="danger" className="mt-3 mb-0 py-2">
+                    {teamSummaryError}
+                  </Alert>
+                )}
               </Card.Body>
             </Card>
           </Col>
@@ -988,6 +1542,46 @@ export default function PostTournament() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowPlayerModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Team Summary Modal */}
+      <Modal
+        show={showTeamModal}
+        onHide={() => setShowTeamModal(false)}
+        size="lg"
+        centered
+        contentClassName={isDarkMode ? "bg-dark text-white" : ""}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Team Tournament Summary</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {teamSummaryError && (
+            <Alert variant="danger" className="mb-2">
+              {teamSummaryError}
+            </Alert>
+          )}
+
+          {teamSummaryLoading && (
+            <div className="text-center py-4">
+              <Spinner animation="border" />
+            </div>
+          )}
+
+          {!teamSummaryLoading && !teamSummary && !teamSummaryError && (
+            <div className="text-muted">
+              Select a tournament &amp; team above, then open this card again to
+              generate the summary.
+            </div>
+          )}
+
+          {!teamSummaryLoading && teamSummary && renderTeamSummary()}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTeamModal(false)}>
             Close
           </Button>
         </Modal.Footer>
