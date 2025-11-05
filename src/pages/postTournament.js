@@ -1,3 +1,4 @@
+// src/pages/PostTournament.js
 import React, { useContext, useEffect, useState } from "react";
 import {
   Card,
@@ -9,20 +10,25 @@ import {
   Tabs,
   Tab,
   ProgressBar,
+  Container,
 } from "react-bootstrap";
+
 import DarkModeContext from "../DarkModeContext";
+import BackButton from "../components/BackButton";
 import api from "../api";
 
+// --------- Config ---------
 
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
-// Tournament-level endpoints (you'll wire these up on the backend)
-const EP_TOURNAMENTS = "/posttournament/tournaments";          // GET ?teamCategory=
-const EP_TOURNAMENT_TEAMS = "/posttournament/teams";           // GET ?tournament_id=
-const EP_TOURNAMENT_PLAYERS = "/posttournament/players";       // GET ?tournament_id=&team_id=
-const EP_TOURNAMENT_PLAYER_SUMMARY = "/posttournament/player-summary"; // GET ?tournament_id=&team_id=&player_id=&team_category=
+// Tournament-level endpoints (adjust names if your backend differs)
+const EP_TOURNAMENTS = "/posttournament/tournaments"; // GET ?teamCategory=
+const EP_TOURNAMENT_TEAMS = "/posttournament/teams"; // GET ?tournament_id=
+const EP_TOURNAMENT_PLAYERS = "/posttournament/players"; // GET ?tournament_id=&team_id=
+const EP_TOURNAMENT_PLAYER_SUMMARY =
+  "/posttournament/player-summary"; // GET ?tournament_id=&team_id=&player_id=&team_category=
 
-// ---------- Small UI helpers ----------
+// --------- Small UI helpers (same style as match player summaries) ---------
 
 function MetricRow({ label, value, sub }) {
   return (
@@ -50,11 +56,12 @@ function SectionBlock({ title, children }) {
 }
 
 // ======================================
-// Tournament Player Summary Component
+// Page: PostTournament
 // ======================================
 
-export default function TournamentPlayerSummary() {
+export default function PostTournament() {
   const { isDarkMode } = useContext(DarkModeContext);
+  const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
   const cardVariant = isDarkMode ? "dark" : "light";
 
   // Filters
@@ -62,32 +69,32 @@ export default function TournamentPlayerSummary() {
   const [tournaments, setTournaments] = useState([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
 
-  const [teamsForTournament, setTeamsForTournament] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [selectedTeamId, setSelectedTeamId] = useState("");
 
-  const [playersForTeam, setPlayersForTeam] = useState([]);
+  const [players, setPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
 
-  // Data + state
+  // Data
   const [playerSummary, setPlayerSummary] = useState(null);
   const [activeTab, setActiveTab] = useState("Batting");
 
+  // Loading / error
   const [loadingTournaments, setLoadingTournaments] = useState(false);
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
-
   const [error, setError] = useState("");
 
-  // ---------- Fetch tournaments when category changes ----------
+  // --------- Load tournaments for category ---------
   useEffect(() => {
     let mounted = true;
     setError("");
     setTournaments([]);
     setSelectedTournamentId("");
-    setTeamsForTournament([]);
+    setTeams([]);
     setSelectedTeamId("");
-    setPlayersForTeam([]);
+    setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
 
@@ -101,8 +108,7 @@ export default function TournamentPlayerSummary() {
           : [];
         setTournaments(list);
         if (list.length) {
-          const firstId = String(list[0].id);
-          setSelectedTournamentId(firstId);
+          setSelectedTournamentId(String(list[0].id));
         }
       })
       .catch((err) => {
@@ -116,35 +122,34 @@ export default function TournamentPlayerSummary() {
     };
   }, [category]);
 
-  // ---------- Fetch teams when tournament changes ----------
+  // --------- Load teams for tournament ---------
   useEffect(() => {
     if (!selectedTournamentId) {
-      setTeamsForTournament([]);
+      setTeams([]);
       setSelectedTeamId("");
-      setPlayersForTeam([]);
+      setPlayers([]);
       setSelectedPlayerId("");
       setPlayerSummary(null);
       return;
     }
 
     let mounted = true;
-    setLoadingTeams(true);
-    setTeamsForTournament([]);
+    setError("");
+    setTeams([]);
     setSelectedTeamId("");
-    setPlayersForTeam([]);
+    setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
-    setError("");
 
+    setLoadingTeams(true);
     api
       .get(EP_TOURNAMENT_TEAMS, { params: { tournament_id: selectedTournamentId } })
       .then((res) => {
         if (!mounted) return;
         const list = Array.isArray(res.data?.teams) ? res.data.teams : [];
-        setTeamsForTournament(list);
+        setTeams(list);
         if (list.length) {
-          const firstTeamId = String(list[0].id);
-          setSelectedTeamId(firstTeamId);
+          setSelectedTeamId(String(list[0].id));
         }
       })
       .catch((err) => {
@@ -158,22 +163,22 @@ export default function TournamentPlayerSummary() {
     };
   }, [selectedTournamentId]);
 
-  // ---------- Fetch players when team changes ----------
+  // --------- Load players for team ---------
   useEffect(() => {
     if (!selectedTournamentId || !selectedTeamId) {
-      setPlayersForTeam([]);
+      setPlayers([]);
       setSelectedPlayerId("");
       setPlayerSummary(null);
       return;
     }
 
     let mounted = true;
-    setLoadingPlayers(true);
-    setPlayersForTeam([]);
+    setError("");
+    setPlayers([]);
     setSelectedPlayerId("");
     setPlayerSummary(null);
-    setError("");
 
+    setLoadingPlayers(true);
     api
       .get(EP_TOURNAMENT_PLAYERS, {
         params: {
@@ -184,10 +189,9 @@ export default function TournamentPlayerSummary() {
       .then((res) => {
         if (!mounted) return;
         const list = Array.isArray(res.data?.players) ? res.data.players : [];
-        setPlayersForTeam(list);
+        setPlayers(list);
         if (list.length) {
-          const firstPlayerId = String(list[0].id);
-          setSelectedPlayerId(firstPlayerId);
+          setSelectedPlayerId(String(list[0].id));
         }
       })
       .catch((err) => {
@@ -201,7 +205,7 @@ export default function TournamentPlayerSummary() {
     };
   }, [selectedTournamentId, selectedTeamId]);
 
-  // ---------- Fetch player tournament summary when player changes ----------
+  // --------- Load player tournament summary ---------
   useEffect(() => {
     if (!selectedTournamentId || !selectedTeamId || !selectedPlayerId) {
       setPlayerSummary(null);
@@ -209,9 +213,10 @@ export default function TournamentPlayerSummary() {
     }
 
     let mounted = true;
-    setLoadingSummary(true);
-    setPlayerSummary(null);
     setError("");
+    setPlayerSummary(null);
+    setLoadingSummary(true);
+    setActiveTab("Batting");
 
     api
       .get(EP_TOURNAMENT_PLAYER_SUMMARY, {
@@ -237,8 +242,7 @@ export default function TournamentPlayerSummary() {
     };
   }, [selectedTournamentId, selectedTeamId, selectedPlayerId, category]);
 
-  // ---------- Render helpers: Batting / Bowling / Fielding ----------
-
+  // --------- Render Batting tab (same format as match summary, but tournament totals) ---------
   const renderBattingSummary = () => {
     const batting = playerSummary?.batting;
     if (!batting || !batting.has_data) {
@@ -338,7 +342,7 @@ export default function TournamentPlayerSummary() {
             }
           />
 
-          {/* Middle Overs */}
+          {/* Middle overs */}
           <MetricRow
             label="Middle Overs"
             value={
@@ -360,7 +364,7 @@ export default function TournamentPlayerSummary() {
             }
           />
 
-          {/* Death Overs */}
+          {/* Death overs */}
           <MetricRow
             label="Death Overs"
             value={
@@ -392,6 +396,7 @@ export default function TournamentPlayerSummary() {
     );
   };
 
+  // --------- Render Bowling tab ---------
   const renderBowlingSummary = () => {
     const bowling = playerSummary?.bowling;
     if (!bowling || !bowling.has_data) {
@@ -447,7 +452,9 @@ export default function TournamentPlayerSummary() {
               phase.powerplay_overs != null ||
               phase.powerplay_runs != null ||
               phase.powerplay_wickets != null
-                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_dot_balls ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
+                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${
+                    phase.powerplay_dot_balls ?? 0
+                  }-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -464,7 +471,9 @@ export default function TournamentPlayerSummary() {
               phase.middle_overs_overs != null ||
               phase.middle_overs_runs != null ||
               phase.middle_overs_wickets != null
-                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_dot_balls ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
+                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${
+                    phase.middle_overs_dot_balls ?? 0
+                  }-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -481,7 +490,9 @@ export default function TournamentPlayerSummary() {
               phase.death_overs_overs != null ||
               phase.death_overs_runs != null ||
               phase.death_overs_wickets != null
-                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_dot_balls ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
+                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${
+                    phase.death_overs_dot_balls ?? 0
+                  }-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
                 : "—"
             }
             sub={
@@ -495,6 +506,7 @@ export default function TournamentPlayerSummary() {
     );
   };
 
+  // --------- Render Fielding tab ---------
   const renderFieldingSummary = () => {
     const fielding = playerSummary?.fielding;
     if (!fielding || !fielding.has_data) {
@@ -525,11 +537,11 @@ export default function TournamentPlayerSummary() {
           />
           <MetricRow
             label="Run Outs (Direct)"
-            value={fielding.run_outs_direct != null ? fielding.run_outs_direct : 0}
+            value={fielding.run_outs_direct ?? 0}
           />
           <MetricRow
             label="Run Outs (Assist)"
-            value={fielding.run_outs_assist != null ? fielding.run_outs_assist : 0}
+            value={fielding.run_outs_assist ?? 0}
           />
         </SectionBlock>
 
@@ -555,130 +567,153 @@ export default function TournamentPlayerSummary() {
     );
   };
 
-  // ---------- Render main card ----------
-
+  // --------- Page layout ---------
   return (
-    <Card bg={cardVariant} text={isDarkMode ? "light" : "dark"} className="shadow">
-      <Card.Body>
-        <Card.Title className="fw-bold mb-3">Post-Tournament Player Summary</Card.Title>
+    <div className={containerClass} style={{ minHeight: "100vh" }}>
+      <Container className="py-4">
+        <BackButton isDarkMode={isDarkMode} />
 
-        {error && (
-          <Alert variant="danger" className="mb-3">
-            {error}
-          </Alert>
-        )}
+        <Card
+          bg={cardVariant}
+          text={isDarkMode ? "light" : "dark"}
+          className="mb-4 shadow-sm"
+        >
+          <Card.Body>
+            <Card.Title className="fw-bold mb-3">
+              Post-Tournament Player Summary
+            </Card.Title>
 
-        {/* Filters: Category → Tournament → Team → Player */}
-        <Row className="g-3 mb-3">
-          <Col md={3}>
-            <Form.Label className="fw-bold">Category</Form.Label>
-            <Form.Select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              disabled={loadingTournaments}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
+            {error && (
+              <Alert variant="danger" className="mb-3">
+                {error}
+              </Alert>
+            )}
 
-          <Col md={3}>
-            <Form.Label className="fw-bold">Tournament</Form.Label>
-            <Form.Select
-              value={selectedTournamentId}
-              onChange={(e) => setSelectedTournamentId(e.target.value)}
-              disabled={loadingTournaments || !tournaments.length}
-            >
-              {!tournaments.length && <option value="">No tournaments found</option>}
-              {tournaments.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
+            {/* Filters */}
+            <Row className="g-3">
+              <Col md={3}>
+                <Form.Label className="fw-bold">Category</Form.Label>
+                <Form.Select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={loadingTournaments}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
 
-          <Col md={3}>
-            <Form.Label className="fw-bold">Team</Form.Label>
-            <Form.Select
-              value={selectedTeamId}
-              onChange={(e) => setSelectedTeamId(e.target.value)}
-              disabled={loadingTeams || !teamsForTournament.length}
-            >
-              {!teamsForTournament.length && <option value="">No teams</option>}
-              {teamsForTournament.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
+              <Col md={3}>
+                <Form.Label className="fw-bold">Tournament</Form.Label>
+                <Form.Select
+                  value={selectedTournamentId}
+                  onChange={(e) => setSelectedTournamentId(e.target.value)}
+                  disabled={loadingTournaments || !tournaments.length}
+                >
+                  {!tournaments.length && (
+                    <option value="">No tournaments found</option>
+                  )}
+                  {tournaments.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
 
-          <Col md={3}>
-            <Form.Label className="fw-bold">Player</Form.Label>
-            <Form.Select
-              value={selectedPlayerId}
-              onChange={(e) => setSelectedPlayerId(e.target.value)}
-              disabled={loadingPlayers || !playersForTeam.length}
-            >
-              {!playersForTeam.length && <option value="">No players</option>}
-              {playersForTeam.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Row>
+              <Col md={3}>
+                <Form.Label className="fw-bold">Team</Form.Label>
+                <Form.Select
+                  value={selectedTeamId}
+                  onChange={(e) => setSelectedTeamId(e.target.value)}
+                  disabled={loadingTeams || !teams.length}
+                >
+                  {!teams.length && <option value="">No teams</option>}
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
 
-        {loadingSummary && (
-          <div className="text-center py-4">
-            <Spinner animation="border" />
-          </div>
-        )}
+              <Col md={3}>
+                <Form.Label className="fw-bold">Player</Form.Label>
+                <Form.Select
+                  value={selectedPlayerId}
+                  onChange={(e) => setSelectedPlayerId(e.target.value)}
+                  disabled={loadingPlayers || !players.length}
+                >
+                  {!players.length && <option value="">No players</option>}
+                  {players.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
-        {!loadingSummary && playerSummary && (
-          <>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <div className="small text-muted">Player</div>
-                <div className="fw-bold">{playerSummary.player_name}</div>
+        {/* Summary Card */}
+        <Card
+          bg={cardVariant}
+          text={isDarkMode ? "light" : "dark"}
+          className="shadow"
+        >
+          <Card.Body>
+            {loadingSummary && (
+              <div className="text-center py-4">
+                <Spinner animation="border" />
               </div>
-              <div className="text-end">
-                <div className="small text-muted">Team</div>
-                <div className="fw-bold">{playerSummary.team_name}</div>
+            )}
+
+            {!loadingSummary && playerSummary && (
+              <>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <div className="small text-muted">Player</div>
+                    <div className="fw-bold">{playerSummary.player_name}</div>
+                  </div>
+                  <div className="text-end">
+                    <div className="small text-muted">Team</div>
+                    <div className="fw-bold">{playerSummary.team_name}</div>
+                  </div>
+                </div>
+
+                <Tabs
+                  id="tournament-player-summary-tabs"
+                  activeKey={activeTab}
+                  onSelect={(key) => setActiveTab(key || "Batting")}
+                  className="mb-2"
+                  justify
+                >
+                  <Tab eventKey="Batting" title="Batting">
+                    {renderBattingSummary()}
+                  </Tab>
+                  <Tab eventKey="Bowling" title="Bowling">
+                    {renderBowlingSummary()}
+                  </Tab>
+                  <Tab eventKey="Fielding" title="Fielding">
+                    {renderFieldingSummary()}
+                  </Tab>
+                </Tabs>
+              </>
+            )}
+
+            {!loadingSummary && !playerSummary && !error && (
+              <div className="text-muted">
+                Select a tournament, team and player to see their tournament
+                summary.
               </div>
-            </div>
-
-            <Tabs
-              id="tournament-player-summary-tabs"
-              activeKey={activeTab}
-              onSelect={(key) => setActiveTab(key || "Batting")}
-              className="mb-2"
-              justify
-            >
-              <Tab eventKey="Batting" title="Batting">
-                {renderBattingSummary()}
-              </Tab>
-              <Tab eventKey="Bowling" title="Bowling">
-                {renderBowlingSummary()}
-              </Tab>
-              <Tab eventKey="Fielding" title="Fielding">
-                {renderFieldingSummary()}
-              </Tab>
-            </Tabs>
-          </>
-        )}
-
-        {!loadingSummary && !playerSummary && !error && (
-          <div className="text-muted">
-            Select a tournament, team and player to see their tournament summary.
-          </div>
-        )}
-      </Card.Body>
-    </Card>
+            )}
+          </Card.Body>
+        </Card>
+      </Container>
+    </div>
   );
 }
