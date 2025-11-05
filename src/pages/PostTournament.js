@@ -469,7 +469,7 @@ export default function PostTournament() {
     );
   };
 
-  /** -------- Bowling tab renderer (Tournament) -------- */
+  // -------- Bowling tab renderer (Tournament) --------
   const renderBowlingSummary = () => {
     const bowling = playerSummary?.bowling;
     if (!bowling || !bowling.has_data) {
@@ -486,15 +486,35 @@ export default function PostTournament() {
     const econ = bowling.economy ?? null;
     const dotPct = bowling.dot_ball_percentage ?? null;
     const dotBallsCount = bowling.dot_balls ?? null;
+
     const phase = bowling.phase_breakdown || {};
+    const matchSummaries = Array.isArray(bowling.match_summaries)
+      ? bowling.match_summaries
+      : [];
+
+    const dotPctDisplay =
+      dotPct != null ? `${dotPct.toFixed(1)}%` : "—";
+
+    const dotBarVariant =
+      dotPct == null
+        ? "secondary"
+        : dotPct >= 60
+        ? "success"
+        : dotPct >= 50
+        ? "warning"
+        : "danger";
 
     return (
       <>
+        {/* Figures (Tournament) with dot ball progress bar */}
         <SectionBlock title="Figures (Tournament)">
           <MetricRow
             label="Overs–Dots–Runs–Wickets"
             value={
-              overs != null || dotBallsCount != null || runs != null || wkts != null
+              overs != null ||
+              dotBallsCount != null ||
+              runs != null ||
+              wkts != null
                 ? `${overs ?? 0}-${dotBallsCount ?? 0}-${runs ?? 0}-${wkts ?? 0}`
                 : "—"
             }
@@ -504,19 +524,32 @@ export default function PostTournament() {
             value={econ != null ? econ.toFixed(2) : "—"}
             sub="Runs conceded per over"
           />
-          <MetricRow
-            label="Dot Ball %"
-            value={dotPct != null ? `${dotPct.toFixed(1)}%` : "—"}
-            sub="Dots as % of legal balls"
-          />
+
+          <div className="mt-2">
+            <div className="d-flex justify-content-between mb-1">
+              <span className="small text-muted text-uppercase">
+                Dot Ball %
+              </span>
+              <span className="fw-semibold">{dotPctDisplay}</span>
+            </div>
+            <ProgressBar
+              now={dotPct != null ? dotPct : 0}
+              variant={dotBarVariant}
+            />
+          </div>
         </SectionBlock>
 
+        {/* Extras & Boundaries */}
         <SectionBlock title="Extras & Boundaries">
           <MetricRow label="Wides" value={bowling.wides ?? 0} />
           <MetricRow label="No Balls" value={bowling.no_balls ?? 0} />
-          <MetricRow label="Boundary Balls" value={bowling.boundary_balls ?? 0} />
+          <MetricRow
+            label="Boundary Balls"
+            value={bowling.boundary_balls ?? 0}
+          />
         </SectionBlock>
 
+        {/* Phases (Tournament) – including wickets */}
         <SectionBlock title="Phases (Tournament)">
           {/* Powerplay */}
           <MetricRow
@@ -524,13 +557,20 @@ export default function PostTournament() {
             value={
               phase.powerplay_overs != null ||
               phase.powerplay_runs != null ||
-              phase.powerplay_wickets != null
-                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${phase.powerplay_dot_balls ?? 0}-${phase.powerplay_runs ?? 0}-${phase.powerplay_wickets ?? 0}`
+              phase.powerplay_wickets != null ||
+              phase.powerplay_dot_balls != null
+                ? `${(phase.powerplay_overs ?? 0).toFixed(1)}-${
+                    phase.powerplay_dot_balls ?? 0
+                  }-${phase.powerplay_runs ?? 0}-${
+                    phase.powerplay_wickets ?? 0
+                  }`
                 : "—"
             }
             sub={
               phase.powerplay_dot_ball_pct != null
-                ? `${phase.powerplay_dot_ball_pct.toFixed(1)}% dot balls`
+                ? `${phase.powerplay_dot_ball_pct.toFixed(
+                    1
+                  )}% dot balls`
                 : undefined
             }
           />
@@ -541,13 +581,20 @@ export default function PostTournament() {
             value={
               phase.middle_overs_overs != null ||
               phase.middle_overs_runs != null ||
-              phase.middle_overs_wickets != null
-                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${phase.middle_overs_dot_balls ?? 0}-${phase.middle_overs_runs ?? 0}-${phase.middle_overs_wickets ?? 0}`
+              phase.middle_overs_wickets != null ||
+              phase.middle_overs_dot_balls != null
+                ? `${(phase.middle_overs_overs ?? 0).toFixed(1)}-${
+                    phase.middle_overs_dot_balls ?? 0
+                  }-${phase.middle_overs_runs ?? 0}-${
+                    phase.middle_overs_wickets ?? 0
+                  }`
                 : "—"
             }
             sub={
               phase.middle_overs_dot_ball_pct != null
-                ? `${phase.middle_overs_dot_ball_pct.toFixed(1)}% dot balls`
+                ? `${phase.middle_overs_dot_ball_pct.toFixed(
+                    1
+                  )}% dot balls`
                 : undefined
             }
           />
@@ -558,20 +605,96 @@ export default function PostTournament() {
             value={
               phase.death_overs_overs != null ||
               phase.death_overs_runs != null ||
-              phase.death_overs_wickets != null
-                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${phase.death_overs_dot_balls ?? 0}-${phase.death_overs_runs ?? 0}-${phase.death_overs_wickets ?? 0}`
+              phase.death_overs_wickets != null ||
+              phase.death_overs_dot_balls != null
+                ? `${(phase.death_overs_overs ?? 0).toFixed(1)}-${
+                    phase.death_overs_dot_balls ?? 0
+                  }-${phase.death_overs_runs ?? 0}-${
+                    phase.death_overs_wickets ?? 0
+                  }`
                 : "—"
             }
             sub={
               phase.death_overs_dot_ball_pct != null
-                ? `${phase.death_overs_dot_ball_pct.toFixed(1)}% dot balls`
+                ? `${phase.death_overs_dot_ball_pct.toFixed(
+                    1
+                  )}% dot balls`
                 : undefined
             }
           />
         </SectionBlock>
+
+        {/* Match-by-Match Bowling Summary (Tournament) */}
+        {matchSummaries.length > 0 && (
+          <SectionBlock title="Tournament Summary (Match by Match)">
+            {matchSummaries.map((ms) => {
+              const dot = ms.dot_ball_pct;
+              const dotDisplay =
+                dot != null ? `${dot.toFixed(1)}%` : "—";
+
+              const matchBarVariant =
+                dot == null
+                  ? "secondary"
+                  : dot >= 60
+                  ? "success"
+                  : dot >= 50
+                  ? "warning"
+                  : "danger";
+
+              const oversVal =
+                ms.overs != null ? Number(ms.overs) : 0;
+              const oversStr = oversVal.toFixed(1);
+
+              const dotsVal = ms.dot_balls ?? 0;
+              const runsVal =
+                ms.runs_conceded != null
+                  ? ms.runs_conceded
+                  : ms.runs ?? 0;
+              const wktsVal = ms.wickets ?? 0;
+
+              return (
+                <Card key={ms.match_id} className="mb-2">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <div>
+                        <div className="small text-muted">vs</div>
+                        <div className="fw-semibold">
+                          {ms.opponent}
+                        </div>
+                      </div>
+                      <div className="text-end">
+                        <div className="small text-muted">
+                          Figures
+                        </div>
+                        <div className="fw-semibold">
+                          {oversStr}-{dotsVal}-{runsVal}-{wktsVal}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="d-flex justify-content-between mb-1">
+                        <span className="small text-muted">
+                          Dot Ball %
+                        </span>
+                        <span className="fw-semibold">
+                          {dotDisplay}
+                        </span>
+                      </div>
+                      <ProgressBar
+                        now={dot != null ? dot : 0}
+                        variant={matchBarVariant}
+                      />
+                    </div>
+                  </Card.Body>
+                </Card>
+              );
+            })}
+          </SectionBlock>
+        )}
       </>
     );
   };
+
 
   /** -------- Fielding tab renderer (Tournament) -------- */
   const renderFieldingSummary = () => {
