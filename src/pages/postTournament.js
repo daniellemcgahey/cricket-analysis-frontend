@@ -13,6 +13,7 @@ import {
 import DarkModeContext from "../DarkModeContext";
 import api from "../api";
 
+
 const CATEGORIES = ["Men", "Women", "U19 Men", "U19 Women", "Training"];
 
 // Tournament-level endpoints (you'll wire these up on the backend)
