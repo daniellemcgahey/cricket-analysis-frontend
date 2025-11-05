@@ -1212,8 +1212,10 @@ export default function PostTournament() {
         </SectionBlock>
 
         {/* Leaders */}
+                {/* Leaders */}
         <SectionBlock title="Leaders">
           <Row>
+            {/* Batting leaders */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Batting</div>
               <ul className="list-group list-group-flush">
@@ -1229,14 +1231,25 @@ export default function PostTournament() {
                     <small className="text-muted">
                       {p.runs} runs
                       {p.strike_rate != null
-                        ? ` @ SR ${p.strike_rate.toFixed(1)}`
+                        ? ` • SR ${p.strike_rate.toFixed(1)}`
                         : ""}
                     </small>
                   </li>
                 ))}
+                {(!leaders.batting || !leaders.batting.length) && (
+                  <li
+                    className={
+                      "list-group-item small text-muted " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    No batting leaders yet.
+                  </li>
+                )}
               </ul>
             </Col>
 
+            {/* Bowling leaders */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Bowling</div>
               <ul className="list-group list-group-flush">
@@ -1250,16 +1263,27 @@ export default function PostTournament() {
                   >
                     <div className="fw-semibold">{p.player_name}</div>
                     <small className="text-muted">
-                      {p.wickets} wkts
+                      {p.wickets} wickets
                       {p.economy != null
-                        ? ` @ ${p.economy.toFixed(2)} econ`
+                        ? ` • Econ ${p.economy.toFixed(2)}`
                         : ""}
                     </small>
                   </li>
                 ))}
+                {(!leaders.bowling || !leaders.bowling.length) && (
+                  <li
+                    className={
+                      "list-group-item small text-muted " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    No bowling leaders yet.
+                  </li>
+                )}
               </ul>
             </Col>
 
+            {/* Fielding leaders */}
             <Col md={4} className="mb-3">
               <div className="fw-semibold mb-2">Fielding</div>
               <ul className="list-group list-group-flush">
@@ -1273,17 +1297,27 @@ export default function PostTournament() {
                   >
                     <div className="fw-semibold">{p.player_name}</div>
                     <small className="text-muted">
-                      {p.dismissals} dismissals
-                      {p.catches
-                        ? ` (${p.catches} catches)`
-                        : ""}
+                      {p.catches} catches
+                      {" • "}
+                      {p.run_outs} run outs
                     </small>
                   </li>
                 ))}
+                {(!leaders.fielding || !leaders.fielding.length) && (
+                  <li
+                    className={
+                      "list-group-item small text-muted " +
+                      (isDarkMode ? "bg-dark text-light" : "")
+                    }
+                  >
+                    No fielding leaders yet.
+                  </li>
+                )}
               </ul>
             </Col>
           </Row>
         </SectionBlock>
+
       </>
     );
   };
