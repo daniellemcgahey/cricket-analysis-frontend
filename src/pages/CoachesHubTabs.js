@@ -45,7 +45,7 @@ const CoachesHubTabs = () => {
           <Tab eventKey="post" title="Post-game">
             <PostGame />
           </Tab>
-          <Tab eventKey="post-tournament" title="Post-Tournament">
+          <Tab eventKey="posttournament" title="Post-Tournament">
             <PostTournament />
           </Tab>
           <Tab eventKey="training" title="Training">
