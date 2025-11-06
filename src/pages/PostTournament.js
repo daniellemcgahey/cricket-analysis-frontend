@@ -1011,6 +1011,7 @@ export default function PostTournament() {
                   <th>Runs</th>
                   <th>Overs</th>
                   <th>RR</th>
+                  <th>Wickets</th>
                 </tr>
               </thead>
               <tbody>
@@ -1028,6 +1029,7 @@ export default function PostTournament() {
                           ? ph.run_rate.toFixed(2)
                           : "—"}
                       </td>
+                      <td>{ph.wickets ?? "—"}</td>
                     </tr>
                   );
                 })}
