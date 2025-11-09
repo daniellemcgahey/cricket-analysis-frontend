@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import api from "../api";
 import { Accordion, Table, Spinner, Alert, Card, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
+import PitchMapChart from "./PitchMapChart";
 import BackButton from "../components/BackButton";
 import BattingPitchMapFilters from "../components/BattingPitchMapFilters";
 
