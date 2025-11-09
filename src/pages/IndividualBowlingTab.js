@@ -26,6 +26,7 @@ const IndividualBowlingTab = () => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [bowlingStats, setBowlingStats] = useState(null);
+  const [bowlingPitchMap, setBowlingPitchMap] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
