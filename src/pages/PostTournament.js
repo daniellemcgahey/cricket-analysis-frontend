@@ -1036,6 +1036,7 @@ export default function PostTournament() {
                 <tr>
                   <th>Phase</th>
                   <th>Runs</th>
+                  <th>SS%</th>
                   <th>Overs</th>
                   <th>RR</th>
                   <th>Wickets</th>
@@ -1048,6 +1049,11 @@ export default function PostTournament() {
                     <tr key={p}>
                       <td>{PHASE_LABELS[p] || p}</td>
                       <td>{ph.runs ?? "—"}</td>
+                      <td>
+                        {ph.scoring_shot_pct != null
+                          ? ph.scoring_shot_pct.toFixed(1)
+                          : "—"}
+                      </td>
                       <td>
                         {ph.overs != null ? ph.overs.toFixed(1) : "—"}
                       </td>
@@ -1333,8 +1339,8 @@ export default function PostTournament() {
                       className={isDarkMode ? "text-light" : "text-muted"}
                     >
                       {p.catches ?? 0} catches •{" "}
-                      {p.run_outs ?? 0} run outs •{" "}
-                      {p.stumpings ?? 0} stumpings
+                      {p.run_outs ?? 0} ROs •{" "}
+                      {p.stumpings ?? 0} Stmps
                     </small>
                   </li>
                 ))}
