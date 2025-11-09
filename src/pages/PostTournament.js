@@ -808,7 +808,6 @@ export default function PostTournament() {
   };
 
   /** -------- Team Tournament Summary renderer -------- */
-  /** -------- Team Tournament Summary renderer -------- */
   const renderTeamSummary = () => {
     if (!teamSummary) {
       return (
@@ -822,9 +821,8 @@ export default function PostTournament() {
 
     const clamp100 = (v) => Math.max(0, Math.min(100, v || 0));
 
-    // Targets for radar-style scores
     const battingTargets = {
-      runs_per_20: 130,      // target runs scored per 20 overs
+      avg_runs: 130,
       scoring_shot_pct: 55,
       boundary_pct: 18,
     };
@@ -832,26 +830,18 @@ export default function PostTournament() {
     const bowlingTargets = {
       economy: 6.8,
       dot_pct: 55,
-      runs_per_20_conceded: 120, // target runs conceded per 20 overs (lower is better)
+      avg_runs_conceded: 120,
     };
 
     const battingScores = {
-      runs_per_20: clamp100(
-        batting.runs_scored_per_20_overs
-          ? (batting.runs_scored_per_20_overs / battingTargets.runs_per_20) *
-              100
-          : 0
+      avg_runs: clamp100(
+        (batting.avg_runs / battingTargets.avg_runs) * 100
       ),
       scoring_shot_pct: clamp100(
-        batting.scoring_shot_pct
-          ? (batting.scoring_shot_pct / battingTargets.scoring_shot_pct) *
-              100
-          : 0
+        (batting.scoring_shot_pct / battingTargets.scoring_shot_pct) * 100
       ),
       boundary_pct: clamp100(
-        batting.boundary_pct
-          ? (batting.boundary_pct / battingTargets.boundary_pct) * 100
-          : 0
+        (batting.boundary_pct / battingTargets.boundary_pct) * 100
       ),
     };
 
@@ -862,12 +852,12 @@ export default function PostTournament() {
           : 0
       ),
       dot_pct: clamp100(
-        bowling.dot_pct ? (bowling.dot_pct / bowlingTargets.dot_pct) * 100 : 0
+        (bowling.dot_pct / bowlingTargets.dot_pct) * 100
       ),
-      runs_per_20_conceded: clamp100(
-        bowling.runs_conceded_per_20_overs
-          ? (bowlingTargets.runs_per_20_conceded /
-              bowling.runs_conceded_per_20_overs) *
+      avg_runs_conceded: clamp100(
+        bowling.avg_runs_conceded
+          ? (bowlingTargets.avg_runs_conceded /
+              bowling.avg_runs_conceded) *
               100
           : 0
       ),
@@ -880,30 +870,6 @@ export default function PostTournament() {
     };
 
     const phaseKeys = ["PP", "MO", "DO"];
-
-    const runsPer20 = batting.runs_scored_per_20_overs ?? null;
-    const runsPer20Display =
-      runsPer20 != null ? runsPer20.toFixed(1) : "—";
-    const runsPer20Variant =
-      runsPer20 == null
-        ? "secondary"
-        : runsPer20 >= battingTargets.runs_per_20
-        ? "success"
-        : runsPer20 >= battingTargets.runs_per_20 * 0.8
-        ? "warning"
-        : "danger";
-
-    const runsPer20Conceded = bowling.runs_conceded_per_20_overs ?? null;
-    const runsPer20ConcededDisplay =
-      runsPer20Conceded != null ? runsPer20Conceded.toFixed(1) : "—";
-    const runsPer20ConcededVariant =
-      runsPer20Conceded == null
-        ? "secondary"
-        : runsPer20Conceded <= bowlingTargets.runs_per_20_conceded
-        ? "success"
-        : runsPer20Conceded <= bowlingTargets.runs_per_20_conceded * 1.15
-        ? "warning"
-        : "danger";
 
     return (
       <>
@@ -966,21 +932,29 @@ export default function PostTournament() {
 
         {/* Team Batting */}
         <SectionBlock title="Team Batting">
-          {/* Runs per 20 overs */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
-                Runs Scored per 20 Overs
+                Average Runs
               </span>
-              <span className="fw-semibold">{runsPer20Display}</span>
+              <span className="fw-semibold">
+                {batting.avg_runs != null
+                  ? batting.avg_runs.toFixed(1)
+                  : "—"}
+              </span>
             </div>
             <ProgressBar
-              now={battingScores.runs_per_20}
-              variant={runsPer20Variant}
+              now={battingScores.avg_runs}
+              variant={
+                batting.avg_runs >= battingTargets.avg_runs
+                  ? "success"
+                  : batting.avg_runs >= battingTargets.avg_runs * 0.8
+                  ? "warning"
+                  : "danger"
+              }
             />
           </div>
 
-          {/* Scoring shot % */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
@@ -1004,7 +978,6 @@ export default function PostTournament() {
             />
           </div>
 
-          {/* Boundary % */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
@@ -1067,23 +1040,31 @@ export default function PostTournament() {
 
         {/* Team Bowling */}
         <SectionBlock title="Team Bowling">
-          {/* Runs conceded per 20 overs */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
-                Runs Conceded per 20 Overs
+                Avg Runs Conceded
               </span>
               <span className="fw-semibold">
-                {runsPer20ConcededDisplay}
+                {bowling.avg_runs_conceded != null
+                  ? bowling.avg_runs_conceded.toFixed(1)
+                  : "—"}
               </span>
             </div>
             <ProgressBar
-              now={bowlingScores.runs_per_20_conceded}
-              variant={runsPer20ConcededVariant}
+              now={bowlingScores.avg_runs_conceded}
+              variant={
+                bowling.avg_runs_conceded <=
+                bowlingTargets.avg_runs_conceded
+                  ? "success"
+                  : bowling.avg_runs_conceded <=
+                    bowlingTargets.avg_runs_conceded * 1.15
+                  ? "warning"
+                  : "danger"
+              }
             />
           </div>
 
-          {/* Economy */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
@@ -1107,7 +1088,6 @@ export default function PostTournament() {
             />
           </div>
 
-          {/* Dot ball % */}
           <div className="mb-3">
             <div className="d-flex justify-content-between mb-1">
               <span className="small text-muted text-uppercase">
@@ -1169,19 +1149,12 @@ export default function PostTournament() {
 
         {/* Fielding */}
         <SectionBlock title="Fielding">
-          {/* Top row: dismissals */}
           <Row className="text-center mb-3">
             <Col xs={3}>
               <div className="h5 mb-0">
                 {fielding.catches ?? 0}
               </div>
               <small className="text-muted">Catches</small>
-            </Col>
-            <Col xs={3}>
-              <div className="h5 mb-0">
-                {fielding.stumpings ?? 0}
-              </div>
-              <small className="text-muted">Stumpings</small>
             </Col>
             <Col xs={3}>
               <div className="h5 mb-0">
@@ -1195,29 +1168,28 @@ export default function PostTournament() {
               </div>
               <small className="text-muted">Drops</small>
             </Col>
-          </Row>
-
-          {/* Second row: chances / ground fielding */}
-          <Row className="text-center mb-3">
             <Col xs={3}>
-              <div className="h6 mb-0 text-warning">
+              <div className="h5 mb-0 text-warning">
                 {fielding.missed_run_outs ?? 0}
               </div>
               <small className="text-muted">Missed ROs</small>
             </Col>
-            <Col xs={3}>
+          </Row>
+
+          <Row className="text-center mb-3">
+            <Col xs={4}>
               <div className="h6 mb-0">
                 {fielding.clean_pickups ?? 0}
               </div>
               <small className="text-muted">Clean Pickups</small>
             </Col>
-            <Col xs={3}>
+            <Col xs={4}>
               <div className="h6 mb-0 text-warning">
                 {fielding.fumbles ?? 0}
               </div>
               <small className="text-muted">Fumbles</small>
             </Col>
-            <Col xs={3}>
+            <Col xs={4}>
               <div className="h6 mb-0 text-warning">
                 {fielding.overthrows ?? 0}
               </div>
@@ -1225,7 +1197,6 @@ export default function PostTournament() {
             </Col>
           </Row>
 
-          {/* Discipline */}
           <Row className="text-center">
             <Col xs={6}>
               <div className="h6 mb-0 text-warning">
@@ -1332,9 +1303,7 @@ export default function PostTournament() {
                     <small
                       className={isDarkMode ? "text-light" : "text-muted"}
                     >
-                      {p.catches ?? 0} catches •{" "}
-                      {p.run_outs ?? 0} run outs •{" "}
-                      {p.stumpings ?? 0} stumpings
+                      {p.catches} catches • {p.run_outs} run outs
                     </small>
                   </li>
                 ))}
@@ -1352,10 +1321,11 @@ export default function PostTournament() {
             </Col>
           </Row>
         </SectionBlock>
+
+
       </>
     );
   };
-
 
   /** -------- Page layout -------- */
   return (
