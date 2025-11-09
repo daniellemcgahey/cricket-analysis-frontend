@@ -1144,6 +1144,7 @@ export default function PostTournament() {
                 <tr>
                   <th>Phase</th>
                   <th>Runs</th>
+                  <th>Dot %</th>
                   <th>Overs</th>
                   <th>Eco</th>
                   <th>Wkts</th>
@@ -1156,6 +1157,9 @@ export default function PostTournament() {
                     <tr key={p}>
                       <td>{PHASE_LABELS[p] || p}</td>
                       <td>{ph.runs_conceded ?? "—"}</td>
+                      <td>
+                        {ph.dot_pct != null ? ph.dot_pct.toFixed(1) : "—"}
+                      </td>
                       <td>
                         {ph.overs != null ? ph.overs.toFixed(1) : "—"}
                       </td>
