@@ -3,17 +3,6 @@ import api from "../api";
 import { Accordion, Card, Form, Spinner, Alert, Table, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 
-const statCategories = [
-  "Most Wickets",
-  "Best Bowling Figures",
-  "Best Averages",
-  "Best Economy Rates",
-  "Best Strike Rates",
-  "Most 3+ Wickets",
-  "Most Dot Balls",
-  "Most Wides",
-  "Most No Balls"
-];
 
 const BowlingLeadersTab = () => {
   const { isDarkMode } = useContext(DarkModeContext);

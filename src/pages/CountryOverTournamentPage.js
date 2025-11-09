@@ -18,7 +18,7 @@ const CountryOverTournamentPage = () => {
 
   const [tournamentOptions, setTournamentOptions] = useState([]);
   const [selectedTournaments, setSelectedTournaments] = useState([]);
-  const [tournament1, tournament2] = selectedTournaments;
+  // const [tournament1, tournament2] = selectedTournaments;
   const [selectedPhases, setSelectedPhases] = useState(["Powerplay", "Middle Overs", "Death Overs"]);
   const [selectedBowlerTypes, setSelectedBowlerTypes] = useState(["Pace", "Medium", "Leg Spin" ,"Off Spin"]);
   const [selectedBowlingArms, setSelectedBowlingArms] = useState(["Left", "Right"]);

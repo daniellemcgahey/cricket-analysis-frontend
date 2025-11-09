@@ -21,29 +21,7 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Filler, 
 // X-axis labels (0 to 19)
 const overs = Array.from({ length: 20 }, (_, i) => i);
 
-// Team color logic
-const getTeamFillColors = (battingTeam) => {
-  const team = battingTeam.toLowerCase();
-  if (team.includes("brasil")) {
-    return {
-      border: "#006400",
-      positiveFill: "rgba(0, 156, 59, 0.3)",     // green
-      negativeFill: "rgba(116, 172, 223, 0.3)"   // argentina blue
-    };
-  }
-  if (team.includes("argentina")) {
-    return {
-      border: "#005DAA",
-      positiveFill: "rgba(116, 172, 223, 0.3)",  // light blue
-      negativeFill: "rgba(0, 156, 59, 0.3)"      // brasil green
-    };
-  }
-  return {
-    border: "#666",
-    positiveFill: "rgba(102, 102, 102, 0.3)",
-    negativeFill: "rgba(102, 102, 102, 0.1)"
-  };
-};
+
 
 const MatchPressurePage = () => {
   const { isDarkMode } = useContext(DarkModeContext);

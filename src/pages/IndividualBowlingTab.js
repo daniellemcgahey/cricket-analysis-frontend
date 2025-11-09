@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import api from "../api";
 import { Accordion, Table, Spinner, Alert, Card, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
-import PitchMapChart from "./PitchMapChart";
 import BackButton from "../components/BackButton";
 import BattingPitchMapFilters from "../components/BattingPitchMapFilters";
 
@@ -27,7 +26,6 @@ const IndividualBowlingTab = () => {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState("");
   const [bowlingStats, setBowlingStats] = useState(null);
-  const [bowlingPitchMap, setBowlingPitchMap] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

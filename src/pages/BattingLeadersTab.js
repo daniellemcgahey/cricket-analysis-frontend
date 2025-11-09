@@ -3,19 +3,6 @@ import api from "../api";
 import { Accordion, Card, Form, Spinner, Alert, Table, Button } from "react-bootstrap";
 import DarkModeContext from "../DarkModeContext";
 
-const statCategories = [
-  "Most Runs",
-  "High Scores",
-  "Highest Averages",
-  "Highest Strike Rates",
-  "Most Fifties and Over",
-  "Most Ducks",
-  "Most Fours",
-  "Most Sixes",
-  "Highest Average Intent",
-  "Highest Scoring Shot %"
-];
-
 const BattingLeadersTab = () => {
   const { isDarkMode } = useContext(DarkModeContext);
   const containerClass = isDarkMode ? "bg-dark text-white" : "bg-light text-dark";
